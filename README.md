@@ -30,6 +30,9 @@ built directly on [`google-deepmind/mujoco`](https://github.com/google-deepmind/
   agent authors correct MuJoCo code.
 - **Parametric scenes** — `arm3`, `box_drop`, `cartpole`, `falling_objects`,
   `table_task`, `empty`, plus any MJCF / URDF / MJB file.
+- **Hello Robot Stretch** — load the real MuJoCo Menagerie Stretch
+  (`scene stretch`, fetched on first use) and run **`pick`** to grasp and lift the
+  tabletop object.
 
 ## How it maps to the two upstream projects
 
@@ -49,6 +52,7 @@ The MuJoCo skills are the same files the Antigravity plugin bundles, taken from
 - pi and Node 18+ (any browser for the 3D panel)
 - Python 3.11+ with `mujoco>=4.0.1` (ships `mujoco.studio` and
   `mujoco_studio_wasm`)
+- `git` (only to fetch the optional MuJoCo Menagerie robot models on first use)
 - optional: `uv` (faster env setup)
 
 ## Setup
@@ -76,8 +80,12 @@ In a pi session in this project:
 ```text
 /robotics start arm3          # boot the sim and open the live 3D panel
 /robotics open                # (re)show the live 3D panel
-/robotics scenes              # list built-in scenes
+/robotics scenes              # list built-in + Menagerie scenes
 /robotics scene cartpole      # switch scene
+/robotics scene stretch       # load the Hello Robot Stretch (fetches ~75 MB first time)
+/robotics pick                # Stretch grasps and lifts the tabletop object
+/robotics camera              # play the robot camera as live video in the browser
+/robotics cameras             # list the model's cameras
 /robotics capture             # save a frame
 /robotics status
 /robotics stop
@@ -94,7 +102,54 @@ Or via the tool (the agent does this automatically):
 { "action": "load", "path": "scenes/my_scene.xml" }
 { "action": "capture", "width": 640, "height": 480 }
 { "action": "open_panel" }                  // alias: "panel"
+{ "action": "scene", "scene": "stretch" }     // load Hello Robot Stretch
+{ "action": "pick", "object": "object" }     // scripted grasp + lift
+{ "action": "stream", "camera": "camera_rgb" } // live robot-camera video
+{ "action": "fetch", "scene": "stretch" }    // pre-download a Menagerie model
 ```
+
+### Picking up an object with the Hello Robot Stretch
+
+The `stretch` scene is the real [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie)
+Hello Robot Stretch 2 with a table and an object in front (Menagerie
+`scene.xml`). It is **not vendored** (the meshes are ~75 MB): on first use the
+daemon does a sparse, blobless `git` checkout of just that directory into
+`<cwd>/.pi/robotics/models/` and reuses it afterwards. `fetch` pre-downloads it.
+
+`pick` runs a calibrated, closed-scene scripted grasp on the sim thread:
+settle → approach the object → close the gripper → lift → raise. It uses the
+model's real actuators (`lift`, `arm_extend`, `wrist_yaw`, `grip`), resumes the
+sim if it was paused, and reports the measured lift:
+
+```jsonc
+// robotics { action: "pick", object: "object" }
+{ "done": true, "object": "object", "start_z": 0.5199, "end_z": 0.9162, "lifted": 0.3963 }
+```
+
+The object starts at z≈0.52 on the table and ends held ≈0.92 by the gripper
+(~0.40 m lift). `reset` returns it to the table. For a different object or
+placement, drive the arm yourself with `ctrl` on `lift` / `arm_extend` /
+`wrist_yaw` / `grip` and read `state`.
+
+### Playing the robot camera as live video
+
+`cameras` lists the current model's cameras; `stream { camera, width, height,
+fps }` serves the chosen camera as an **MJPEG video** and opens a player page in
+the browser (`http://127.0.0.1:<control_port>/camera`). The Stretch head
+RealSense provides `camera_rgb` and `camera_depth`; the daemon points the head at
+the workspace so the stream shows the gripper and the object.
+
+The stream is a plain `multipart/x-mixed-replace` response, so it plays in any
+browser or `<img>` tag:
+
+```html
+<img src="http://127.0.0.1:<control_port>/stream.mjpg?camera=camera_rgb&width=480&height=360&fps=15">
+```
+
+The daemon renders each frame offscreen with `mujoco.Renderer` **from the
+published state snapshot**, so it never reads live `MjData` while the sim thread
+is stepping. Offscreen rendering needs `imageio` + `pillow` (installed by
+`setup`) and a working GL context.
 
 ### Viewing the 3D panel
 
@@ -136,8 +191,8 @@ control port.
 - Loopback only, **no auth or encryption**. Never expose the ports.
 - This plugin drives MuJoCo **simulation**, not real hardware. Real-robot
   bring-up needs a separate safety review.
-- `capture` needs `imageio` + `pillow` and a working GL context; the live viewer
-  does not.
+- `capture` and `stream` need `imageio` + `pillow` and a working GL context; the
+  live 3D viewer does not.
 - Offscreen/native rendering (`mujoco.Renderer`, `mujoco.viewer`) is not used by
   the panel path.
 
@@ -152,10 +207,12 @@ pi-robotics/
 ├── python/
 │   ├── robotics_daemon.py           # daemon entry point
 │   ├── requirements.txt
-│   └── pi_robotics/                 # daemon, scenes, control server
+│   └── pi_robotics/                 # daemon, scenes, menagerie fetch, control server
 ├── examples/scenes/                 # example MJCF
 └── scripts/test-extension.mjs       # headless extension smoke test
 ```
+
+Fetched Menagerie models live in `<cwd>/.pi/robotics/models/` (git-ignored).
 
 ## License
 

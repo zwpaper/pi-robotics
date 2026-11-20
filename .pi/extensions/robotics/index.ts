@@ -49,6 +49,10 @@ const ACTIONS = [
   "ctrl",
   "speed",
   "capture",
+  "pick",
+  "fetch",
+  "cameras",
+  "stream",
   "panel",
 ] as const;
 const DEFAULT_SCENES = [
@@ -59,6 +63,8 @@ const DEFAULT_SCENES = [
   "falling_objects",
   "table_task",
 ];
+// Menagerie-backed scenes: fetched on first use into <cwd>/.pi/robotics/models/.
+const MENAGERIE_SCENES = ["stretch", "stretch3"];
 
 interface ToolResult {
   content: Array<{ type: "text"; text: string }>;
@@ -169,7 +175,9 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "Use the robotics tool when the user wants to simulate a robot, run MuJoCo, test a controller in simulation, or see a live 3D physics scene.",
       "Call robotics with action 'start' to boot the simulation; it opens the live 3D scene in the user's default browser automatically.",
       "robotics 'open_panel' reopens the browser view (e.g. after the tab was closed).",
-      "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty) and 'load' for an XML/URDF/MJB file.",
+      "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty; Menagerie robots: stretch, stretch3) and 'load' for an XML/URDF/MJB file.",
+      "For Hello Robot Stretch: scene 'stretch' (fetched once from MuJoCo Menagerie into .pi/robotics/models/), then action 'pick' to grasp and lift the tabletop object.",
+      "Use robotics action 'stream' to play the robot's camera as a live MJPEG video in the browser (the Stretch head RealSense is 'camera_rgb'); 'cameras' lists them.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
     ],
@@ -192,6 +200,15 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         Type.Array(Type.Number(), { description: "Actuator controls or qpos vector." }),
       ),
       name: Type.Optional(Type.String({ description: "Actuator name for a named 'ctrl'." })),
+      object: Type.Optional(
+        Type.String({ description: "Body name to pick up (for action 'pick'; default 'object')." }),
+      ),
+      camera: Type.Optional(
+        Type.String({ description: "Camera name for action 'stream' (default 'camera_rgb')." }),
+      ),
+      fps: Type.Optional(
+        Type.Number({ description: "Stream frame rate for action 'stream' (default 15)." }),
+      ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
@@ -209,13 +226,16 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "pi-robotics — MuJoCo simulation with a live 3D panel.",
             "",
             "Lifecycle:  start · stop · status · open_panel (alias: panel, opens browser) · setup",
-            "Scenes:     scenes · scene {name,params} · load {path}",
+            "Scenes:     scenes · scene {name,params} · load {path} · fetch {scene}",
             "Control:    ctrl {values}|{name,value} · qpos {values} · pause {paused} · speed {value}",
             "Stepping:   step {n} · reset",
-            "Reading:    state (time, qpos, qvel, ctrl, sites, contacts)",
+            "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height}",
+            "Manip:      pick {object}   (scripted grasp+lift on the Stretch scene)",
+            "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
             "",
             `Built-in scenes: ${DEFAULT_SCENES.join(", ")}`,
+            `Menagerie scenes: ${MENAGERIE_SCENES.join(", ")} (fetched on first use)`,
           ].join("\n"),
           { action },
         );
@@ -325,19 +345,46 @@ fi`,
         }
         case "scene": {
           if (!params.scene) return fail("action 'scene' needs a scene name.", { action });
-          const res = await controlPost(port, "/scene", {
-            name: params.scene,
-            params: params.params ?? {},
-          });
+          // Menagerie scenes are fetched on first use; allow the download.
+          const res = await controlPost(
+            port,
+            "/scene",
+            { name: params.scene, params: params.params ?? {} },
+            900000,
+          );
           setStatus(ctx, paths);
           return ok(json(res.body), { action, session });
         }
         case "load": {
           if (!params.path) return fail("action 'load' needs a path.", { action });
           const absolute = resolve(ctx.cwd, params.path);
-          const res = await controlPost(port, "/load", { path: absolute });
+          const res = await controlPost(port, "/load", { path: absolute }, 900000);
           setStatus(ctx, paths);
           return ok(json(res.body), { action, session });
+        }
+        case "fetch": {
+          if (!params.scene) return fail("action 'fetch' needs a scene name.", { action });
+          const res = await controlPost(port, "/fetch", { name: params.scene }, 900000);
+          return ok(json(res.body), { action });
+        }
+        case "cameras": {
+          const res = await controlGet(port, "/cameras");
+          return ok(json(res.body ?? { cameras: [] }), { action });
+        }
+        case "stream": {
+          // Live MJPEG of a model camera (e.g. the robot's head RealSense).
+          const query = new URLSearchParams({
+            width: String(params.width ?? 480),
+            height: String(params.height ?? 360),
+            fps: String(params.fps ?? 15),
+          });
+          if (params.camera) query.set("camera", params.camera);
+          const url = `http://127.0.0.1:${port}/camera?${query.toString()}`;
+          const opened = await openInBrowser(url);
+          return ok(
+            `Robot camera stream: ${url}` + (opened ? " (opened in your browser)" : ""),
+            { action, url, browserOpened: opened },
+          );
         }
         case "state": {
           const res = await controlGet(port, "/state");
@@ -393,6 +440,26 @@ fi`,
           if (!body?.ok) return fail(`capture failed: ${body?.error ?? "unknown"}`, { action });
           return ok(`Saved frame to ${body.path}`, { action, path: body.path });
         }
+        case "pick": {
+          const objectName = params.object ?? "object";
+          const start = await controlPost(port, "/command", { cmd: "pick", object: objectName });
+          if (!(start.body as { ok?: boolean })?.ok) {
+            return fail(`pick failed to start: ${json(start.body)}`, { action });
+          }
+          // The program runs on the sim clock (~7 s at 100% speed); wait for it.
+          const deadline = Date.now() + 30000;
+          let pick: Record<string, unknown> = { active: true };
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 500));
+            const s = await controlGet(port, "/state");
+            pick = ((s.body as { pick?: Record<string, unknown> })?.pick ?? {}) as Record<string, unknown>;
+            if (pick.done === true || pick.error) break;
+          }
+          if (pick.done !== true) {
+            return fail(`pick did not finish: ${json(pick)}`, { action, pick });
+          }
+          return ok(json(pick), { action, pick, success: true });
+        }
         default:
           return fail(`Unknown action '${action}'. Try action 'help'.`, { action });
       }
@@ -411,7 +478,7 @@ fi`,
 
   pi.registerCommand("robotics", {
     description:
-      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | capture | setup)",
+      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | pick [object] | camera [name] | cameras | capture | setup)",
     handler: async (args, ctx) => {
       const paths = resolvePaths(ctx.cwd);
       const [sub, ...rest] = (args ?? "").trim().split(/\s+/).filter(Boolean);
@@ -465,9 +532,33 @@ fi`,
             ctx.ui.notify(`robotics scenes: ${scenes.join(", ")}`, "info");
             return;
           }
-          await controlPost(port, "/scene", { name: rest[0], params: {} });
+          await controlPost(port, "/scene", { name: rest[0], params: {} }, 900000);
           setStatus(ctx, paths);
           ctx.ui.notify(`robotics: switched to scene '${rest[0]}'`, "info");
+          return;
+        }
+        if (sub === "pick") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
+            return;
+          }
+          ctx.ui.notify("robotics: picking up the object\u2026", "info");
+          await controlPost(port, "/command", { cmd: "pick", object: rest[0] ?? "object" });
+          const deadline = Date.now() + 30000;
+          let pick: Record<string, unknown> = {};
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 500));
+            const s = await controlGet(port, "/state");
+            pick = ((s.body as { pick?: Record<string, unknown> })?.pick ?? {}) as Record<string, unknown>;
+            if (pick.done === true || pick.error) break;
+          }
+          ctx.ui.notify(
+            pick.done === true
+              ? `robotics: picked up \u2014 lifted ${pick.lifted} m`
+              : `robotics pick failed: ${JSON.stringify(pick)}`,
+            pick.done === true ? "info" : "error",
+          );
           return;
         }
         if (sub === "capture") {
@@ -479,6 +570,28 @@ fi`,
           const res = await controlPost(port, "/capture", { width: 640, height: 480 });
           const body = res.body as { ok?: boolean; path?: string; error?: string };
           ctx.ui.notify(body?.ok ? `robotics: saved ${body.path}` : `robotics capture failed: ${body?.error}`, body?.ok ? "info" : "error");
+          return;
+        }
+        if (sub === "camera" || sub === "cameras" || sub === "stream") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
+            return;
+          }
+          if (sub === "cameras") {
+            const res = await controlGet(port, "/cameras");
+            const cams = (res.body as { cameras?: string[] })?.cameras ?? [];
+            ctx.ui.notify(`robotics cameras: ${cams.join(", ") || "(none)"}`, "info");
+            return;
+          }
+          const q = new URLSearchParams({ width: "480", height: "360", fps: "15" });
+          if (sub === "camera" && rest[0]) q.set("camera", rest[0]);
+          const url = `http://127.0.0.1:${port}/camera?${q.toString()}`;
+          const opened = await openInBrowser(url);
+          ctx.ui.notify(
+            opened ? `robotics: opened camera stream ${url}` : `robotics camera: ${url}`,
+            opened ? "info" : "warning",
+          );
           return;
         }
         if (sub === "setup") {

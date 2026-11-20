@@ -39,23 +39,45 @@ from mujoco.studio import (
     viewer_protocol,
 )
 
-from pi_robotics import scenes
+from pi_robotics import menagerie, scenes
 from pi_robotics.control import ControlServer, SharedState
+
+# Default head pose so the RealSense camera looks at the tabletop workspace.
+STRETCH_LOOK_AT: dict[str, float] = {"head_pan": -1.5, "head_tilt": -0.9}
+
+# Scripted pick for the Hello Robot Stretch tabletop scene: approach the object,
+# close the gripper, lift, retract, lift clear. Actuator values are the
+# calibrated targets (see the repo README / calibration notes).
+STRETCH_PICK_PROGRAM: list[tuple[float, dict[str, float]]] = [
+    # Let the object settle on the table before approaching (arm retracted,
+    # gripper open, at the calibration start pose).
+    (2.5, {"lift": 0.0, "arm_extend": 0.0, "wrist_yaw": 0.0, "grip": 0.04, **STRETCH_LOOK_AT}),
+    (1.6, {"lift": -0.07, "arm_extend": 0.28, "wrist_yaw": 0.15, "grip": 0.04, **STRETCH_LOOK_AT}),
+    (1.3, {"lift": -0.07, "arm_extend": 0.28, "wrist_yaw": 0.15, "grip": -0.005, **STRETCH_LOOK_AT}),
+    (2.0, {"lift": 0.18, "arm_extend": 0.28, "wrist_yaw": 0.15, "grip": -0.005, **STRETCH_LOOK_AT}),
+    (2.0, {"lift": 0.40, "arm_extend": 0.28, "wrist_yaw": 0.15, "grip": -0.005, **STRETCH_LOOK_AT}),
+]
 
 
 class RoboticsSimPlugin(plugin.SimPlugin):
     """Sim-thread plugin: builds scenes, applies control commands, publishes state."""
 
-    def __init__(self, state: SharedState) -> None:
+    def __init__(self, state: SharedState, models_root: pathlib.Path) -> None:
         super().__init__()
         self._state = state
+        self._models_root = models_root
         self._scene_name = state.scene_name
         self._scene_params = dict(state.scene_params)
         self._commands: queue.Queue[dict[str, Any]] = queue.Queue()
+        self._pick: dict[str, Any] | None = None
 
     # -- command ingress (called from the control-server thread) -------------
     def enqueue(self, command: dict[str, Any]) -> None:
         self._commands.put(command)
+
+    def ensure_scene_model(self, name: str) -> pathlib.Path:
+        """Fetches (if needed) and returns a Menagerie model directory."""
+        return menagerie.ensure_model(self._models_root, name)
 
     # -- model lifecycle -----------------------------------------------------
     @messages.handler(priority=messages.Priority.INTERNAL - 1)
@@ -79,6 +101,16 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         self._state.model_path = model_path or ""
         if model_path:
             self.handle.dispatch(messages.LoadModelEvent(path=model_path))
+        elif menagerie.is_menagerie_scene(self._scene_name):
+            # Built-in Menagerie robot scene (e.g. Hello Robot Stretch): fetch on
+            # first use, then load its scene.xml.
+            try:
+                directory = menagerie.ensure_model(self._models_root, self._scene_name)
+                self.handle.dispatch(
+                    messages.LoadModelEvent(path=str(directory / "scene.xml"))
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._state.record_error("scene", str(exc))
         else:
             # A sentinel path signals "build the Python scene" to on_load_model.
             self.handle.dispatch(messages.LoadModelEvent(path=""))
@@ -104,6 +136,85 @@ class RoboticsSimPlugin(plugin.SimPlugin):
     def on_post_model(self, event: messages.PostModelEvent) -> None:
         self._state.publish_model(event.model)
         self._state.record_error(None, None)
+        if self._pick is None:
+            self._state.clear_pick()
+        self._apply_home_posture(event.model, event.data)
+
+    def _apply_home_posture(
+        self, model: mujoco.MjModel, data: mujoco.MjData
+    ) -> None:
+        """Points the head camera at the workspace on the Stretch scene."""
+        if self._scene_name not in menagerie.MODELS:
+            return
+        for name, value in STRETCH_LOOK_AT.items():
+            aid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
+            if aid >= 0:
+                data.ctrl[aid] = value
+
+    # -- scripted manipulation ----------------------------------------------
+    def start_pick(
+        self,
+        object_name: str = "object",
+        program: list[tuple[float, dict[str, float]]] | None = None,
+    ) -> None:
+        self._pick = {
+            "object": object_name,
+            "program": program or STRETCH_PICK_PROGRAM,
+            "index": 0,
+            "phase_start": None,
+            "start_z": None,
+        }
+        self._state.set_pick({"active": True, "object": object_name, "phase": 0})
+
+    def _advance_pick(self, model: mujoco.MjModel, data: mujoco.MjData) -> None:
+        pick = self._pick
+        assert pick is not None
+        program = pick["program"]
+        index = pick["index"]
+        object_name = pick["object"]
+        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, object_name)
+        if body_id < 0:
+            self._state.set_pick(
+                {"active": False, "error": f"unknown body '{object_name}'"}
+            )
+            self._pick = None
+            return
+        if pick["phase_start"] is None:
+            pick["phase_start"] = float(data.time)
+            pick["start_z"] = float(data.xpos[body_id][2])
+        # Track the object height during the initial settle phase so the
+        # reported lift is measured from its resting height, not its spawn.
+        if index == 0:
+            pick["start_z"] = float(data.xpos[body_id][2])
+
+        duration, targets = program[index]
+        data.ctrl[:] = 0.0
+        for name, value in targets.items():
+            aid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
+            if aid >= 0:
+                data.ctrl[aid] = value
+
+        if float(data.time) - float(pick["phase_start"]) >= duration:
+            pick["index"] = index + 1
+            pick["phase_start"] = float(data.time)
+            if pick["index"] >= len(program):
+                end_z = float(data.xpos[body_id][2])
+                start_z = float(pick["start_z"] or end_z)
+                self._state.set_pick(
+                    {
+                        "active": False,
+                        "done": True,
+                        "object": object_name,
+                        "start_z": round(start_z, 4),
+                        "end_z": round(end_z, 4),
+                        "lifted": round(end_z - start_z, 4),
+                    }
+                )
+                self._pick = None
+            else:
+                self._state.set_pick(
+                    {"active": True, "object": object_name, "phase": pick["index"]}
+                )
 
     # -- per-step command application ---------------------------------------
     @messages.handler
@@ -119,6 +230,9 @@ class RoboticsSimPlugin(plugin.SimPlugin):
                 self._apply_command(model, data, cmd, applied)
             except Exception:  # noqa: BLE001
                 self._state.record_error("command", traceback.format_exc())
+        if self._pick is not None:
+            self._advance_pick(model, data)
+            applied.append("pick")
         if applied:
             mujoco.mj_forward(model, data)
 
@@ -159,6 +273,9 @@ class RoboticsSimPlugin(plugin.SimPlugin):
                 mujoco.mj_resetDataKeyframe(model, data, int(key))
             else:
                 mujoco.mj_resetData(model, data)
+            self._pick = None
+            self._state.clear_pick()
+            self._apply_home_posture(model, data)
             applied.append("reset")
         else:
             raise ValueError(f"unknown command '{kind}'")
@@ -232,7 +349,17 @@ def run(args: argparse.Namespace) -> int:
     else:
         model_path = None
 
-    sim_plugin = RoboticsSimPlugin(state)
+    models_root = runtime_dir.parent / "models"
+
+    # A Menagerie scene may need a one-time download; do it before the viewer
+    # starts so startup stays the same afterward.
+    if not model_path and menagerie.is_menagerie_scene(state.scene_name):
+        try:
+            menagerie.ensure_model(models_root, state.scene_name)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[pi-robotics] model fetch failed: {exc}", file=sys.stderr)
+
+    sim_plugin = RoboticsSimPlugin(state, models_root)
 
     plugins: list[Any] = [
         AppInitPlugin(compact=args.compact),

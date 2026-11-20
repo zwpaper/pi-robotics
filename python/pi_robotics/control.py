@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import http.server
+import io
 import json
 import pathlib
 import threading
@@ -41,6 +42,7 @@ class SharedState:
         self._scene_source = ""
         self._scene_xml = ""
         self._errors: dict[str, str] = {}
+        self._pick: dict[str, Any] = {"active": False}
 
     # -- setters (sim thread) ------------------------------------------------
     def set_viewer_port(self, port: int) -> None:
@@ -65,6 +67,14 @@ class SharedState:
     def has_error(self, component: str) -> bool:
         with self._lock:
             return component in self._errors
+
+    def set_pick(self, info: dict[str, Any]) -> None:
+        with self._lock:
+            self._pick = dict(info)
+
+    def clear_pick(self) -> None:
+        with self._lock:
+            self._pick = {"active": False}
 
     def publish_model(self, model: mujoco.MjModel) -> None:
         def name_of(objtype: mujoco.mjtObj, i: int, fallback: str) -> str:
@@ -124,6 +134,7 @@ class SharedState:
         with self._lock:
             out = dict(self._state)
             out["model"] = dict(self._model_meta)
+            out["pick"] = dict(self._pick)
             return out
 
     def model_meta(self) -> dict[str, Any]:
@@ -143,6 +154,7 @@ class SharedState:
                 "model_path": self.model_path,
                 "runtime_dir": str(self.runtime_dir),
                 "errors": dict(self._errors),
+                "pick": dict(self._pick),
                 "model": dict(self._model_meta),
             }
 
@@ -157,25 +169,71 @@ def _render_png(
     width: int,
     height: int,
     camera: str | None,
+    camera_opts: dict[str, Any] | None = None,
 ) -> bytes:
     """Offscreen render to PNG bytes (best effort; needs a GL context)."""
     import imageio.v3 as iio  # optional dependency
 
+    opts = camera_opts or {}
     renderer = mujoco.Renderer(model, height=height, width=width)
     try:
+        cam = mujoco.MjvCamera()
         if camera:
-            cam = mujoco.MjvCamera()
             cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
             cam.fixedcamid = mujoco.mj_name2id(
                 model, mujoco.mjtObj.mjOBJ_CAMERA, camera
             )
-            renderer.update_scene(data, camera=cam)
         else:
-            renderer.update_scene(data)
+            cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+            if "distance" in opts:
+                cam.distance = float(opts["distance"])
+            if "elevation" in opts:
+                cam.elevation = float(opts["elevation"])
+            if "azimuth" in opts:
+                cam.azimuth = float(opts["azimuth"])
+            lookat = opts.get("lookat")
+            if lookat is not None:
+                cam.lookat[:] = np.asarray(lookat, dtype=float)[:3]
+        renderer.update_scene(data, camera=cam)
         frame = renderer.render()
     finally:
         renderer.close()
     return iio.imwrite("<bytes>", frame, extension=".png")
+
+
+def _encode_jpeg(frame: np.ndarray, quality: int = 80) -> bytes:
+    """Encodes an HxWx3 uint8 RGB frame as JPEG (needs Pillow)."""
+    from PIL import Image  # optional dependency
+
+    buffer = io.BytesIO()
+    Image.fromarray(frame).save(buffer, format="JPEG", quality=quality)
+    return buffer.getvalue()
+
+
+CAMERA_PAGE = """<!doctype html>
+<html><head><meta charset="utf-8"><title>pi-robotics camera</title>
+<style>
+ body{{margin:0;background:#111;color:#ddd;font:13px system-ui,sans-serif}}
+ header{{padding:6px 10px;background:#1b1b1b;display:flex;gap:10px;align-items:center}}
+ img{{display:block;width:100%;height:auto;max-width:100vw}}
+ select{{background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;padding:3px 6px}}
+</style></head>
+<body>
+<header>
+  <strong>pi-robotics</strong>
+  <label>camera <select id="c">{options}</select></label>
+  <span id="s">connecting\u2026</span>
+</header>
+<img id="v" alt="robot camera" src="/stream.mjpg?camera={camera}&width={width}&height={height}&fps={fps}">
+<script>
+ const sel=document.getElementById('c'), img=document.getElementById('v'), s=document.getElementById('s');
+ function go(){{img.src='/stream.mjpg?camera='+encodeURIComponent(sel.value)+'&width={width}&height={height}&fps={fps}';}}
+ sel.addEventListener('change', go);
+ img.addEventListener('load', ()=>s.textContent='live');
+ img.addEventListener('error', ()=>s.textContent='stream ended (sim running?)');
+</script>
+</body></html>
+"""
 
 
 class ControlServer:
@@ -193,6 +251,7 @@ class ControlServer:
         self._server: http.server.ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
         self._render_lock = threading.Lock()
+        self._stream_stop = threading.Event()
         self.port = 0
 
     def start(self, port: int = 0) -> None:
@@ -232,9 +291,10 @@ class ControlServer:
                 elif path == "/state":
                     self._send(200, outer._state.snapshot())
                 elif path in ("/scenes", "/list-scenes"):
-                    from pi_robotics import scenes
+                    from pi_robotics import menagerie, scenes
 
-                    self._send(200, {"scenes": scenes.list_scenes()})
+                    names = sorted(set(scenes.list_scenes()) | set(menagerie.MODELS))
+                    self._send(200, {"scenes": names})
                 elif path == "/scene":
                     self._send(
                         200,
@@ -244,6 +304,20 @@ class ControlServer:
                             "xml": outer._state.scene_xml(),
                         },
                     )
+                elif path == "/cameras":
+                    self._send(200, {"cameras": outer.list_cameras()})
+                elif path == "/camera":
+                    query = urllib.parse.parse_qs(
+                        urllib.parse.urlparse(self.path).query
+                    )
+                    page = outer.camera_page(query)
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(page)))
+                    self.end_headers()
+                    self.wfile.write(page)
+                elif path == "/stream.mjpg":
+                    outer.stream_mjpeg(self)
                 else:
                     self._send(404, {"error": f"unknown endpoint {path}"})
 
@@ -265,9 +339,111 @@ class ControlServer:
         self._thread.start()
 
     def stop(self) -> None:
+        self._stream_stop.set()
         if self._server is not None:
             self._server.shutdown()
             self._server.server_close()
+
+    # -- camera streaming ----------------------------------------------------
+    def list_cameras(self) -> list[str]:
+        model = self._handle.model
+        if model is None:
+            return []
+        return [
+            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_CAMERA, i)
+            or f"camera{i}"
+            for i in range(model.ncam)
+        ]
+
+    def camera_page(self, query: dict[str, list[str]]) -> bytes:
+        cameras = self.list_cameras()
+        requested = (query.get("camera") or [""])[0]
+        default = requested or ("camera_rgb" if "camera_rgb" in cameras else (cameras[0] if cameras else ""))
+        width = int((query.get("width") or ["480"])[0])
+        height = int((query.get("height") or ["360"])[0])
+        fps = int((query.get("fps") or ["15"])[0])
+        options = "".join(
+            f'<option value="{c}"{" selected" if c == default else ""}>{c}</option>'
+            for c in cameras
+        )
+        return CAMERA_PAGE.format(
+            options=options or '<option value="">(no cameras in model)</option>',
+            camera=default,
+            width=width,
+            height=height,
+            fps=fps,
+        ).encode("utf-8")
+
+    def stream_mjpeg(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        """Streams the named camera as multipart/x-mixed-replace MJPEG."""
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(handler.path).query)
+        camera_name = (query.get("camera") or [""])[0]
+        width = min(int((query.get("width") or ["480"])[0]), 640)
+        height = min(int((query.get("height") or ["360"])[0]), 480)
+        fps = max(1, min(int((query.get("fps") or ["15"])[0]), 60))
+        quality = max(10, min(int((query.get("quality") or ["80"])[0]), 95))
+        period = 1.0 / fps
+
+        model = self._handle.model
+        if model is None:
+            handler.send_response(503)
+            handler.end_headers()
+            return
+        cam_id = -1
+        if camera_name:
+            cam_id = mujoco.mj_name2id(
+                model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name
+            )
+        if cam_id < 0:
+            handler.send_response(404)
+            handler.send_header("Content-Type", "text/plain")
+            handler.end_headers()
+            handler.wfile.write(f"no camera '{camera_name}'".encode())
+            return
+
+        handler.send_response(200)
+        handler.send_header(
+            "Content-Type", "multipart/x-mixed-replace; boundary=frame"
+        )
+        handler.send_header("Cache-Control", "no-store")
+        handler.send_header("Access-Control-Allow-Origin", "*")
+        handler.end_headers()
+
+        try:
+            renderer = mujoco.Renderer(model, height=height, width=width)
+        except Exception as exc:  # noqa: BLE001
+            handler.wfile.write(f"renderer unavailable: {exc}\r\n".encode())
+            return
+
+        scratch = mujoco.MjData(model)
+        try:
+            while not self._stream_stop.is_set():
+                # Render from the published state snapshot so we never read live
+                # MjData while the sim thread is stepping.
+                snap = self._state.snapshot()
+                qpos = np.asarray(snap.get("qpos", []), dtype=float)
+                qvel = np.asarray(snap.get("qvel", []), dtype=float)
+                if qpos.size == model.nq:
+                    scratch.qpos[:] = qpos
+                if qvel.size == model.nv:
+                    scratch.qvel[:] = qvel
+                mujoco.mj_forward(model, scratch)
+                with self._render_lock:
+                    renderer.update_scene(scratch, camera=cam_id)
+                    frame = renderer.render()
+                jpeg = _encode_jpeg(frame, quality)
+                handler.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\n")
+                handler.wfile.write(
+                    f"Content-Length: {len(jpeg)}\r\n\r\n".encode()
+                )
+                handler.wfile.write(jpeg)
+                handler.wfile.write(b"\r\n")
+                handler.wfile.flush()
+                time.sleep(period)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            renderer.close()
 
     # -- request handling ----------------------------------------------------
     def _handle_post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
@@ -284,6 +460,10 @@ class ControlServer:
             params = body.get("params") or {}
             self._sim_plugin.reload_scene(scene_name=name, params=params)
             return {"ok": True, "scene": name}
+        if path == "/fetch":
+            name = body.get("name")
+            directory = self._sim_plugin.ensure_scene_model(name)
+            return {"ok": True, "name": name, "path": str(directory)}
         if path == "/capture":
             return self._capture(body)
         if path == "/shutdown":
@@ -321,6 +501,15 @@ class ControlServer:
             snap = messages.StepControlSnapshot(speed=speed)
             self._handle.dispatch(snap)
             return {"ok": True, "speed": speed}
+        if cmd == "pick":
+            object_name = str(body.get("object") or "object")
+            # The scripted pick needs the sim running (a prior `step`/`pause`
+            # leaves it paused).
+            self._handle.dispatch(
+                messages.RequestPauseEvent(pause_state=sim.PauseState.UNPAUSED)
+            )
+            self._sim_plugin.start_pick(object_name=object_name)
+            return {"ok": True, "pick": object_name}
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
@@ -333,9 +522,10 @@ class ControlServer:
         width = int(body.get("width", 640))
         height = int(body.get("height", 480))
         camera = body.get("camera")
+        camera_opts = body.get("camera_opts") or {}
         with self._render_lock:
             try:
-                png = _render_png(model, data, width, height, camera)
+                png = _render_png(model, data, width, height, camera, camera_opts)
             except Exception as exc:  # noqa: BLE001
                 return {"ok": False, "error": f"render failed: {exc}"}
         out_name = body.get("name") or f"frame_{int(time.time() * 1000)}.png"

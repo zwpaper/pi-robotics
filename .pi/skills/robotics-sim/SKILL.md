@@ -39,9 +39,10 @@ Only one daemon runs per project. It is discovered through
    boots the daemon, waits for the viewer, and opens the live 3D scene in the
    user's default browser.
 2. **Author** — switch scenes with `scene { name, params }` (built-ins:
-   `arm3`, `box_drop`, `cartpole`, `falling_objects`, `table_task`, `empty`) or
-   load a file with `load { path }`. To iterate on a scene, edit an MJCF file
-   and `load` it again; the viewer hot-swaps the model.
+   `arm3`, `box_drop`, `cartpole`, `falling_objects`, `table_task`, `empty`;
+   Menagerie robots: `stretch`, `stretch3`) or load a file with `load { path }`.
+   To iterate on a scene, edit an MJCF file and `load` it again; the viewer
+   hot-swaps the model.
 3. **Act** — `ctrl { name, value }` or `ctrl { values: [...] }` to drive
    actuators, `qpos { values }` to set joints directly, `pause { paused }`,
    `speed { value }`, `step { n }`, `reset`.
@@ -64,8 +65,34 @@ another machine, port-forward (e.g. `ssh -L 8080:127.0.0.1:8080 <agent-host>`)
 and open `http://localhost:8080/`.
 
 Commands: `/robotics start [scene]`, `/robotics open`, `/robotics scenes`,
-`/robotics scene <name>`, `/robotics capture`, `/robotics stop`, `/robotics
-status`.
+`/robotics scene <name>`, `/robotics pick [object]`, `/robotics camera [name]`,
+`/robotics cameras`, `/robotics capture`, `/robotics stop`, `/robotics status`.
+
+## Hello Robot Stretch and `pick`
+
+`scene { name: "stretch" }` loads the real MuJoCo Menagerie Hello Robot
+Stretch 2 (`scene.xml`: robot + table + object). It is fetched on first use into
+`<cwd>/.pi/robotics/models/` (sparse, blobless `git` checkout, ~75 MB);
+`fetch { scene: "stretch" }` pre-downloads without loading.
+
+`pick { object }` (default `object`) runs a calibrated scripted grasp on the sim
+thread — settle, approach, close gripper, lift, raise — using the model's real
+actuators (`lift`, `arm_extend`, `wrist_yaw`, `grip`), resuming the sim if it was
+paused. It reports the measured lift, e.g.
+`{ done: true, start_z: 0.52, end_z: 0.92, lifted: 0.40 }`. `reset` puts the
+object back. For a different object or placement, drive the arm yourself with
+`ctrl` on those actuators and read `state`.
+
+## Robot camera stream
+
+`cameras` lists the model's cameras; `stream { camera, width, height, fps }`
+serves the chosen camera as a live MJPEG video and opens the player page
+`http://127.0.0.1:<control_port>/camera` in the browser. On Stretch the head
+RealSense gives `camera_rgb` and `camera_depth`; the daemon points the head at the
+workspace so the video shows the gripper and object. The raw stream URL is
+`/stream.mjpg?camera=<name>&width=&height=&fps=` and plays in any `<img>`. Frames
+are rendered offscreen from the published state snapshot; `capture` saves a
+single frame to PNG.
 
 ## Authoring scenes
 

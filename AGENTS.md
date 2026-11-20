@@ -14,6 +14,7 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
 - `python/pi_robotics/` — daemon, scenes, control server.
   - `daemon.py` — launches `mujoco.studio.launch_web` and the sim plugin.
   - `scenes.py` — parametric MJCF scenes.
+  - `menagerie.py` — fetches Menagerie robot models (e.g. Stretch) on demand.
   - `control.py` — loopback control API + shared state.
 - `python/robotics_daemon.py` — daemon entry point.
 - `.pi/skills/mujoco/` — upstream MuJoCo agent skills (Apache-2.0).
@@ -33,6 +34,9 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
   MuJoCo WASM viewer cannot run in a sandboxed opaque-origin preview iframe.
 - Keep `scenes.py` self-contained (XML strings, no `MjSpec` internals) so the
   exact model the agent reads is the model the daemon compiles.
+- Never vendor large MuJoCo Menagerie meshes into the repo. `menagerie.py`
+  fetches them on demand into `<cwd>/.pi/robotics/models/` (git-ignored) with a
+  sparse, blobless `git` checkout. Add new robots to its `MODELS` map.
 
 ## Checks
 

@@ -69,5 +69,9 @@ await call("state");
 await call("ctrl", { name: "joint0", value: 0.8 });
 await call("step", { n: 20 });
 await call("capture", { width: 320, height: 240 });
+// Stretch: load the Menagerie robot and run the scripted pick.
+await call("scene", { scene: "stretch" });
+await call("cameras");
+await call("pick", { object: "object" });
 await call("stop");
 await call("status");
