@@ -53,10 +53,6 @@ const ctx = {
   cwd: REPO_ROOT,
   hasUI: false,
   ui: { setStatus() {}, notify() {} },
-  async executeTool(name, args) {
-    console.log(`  [canvas] ${name}`, JSON.stringify(args));
-    return { isError: false, content: [{ type: "text", text: "ok" }] };
-  },
 };
 
 async function call(action, extra = {}) {

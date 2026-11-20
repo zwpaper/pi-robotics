@@ -6,8 +6,8 @@
  *   - spawns a headless MuJoCo Studio web viewer (the real-time 3D scene),
  *   - exposes a loopback control API as the `robotics` tool (load scenes, drive
  *     actuators, step, reset, read state, capture frames),
- *   - points the pi-dashboard canvas at the live viewer so a human can watch and
- *     the agent can drive the same simulation.
+ *   - opens the live viewer in the user's browser so a human can watch while the
+ *     agent drives the same simulation.
  *
  * The heavy lifting lives in `python/robotics_daemon.py`; this file is the
  * agent-facing surface plus process supervision.
@@ -17,7 +17,6 @@ import { resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { controlGet, controlPost } from "./client.ts";
-import { startPanelProxy, type PanelProxy } from "./panel-shim.ts";
 import {
   type StartOptions,
   daemonStatus,
@@ -89,64 +88,6 @@ function setStatus(ctx: ExtensionContext, paths: RoboticsPaths): void {
   }
 }
 
-/** One shim proxy per viewer port, shared across sessions in this pi process. */
-const panelProxies = new Map<number, Promise<PanelProxy>>();
-
-/**
- * Returns a loopback port that serves the viewer with a shim making its
- * root-absolute requests survive pi-dashboard's ``/live/<id>/`` path proxy.
- * Falls back to the raw viewer port if the proxy cannot start.
- */
-async function ensurePanelProxy(viewerPort: number): Promise<number> {
-  let promise = panelProxies.get(viewerPort);
-  if (!promise) {
-    promise = startPanelProxy(viewerPort);
-    panelProxies.set(viewerPort, promise);
-  }
-  try {
-    return (await promise).port;
-  } catch {
-    panelProxies.delete(viewerPort);
-    return viewerPort;
-  }
-}
-
-/** Declares the live 3D viewer on the pi-dashboard canvas. */
-async function openPanel(
-  ctx: ExtensionContext,
-  session: SessionInfo,
-): Promise<{ ok: boolean; via?: string; port?: number; note: string }> {
-  const title = `MuJoCo Studio \u2014 ${session.scene}`;
-  const port = await ensurePanelProxy(session.viewer_port);
-  const call = async (args: unknown) => {
-    // `executeTool` returns isError for unknown tools instead of throwing.
-    const res = (await (ctx as any).executeTool?.("canvas", args)) as
-      | { isError?: boolean }
-      | undefined;
-    return res && !res.isError;
-  };
-  try {
-    if (await call({ target: { kind: "server", port, path: "/" }, title, mode: "pin" })) {
-      return {
-        ok: true,
-        via: "canvas:server",
-        port,
-        note: "declared on the pi-dashboard canvas (note: the sandboxed preview cannot run the WASM viewer; use the browser tab)",
-      };
-    }
-    if (await call({ target: { kind: "url", url: `http://127.0.0.1:${port}/` }, title, mode: "pin" })) {
-      return { ok: true, via: "canvas:url", port, note: "declared on the pi-dashboard canvas" };
-    }
-  } catch {
-    /* fall through to URL-only */
-  }
-  return {
-    ok: false,
-    port,
-    note: `canvas chip not available; use the browser viewer`,
-  };
-}
-
 const SCENE_PARAMS = Type.Record(Type.String(), Type.Any(), {
   description: "Scene parameters, e.g. { height: 1.5, color: '0.9 0.2 0.2 1' }.",
 });
@@ -155,10 +96,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
   /**
    * Opens a URL in the user's default browser.
    *
-   * The pi-dashboard canvas renders a declared server inside a sandboxed,
-   * opaque-origin iframe, where Chromium's Private Network Access blocks the
-   * `fetch()` calls the MuJoCo WASM client needs (WASM binary + model bundles).
-   * A real browser tab is therefore the reliable way to view the live scene.
+   * The MuJoCo Studio viewer is a WASM/WebGL app served from a loopback port;
+   * a real browser tab is the view the extension controls.
    */
   const openInBrowser = async (url: string): Promise<boolean> => {
     try {
@@ -203,34 +142,17 @@ export default function roboticsExtension(pi: ExtensionAPI) {
     return session;
   };
 
-  // Declare the live panel at most once per viewer port in this session, so any
-  // first interaction with the sim puts the 3D scene on the dashboard canvas.
-  let declaredViewerPort: number | null = null;
-  const declarePanel = async (
-    ctx: ExtensionContext,
-    session: SessionInfo,
-  ): Promise<{ ok: boolean; via?: string; port?: number; note: string } | null> => {
-    if (declaredViewerPort === session.viewer_port) return null;
-    const panel = await openPanel(ctx, session);
-    if (panel.ok) declaredViewerPort = session.viewer_port;
-    return panel;
-  };
-
   // -- session lifecycle ---------------------------------------------------
   pi.on("session_start", async (_event, ctx) => {
     const paths = resolvePaths(ctx.cwd);
     setStatus(ctx, paths);
     const { running, session } = daemonStatus(paths);
-    if (running && session) {
-      // Warm the shim proxy so the panel opens instantly when asked for.
-      await ensurePanelProxy(session.viewer_port);
-      if (ctx.hasUI) {
-        ctx.ui.setWidget("robotics", [
-          `robotics: live sim "${session.scene}"`,
-          `viewer  http://127.0.0.1:${session.viewer_port}/`,
-          "ask: \"open the MuJoCo 3D panel\" to show it on the canvas",
-        ]);
-      }
+    if (running && session && ctx.hasUI) {
+      ctx.ui.setWidget("robotics", [
+        `robotics: live sim "${session.scene}"`,
+        `viewer  ${session.viewer_url}`,
+        "run /robotics open to reopen the 3D panel in your browser",
+      ]);
     }
   });
 
@@ -239,14 +161,14 @@ export default function roboticsExtension(pi: ExtensionAPI) {
     name: "robotics",
     label: "Robotics",
     description:
-      "Control a MuJoCo robotics simulation and show its live 3D scene on the pi-dashboard canvas. " +
+      "Control a MuJoCo robotics simulation and open its live 3D scene in the browser. " +
       "Use it to start a simulation, load or build scenes, drive actuators, step/reset physics, read state, and capture frames.",
     promptSnippet:
-      "Drive a MuJoCo simulation (start/stop, scenes, actuators, step/reset, state) with a live 3D panel",
+      "Drive a MuJoCo simulation (start/stop, scenes, actuators, step/reset, state) with a live 3D panel in the browser",
     promptGuidelines: [
       "Use the robotics tool when the user wants to simulate a robot, run MuJoCo, test a controller in simulation, or see a live 3D physics scene.",
-      "Call robotics with action 'start' to boot the simulation; it opens the live 3D scene in the user's browser automatically.",
-      "The MuJoCo WASM viewer cannot render in the pi-dashboard sandboxed preview (Chromium blocks its fetch of the WASM binary and /model from an opaque-origin iframe); view it in a browser tab at the viewer URL. robotics 'open_panel' opens that tab and also declares a canvas chip.",
+      "Call robotics with action 'start' to boot the simulation; it opens the live 3D scene in the user's default browser automatically.",
+      "robotics 'open_panel' reopens the browser view (e.g. after the tab was closed).",
       "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty) and 'load' for an XML/URDF/MJB file.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
@@ -357,8 +279,6 @@ fi`,
           });
           const session = await startDaemon(options);
           setStatus(ctx, paths);
-          const panel = await openPanel(ctx, session);
-          if (panel.ok) declaredViewerPort = session.viewer_port;
           const opened = await openInBrowser(session.viewer_url);
           const state = await controlGet(session.control_port, "/state");
           return ok(
@@ -368,9 +288,8 @@ fi`,
               `viewer=${session.viewer_url}` +
                 (opened ? " (opened in your browser)" : ""),
               `control=:${session.control_port}`,
-              `panel: ${panel.note}`,
             ].join("\n"),
-            { action, session, state: state.body, panel, browserOpened: opened },
+            { action, session, state: state.body, browserOpened: opened },
           );
         } catch (error) {
           return fail(`failed to start: ${(error as Error).message}`, { action });
@@ -380,15 +299,10 @@ fi`,
       if (action === "open_panel") {
         const { running, session } = daemonStatus(paths);
         if (!running || !session) return fail("Start the simulation first.", { action });
-        const panel = await openPanel(ctx, session);
-        if (panel.ok) declaredViewerPort = session.viewer_port;
         const opened = await openInBrowser(session.viewer_url);
         return ok(
-          [
-            panel.note,
-            `viewer: ${session.viewer_url}` + (opened ? " (opened in your browser)" : ""),
-          ].join("\n"),
-          { action, session, panel, browserOpened: opened },
+          `viewer: ${session.viewer_url}` + (opened ? " (opened in your browser)" : ""),
+          { action, session, browserOpened: opened },
         );
       }
 
@@ -403,10 +317,6 @@ fi`,
         );
       }
       const port = session.control_port;
-
-      // Any first sim interaction this session also puts the live scene on the
-      // dashboard canvas (no-op once declared).
-      await declarePanel(ctx, session);
 
       switch (action) {
         case "scenes": {

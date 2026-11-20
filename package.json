@@ -10,7 +10,6 @@
   },
   "scripts": {
     "typecheck": "tsc -p .pi/extensions/robotics/tsconfig.json",
-    "test:extension": "node scripts/test-extension.mjs",
-    "test:panel": "node scripts/test-panel-proxy.mjs"
+    "test:extension": "node scripts/test-extension.mjs"
   }
 }

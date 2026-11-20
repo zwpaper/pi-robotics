@@ -4,16 +4,16 @@ MuJoCo robotics simulation with a **live 3D panel**, packaged as a
 [pi](https://github.com/earendil-works/pi) extension.
 
 Your agent writes and runs a controller against a real physics engine, and you
-watch the same scene update in real time on the **pi-dashboard canvas** — no
-desktop window, no GPU rendering on the agent host (the browser renders with
-MuJoCo Studio's WASM Filament client).
+watch the same scene update live in your **browser** — no desktop window, no GPU
+on the agent host (the browser renders with MuJoCo Studio's WASM Filament
+client).
 
 This is a pi-native re-implementation of the simulation surface of
 [`google-deepmind/robotics-antigravity-plugin`](https://github.com/google-deepmind/robotics-antigravity-plugin),
 built directly on [`google-deepmind/mujoco`](https://github.com/google-deepmind/mujoco).
 
 <p align="center">
-  <em>pi agent ─▶ robotics tool ─▶ control API ─▶ MuJoCo daemon ─▶ Studio web viewer ─▶ pi-dashboard canvas</em>
+  <em>pi agent ─▶ robotics tool ─▶ control API ─▶ MuJoCo daemon ─▶ Studio web viewer ─▶ browser tab</em>
 </p>
 
 ## What you get
@@ -22,9 +22,8 @@ built directly on [`google-deepmind/mujoco`](https://github.com/google-deepmind/
   actuators and joints, step/reset physics, read `qpos`/`qvel`/sites/contacts,
   and capture frames.
 - **Live 3D panel** — the daemon runs MuJoCo Studio in headless web mode and
-the extension opens it in your browser (`/robotics start`), with a pi-dashboard
-canvas chip as a secondary route. The same physics state the agent drives is
-what you see.
+  the extension opens it in your default browser (`/robotics start`). The same
+  physics state the agent drives is what you see.
 - **Bundled MuJoCo skills** — the upstream `mujoco-python`,
   `mujoco-spec-editing`, `mujoco-rendering`, `mujoco-gui`, `mujoco-studio`,
   `mujoco-accelerated`, `mujoco-parity`, and `mujoco-deformables` skills, so the
@@ -37,7 +36,7 @@ what you see.
 | Concern | `robotics-antigravity-plugin` | this repo |
 |---|---|---|
 | Agent surface | Antigravity skills + sidecar | pi `robotics` tool + pi skills |
-| Live 3D viewer | `mujoco_studio` sidecar (Node) + `studiod.py` | daemon + pi-dashboard `canvas` |
+| Live 3D viewer | `mujoco_studio` sidecar (Node) + `studiod.py` | MuJoCo Studio web viewer in the browser |
 | Physics | `mujoco` (Python) | `mujoco` (Python) |
 | Scene authoring | `sim_plugin.py` / `scene.xml` | `python/pi_robotics/scenes.py` + `load` |
 | Real hardware | SO-101 / YAM / FR3 skills | out of scope (sim first) |
@@ -47,7 +46,7 @@ The MuJoCo skills are the same files the Antigravity plugin bundles, taken from
 
 ## Requirements
 
-- pi (with a pi-dashboard, for the panel) and Node 18+
+- pi and Node 18+ (any browser for the 3D panel)
 - Python 3.11+ with `mujoco>=4.0.1` (ships `mujoco.studio` and
   `mujoco_studio_wasm`)
 - optional: `uv` (faster env setup)
@@ -99,29 +98,16 @@ Or via the tool (the agent does this automatically):
 
 ### Viewing the 3D panel
 
-`start` and `open_panel` **open the live scene in your default browser** at
-`http://127.0.0.1:<viewer_port>/`, and declare a server chip on the
-**pi-dashboard canvas** as a secondary route. In the browser tab you get the
-full interactive MuJoCo Studio viewer (orbit, pan, inspect, play/pause) at 60
-FPS, driven by the same daemon the agent controls.
+`start` and `open_panel` open the live scene in your **default browser** at
+`http://127.0.0.1:<viewer_port>/` (macOS `open`, Windows `start`, Linux
+`xdg-open`). You get the full interactive MuJoCo Studio viewer (orbit, pan,
+inspect, play/pause) at 60 FPS, driven by the same daemon the agent controls.
+Keep the tab open while the agent drives `ctrl`/`step`/`scene` — the view updates
+live.
 
-**Why not the embedded canvas preview.** pi-dashboard renders a declared server
-inside a **sandboxed, opaque-origin iframe** (`sandbox="allow-scripts …"`, no
-`allow-same-origin`). Chromium's *Private Network Access* policy blocks
-`fetch()`/XHR from such an origin to loopback addresses, while allowing
-`<script>`/`<img>` subresources. The MuJoCo WASM client fetches its WASM binary
-and `/model` bundles with `fetch()`, so it cannot boot in that frame — verified:
-plain cross-origin iframes render the scene, sandboxed ones stay blank. The
-agent-host server also cannot see the browser, so a real tab is the reliable
-view.
-
-**Why the shim proxy still exists.** The daemon serves the viewer through a
-tiny loopback **panel shim proxy** (`panel-shim.ts`). It injects a shim that
-rewrites the viewer's root-absolute `WebSocket`/`fetch` targets to the current
-directory and tunnels `/state`, `/ui`, and `/drop`. That is exactly what is
-needed if the dashboard is ever configured to embed without the opaque-origin
-sandbox, and it makes the viewer work under any reverse-proxy prefix (for
-example a remote single-port tunnel). It is transparent when opened top-level.
+Only the browser needs to reach the loopback port. To view the panel from
+another machine, forward it, e.g. `ssh -L 8080:127.0.0.1:8080 <agent-host>` and
+open `http://localhost:8080/`.
 
 ## Architecture
 
@@ -130,9 +116,8 @@ pi session
  ├─ .pi/extensions/robotics/index.ts     robotics tool + /robotics command
  │     ├─ daemon.ts ──spawn/stop──┐
  │     ├─ client.ts ──HTTP────────┼──────────────┐
- │     ├─ panel-shim.ts ──loopback proxy + prefix shim ─┐
- │     └─ canvas tool (dashboard) │              │      │
- │                                ▼              ▼      │
+ │     └─ openInBrowser ──▶ browser tab          │
+ │                                ▼              ▼
  └─ python/robotics_daemon.py ── mujoco.studio.launch_web
        ├─ RoboticsSimPlugin   builds scenes, applies ctrl/qpos, publishes state
        ├─ step_control / sim_history / studio App (interactive UI)
@@ -143,15 +128,15 @@ pi session
 ```
 
 The viewer serves the page, `/ui`, `/state`, `/model`, and the WASM client on a
-single loopback port. The browser embeds it through the shim proxy; the agent
-talks to the Python daemon over the separate control port.
+single loopback port; the agent talks to the Python daemon over the separate
+control port.
 
 ## Notes and limitations
 
 - Loopback only, **no auth or encryption**. Never expose the ports.
 - This plugin drives MuJoCo **simulation**, not real hardware. Real-robot
   bring-up needs a separate safety review.
-- `capture` needs `imageio` + `pillow` and a working GL context; the live panel
+- `capture` needs `imageio` + `pillow` and a working GL context; the live viewer
   does not.
 - Offscreen/native rendering (`mujoco.Renderer`, `mujoco.viewer`) is not used by
   the panel path.

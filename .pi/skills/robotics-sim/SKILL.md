@@ -4,7 +4,7 @@ description: >-
   Drives the pi-robotics MuJoCo simulation through the `robotics` tool: start
   and stop the daemon, load or build scenes, drive actuators and joints, step
   and reset physics, read qpos/qvel/sensors/contacts, capture frames, and show
-  the live 3D scene on the pi-dashboard canvas. Use when the user asks to
+  the live 3D scene in the browser. Use when the user asks to
   simulate a robot in MuJoCo, test a controller in simulation, build a physics
   scene, or show a live 3D robotics panel. Don't use for pure
   rendering-only requests, non-MuJoCo simulators, or real-hardware wiring.
@@ -26,7 +26,7 @@ One background Python process (the *daemon*) owns the simulation and the 3D
 viewer. It exposes two loopback ports:
 
 - a **web-viewer port** — MuJoCo Studio, rendering the live scene in the browser
-  via a WASM Filament client; this is what the pi-dashboard canvas embeds.
+  via a WASM Filament client; the extension opens it in the user's browser.
 - a **control port** — the JSON API the `robotics` tool calls.
 
 Only one daemon runs per project. It is discovered through
@@ -37,8 +37,7 @@ Only one daemon runs per project. It is discovered through
 
 1. **Start** — `robotics` action `start`, optionally `{ scene: "arm3" }`. This
    boots the daemon, waits for the viewer, and opens the live 3D scene in the
-   user's browser. It also declares the scene on the pi-dashboard canvas (a
-   server chip) as a secondary route, lazily on the first sim action too.
+   user's default browser.
 2. **Author** — switch scenes with `scene { name, params }` (built-ins:
    `arm3`, `box_drop`, `cartpole`, `falling_objects`, `table_task`, `empty`) or
    load a file with `load { path }`. To iterate on a scene, edit an MJCF file
@@ -58,22 +57,11 @@ one.
 
 ## Showing the live panel
 
-`start` and `open_panel` **open the live scene in the user's default browser** at
-`http://127.0.0.1:<viewer_port>/` and also declare a server chip on the
-pi-dashboard canvas. Tell the user to watch that browser tab.
-
-The MuJoCo WASM viewer **cannot run in the pi-dashboard sandboxed preview**: the
-dashboard frames a declared server with `sandbox="allow-scripts"` (opaque
-origin), and Chromium's Private Network Access blocks the `fetch()` calls the
-WASM client needs for its WASM binary and `/model` bundles. Plain cross-origin
-iframes render fine; sandboxed ones stay blank (verified). If the user says the
-canvas preview is blank, that is expected — point them at the browser tab, or
-re-run `start` / `open_panel` to reopen it.
-
-The port declared to the canvas is the extension's **shim proxy**
-(`panel-shim.ts`), not the raw viewer: it injects a shim making the viewer's
-root-absolute `/model`, `/state`, `/ui`, and `/drop` requests work under any
-reverse-proxy prefix. It is transparent top-level.
+`start` and `open_panel` open the live scene in the user's **default browser** at
+`http://127.0.0.1:<viewer_port>/`. Tell the user to keep that tab open and watch
+it; it updates live as the agent drives `ctrl`/`step`/`scene`. To view from
+another machine, port-forward (e.g. `ssh -L 8080:127.0.0.1:8080 <agent-host>`)
+and open `http://localhost:8080/`.
 
 Commands: `/robotics start [scene]`, `/robotics open`, `/robotics scenes`,
 `/robotics scene <name>`, `/robotics capture`, `/robotics stop`, `/robotics
