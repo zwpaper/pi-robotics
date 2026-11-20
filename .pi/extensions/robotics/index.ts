@@ -131,7 +131,7 @@ async function openPanel(
         ok: true,
         via: "canvas:server",
         port,
-        note: "declared on the pi-dashboard canvas \u2014 tap the server chip to open the live scene",
+        note: "declared on the pi-dashboard canvas (note: the sandboxed preview cannot run the WASM viewer; use the browser tab)",
       };
     }
     if (await call({ target: { kind: "url", url: `http://127.0.0.1:${port}/` }, title, mode: "pin" })) {
@@ -143,7 +143,7 @@ async function openPanel(
   return {
     ok: false,
     port,
-    note: `canvas tool unavailable; open http://127.0.0.1:${port}/ in a browser`,
+    note: `canvas chip not available; use the browser viewer`,
   };
 }
 
@@ -152,6 +152,28 @@ const SCENE_PARAMS = Type.Record(Type.String(), Type.Any(), {
 });
 
 export default function roboticsExtension(pi: ExtensionAPI) {
+  /**
+   * Opens a URL in the user's default browser.
+   *
+   * The pi-dashboard canvas renders a declared server inside a sandboxed,
+   * opaque-origin iframe, where Chromium's Private Network Access blocks the
+   * `fetch()` calls the MuJoCo WASM client needs (WASM binary + model bundles).
+   * A real browser tab is therefore the reliable way to view the live scene.
+   */
+  const openInBrowser = async (url: string): Promise<boolean> => {
+    try {
+      if (process.platform === "darwin") {
+        return (await pi.exec("open", [url], {} as never)).code === 0;
+      }
+      if (process.platform === "win32") {
+        return (await pi.exec("cmd", ["/c", "start", "", url], {} as never)).code === 0;
+      }
+      return (await pi.exec("xdg-open", [url], {} as never)).code === 0;
+    } catch {
+      return false;
+    }
+  };
+
   const startOptions = async (
     ctx: ExtensionContext,
     paths: RoboticsPaths,
@@ -223,8 +245,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "Drive a MuJoCo simulation (start/stop, scenes, actuators, step/reset, state) with a live 3D panel",
     promptGuidelines: [
       "Use the robotics tool when the user wants to simulate a robot, run MuJoCo, test a controller in simulation, or see a live 3D physics scene.",
-      "Call robotics with action 'start' to boot the simulation; it declares the live 3D scene on the dashboard canvas automatically.",
-      "The panel appears as a server chip on the pi-dashboard canvas; tell the user to tap it to embed the live scene, or use robotics action 'open_panel' to (re)declare it.",
+      "Call robotics with action 'start' to boot the simulation; it opens the live 3D scene in the user's browser automatically.",
+      "The MuJoCo WASM viewer cannot render in the pi-dashboard sandboxed preview (Chromium blocks its fetch of the WASM binary and /model from an opaque-origin iframe); view it in a browser tab at the viewer URL. robotics 'open_panel' opens that tab and also declares a canvas chip.",
       "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty) and 'load' for an XML/URDF/MJB file.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
@@ -264,7 +286,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
           [
             "pi-robotics — MuJoCo simulation with a live 3D panel.",
             "",
-            "Lifecycle:  start · stop · status · open_panel (alias: panel) · setup",
+            "Lifecycle:  start · stop · status · open_panel (alias: panel, opens browser) · setup",
             "Scenes:     scenes · scene {name,params} · load {path}",
             "Control:    ctrl {values}|{name,value} · qpos {values} · pause {paused} · speed {value}",
             "Stepping:   step {n} · reset",
@@ -337,10 +359,18 @@ fi`,
           setStatus(ctx, paths);
           const panel = await openPanel(ctx, session);
           if (panel.ok) declaredViewerPort = session.viewer_port;
+          const opened = await openInBrowser(session.viewer_url);
           const state = await controlGet(session.control_port, "/state");
           return ok(
-            `Simulation running.\nscene=${session.scene}\nviewer=${session.viewer_url}\ncontrol=:${session.control_port}\npanel: ${panel.note}`,
-            { action, session, state: state.body, panel },
+            [
+              `Simulation running.`,
+              `scene=${session.scene}`,
+              `viewer=${session.viewer_url}` +
+                (opened ? " (opened in your browser)" : ""),
+              `control=:${session.control_port}`,
+              `panel: ${panel.note}`,
+            ].join("\n"),
+            { action, session, state: state.body, panel, browserOpened: opened },
           );
         } catch (error) {
           return fail(`failed to start: ${(error as Error).message}`, { action });
@@ -352,9 +382,13 @@ fi`,
         if (!running || !session) return fail("Start the simulation first.", { action });
         const panel = await openPanel(ctx, session);
         if (panel.ok) declaredViewerPort = session.viewer_port;
+        const opened = await openInBrowser(session.viewer_url);
         return ok(
-          panel.note + `\nviewer: http://127.0.0.1:${panel.port ?? session.viewer_port}/`,
-          { action, session, panel },
+          [
+            panel.note,
+            `viewer: ${session.viewer_url}` + (opened ? " (opened in your browser)" : ""),
+          ].join("\n"),
+          { action, session, panel, browserOpened: opened },
         );
       }
 
@@ -456,11 +490,13 @@ fi`,
   });
 
   // -- `/robotics` slash command ------------------------------------------
-  const OPEN_PANEL_NUDGE =
-    'Call the robotics tool with action="open_panel" now, then tell me the live 3D scene is on the dashboard canvas.';
   const runningControlPort = (paths: RoboticsPaths): number | null => {
     const { running, session } = daemonStatus(paths);
     return running && session ? session.control_port : null;
+  };
+  const runningViewerUrl = (paths: RoboticsPaths): string | null => {
+    const { running, session } = daemonStatus(paths);
+    return running && session ? session.viewer_url : null;
   };
 
   pi.registerCommand("robotics", {
@@ -480,20 +516,25 @@ fi`,
           }
           const session = await startDaemon({ python: py.path, paths, scene: rest[0] });
           setStatus(ctx, paths);
+          const opened = await openInBrowser(session.viewer_url);
           ctx.ui.notify(
-            `robotics: ${session.scene} running (viewer :${session.viewer_port}). Opening the 3D panel\u2026`,
+            `robotics: ${session.scene} running \u2014 ${session.viewer_url}` +
+              (opened ? " (opened in your browser)" : ""),
             "info",
           );
-          // Commands cannot call the canvas tool; ask the agent to declare it.
-          pi.sendUserMessage(OPEN_PANEL_NUDGE);
           return;
         }
         if (sub === "open" || sub === "panel") {
-          if (runningControlPort(paths) === null) {
+          const url = runningViewerUrl(paths);
+          if (url === null) {
             ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
             return;
           }
-          pi.sendUserMessage(OPEN_PANEL_NUDGE);
+          const opened = await openInBrowser(url);
+          ctx.ui.notify(
+            opened ? `robotics: opened ${url}` : `robotics viewer: ${url}`,
+            opened ? "info" : "warning",
+          );
           return;
         }
         if (sub === "stop") {
@@ -517,7 +558,6 @@ fi`,
           await controlPost(port, "/scene", { name: rest[0], params: {} });
           setStatus(ctx, paths);
           ctx.ui.notify(`robotics: switched to scene '${rest[0]}'`, "info");
-          pi.sendUserMessage(OPEN_PANEL_NUDGE);
           return;
         }
         if (sub === "capture") {
@@ -538,7 +578,7 @@ fi`,
         const { running, session } = daemonStatus(paths);
         ctx.ui.notify(
           running && session
-            ? `robotics: ${session.scene} at ${session.viewer_url} \u2014 /robotics open to show the panel`
+            ? `robotics: ${session.scene} at ${session.viewer_url} \u2014 /robotics open to show it`
             : "robotics: stopped \u2014 /robotics start",
           "info",
         );

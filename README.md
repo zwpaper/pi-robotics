@@ -21,9 +21,10 @@ built directly on [`google-deepmind/mujoco`](https://github.com/google-deepmind/
 - **`robotics` tool** — start/stop a simulation, switch or load scenes, drive
   actuators and joints, step/reset physics, read `qpos`/`qvel`/sites/contacts,
   and capture frames.
-- **Live 3D panel** — the daemon runs MuJoCo Studio in headless web mode; the
-  extension declares its loopback viewer on the pi-dashboard canvas as a server
-  chip. Tap the chip to embed the live scene.
+- **Live 3D panel** — the daemon runs MuJoCo Studio in headless web mode and
+the extension opens it in your browser (`/robotics start`), with a pi-dashboard
+canvas chip as a secondary route. The same physics state the agent drives is
+what you see.
 - **Bundled MuJoCo skills** — the upstream `mujoco-python`,
   `mujoco-spec-editing`, `mujoco-rendering`, `mujoco-gui`, `mujoco-studio`,
   `mujoco-accelerated`, `mujoco-parity`, and `mujoco-deformables` skills, so the
@@ -96,22 +97,31 @@ Or via the tool (the agent does this automatically):
 { "action": "open_panel" }                  // alias: "panel"
 ```
 
-### Viewing the 3D panel (pi-dashboard)
+### Viewing the 3D panel
 
-`start` or any first simulation action declares the live scene on the
-**pi-dashboard canvas** as a server chip. Tap the chip to embed the interactive
-viewer (orbit, pan, inspect, play/pause). The declaration is made lazily, once
-per session, so the panel is one tap away from any robotics work.
+`start` and `open_panel` **open the live scene in your default browser** at
+`http://127.0.0.1:<viewer_port>/`, and declare a server chip on the
+**pi-dashboard canvas** as a secondary route. In the browser tab you get the
+full interactive MuJoCo Studio viewer (orbit, pan, inspect, play/pause) at 60
+FPS, driven by the same daemon the agent controls.
 
-**Why a shim proxy.** pi-dashboard embeds a declared loopback server through a
-same-origin path proxy at `/live/<id>/…`. The MuJoCo viewer builds its
-WebSocket URLs from `location.host` and fetches `/model` with root-absolute
-paths, which break under that prefix. The extension therefore serves the viewer
-through a tiny loopback **panel shim proxy** (`panel-shim.ts`) that injects a
-shim rewriting `WebSocket`/`fetch` targets to the current directory, strips the
-viewer's duplicate COOP/COEP headers, and tunnels the `/state`, `/ui`, and
-`/drop` websockets. The proxy is transparent when opened top-level, so
-`http://127.0.0.1:<viewer_port>/` still works in any browser.
+**Why not the embedded canvas preview.** pi-dashboard renders a declared server
+inside a **sandboxed, opaque-origin iframe** (`sandbox="allow-scripts …"`, no
+`allow-same-origin`). Chromium's *Private Network Access* policy blocks
+`fetch()`/XHR from such an origin to loopback addresses, while allowing
+`<script>`/`<img>` subresources. The MuJoCo WASM client fetches its WASM binary
+and `/model` bundles with `fetch()`, so it cannot boot in that frame — verified:
+plain cross-origin iframes render the scene, sandboxed ones stay blank. The
+agent-host server also cannot see the browser, so a real tab is the reliable
+view.
+
+**Why the shim proxy still exists.** The daemon serves the viewer through a
+tiny loopback **panel shim proxy** (`panel-shim.ts`). It injects a shim that
+rewrites the viewer's root-absolute `WebSocket`/`fetch` targets to the current
+directory and tunnels `/state`, `/ui`, and `/drop`. That is exactly what is
+needed if the dashboard is ever configured to embed without the opaque-origin
+sandbox, and it makes the viewer work under any reverse-proxy prefix (for
+example a remote single-port tunnel). It is transparent when opened top-level.
 
 ## Architecture
 

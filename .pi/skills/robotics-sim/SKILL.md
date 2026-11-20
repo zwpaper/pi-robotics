@@ -36,10 +36,9 @@ Only one daemon runs per project. It is discovered through
 ## Workflow
 
 1. **Start** — `robotics` action `start`, optionally `{ scene: "arm3" }`. This
-   boots the daemon, waits for the viewer, and declares the live 3D scene on the
-   pi-dashboard canvas (a server chip the user taps to embed). The declaration is
-   made lazily too: the first `state`/`step`/`ctrl`/`scene`/`load` of a session
-   also declares it, so the panel is always one tap away.
+   boots the daemon, waits for the viewer, and opens the live 3D scene in the
+   user's browser. It also declares the scene on the pi-dashboard canvas (a
+   server chip) as a secondary route, lazily on the first sim action too.
 2. **Author** — switch scenes with `scene { name, params }` (built-ins:
    `arm3`, `box_drop`, `cartpole`, `falling_objects`, `table_task`, `empty`) or
    load a file with `load { path }`. To iterate on a scene, edit an MJCF file
@@ -50,27 +49,35 @@ Only one daemon runs per project. It is discovered through
 4. **Observe** — `state` returns `time`, `qpos`, `qvel`, `ctrl`, `ncon`, site
    positions, and model metadata (joint/actuator names). `capture { width,
    height }` saves an offscreen PNG.
-5. **Open the panel** — `open_panel` re-declares the live scene on the canvas if
-   the chip was dismissed.
+5. **Show the panel** — `open_panel` reopens the live scene in the browser if it
+   was closed.
 
 Always pair a physical-sounding claim with a measured number: call `state`
 after `step`/`ctrl` and report the returned `time`/`qpos`, never an estimated
 one.
 
-## Reading and writing the live panel
+## Showing the live panel
 
-`start` and `open_panel` call the pi-dashboard `canvas` tool with a loopback
-port. The dashboard shows a **server chip**; the user taps it to embed the 3D
-view. The port is the extension's **shim proxy** (`panel-shim.ts`), not the raw
-viewer: the proxy injects a shim so the viewer's root-absolute `/model`,
-`/state`, `/ui`, and `/drop` requests survive pi-dashboard's `/live/<id>/` path
-proxy. If the canvas tool is unavailable (pi running outside the dashboard), the
-tool returns the URL so the user can open it directly.
+`start` and `open_panel` **open the live scene in the user's default browser** at
+`http://127.0.0.1:<viewer_port>/` and also declare a server chip on the
+pi-dashboard canvas. Tell the user to watch that browser tab.
+
+The MuJoCo WASM viewer **cannot run in the pi-dashboard sandboxed preview**: the
+dashboard frames a declared server with `sandbox="allow-scripts"` (opaque
+origin), and Chromium's Private Network Access blocks the `fetch()` calls the
+WASM client needs for its WASM binary and `/model` bundles. Plain cross-origin
+iframes render fine; sandboxed ones stay blank (verified). If the user says the
+canvas preview is blank, that is expected — point them at the browser tab, or
+re-run `start` / `open_panel` to reopen it.
+
+The port declared to the canvas is the extension's **shim proxy**
+(`panel-shim.ts`), not the raw viewer: it injects a shim making the viewer's
+root-absolute `/model`, `/state`, `/ui`, and `/drop` requests work under any
+reverse-proxy prefix. It is transparent top-level.
 
 Commands: `/robotics start [scene]`, `/robotics open`, `/robotics scenes`,
 `/robotics scene <name>`, `/robotics capture`, `/robotics stop`, `/robotics
-status`. `/robotics open` (and `scene`, and `start`) ask the agent to call the
-`open_panel` tool, since command handlers cannot call the canvas tool directly.
+status`.
 
 ## Authoring scenes
 
