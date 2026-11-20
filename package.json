@@ -1,0 +1,16 @@
+{
+  "name": "pi-robotics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MuJoCo robotics simulation with a live 3D panel, as a pi extension",
+  "type": "module",
+  "pi": {
+    "extensions": [".pi/extensions/robotics/index.ts"],
+    "skills": [".pi/skills"]
+  },
+  "scripts": {
+    "typecheck": "tsc -p .pi/extensions/robotics/tsconfig.json",
+    "test:extension": "node scripts/test-extension.mjs",
+    "test:panel": "node scripts/test-panel-proxy.mjs"
+  }
+}

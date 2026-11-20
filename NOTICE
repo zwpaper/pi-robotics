@@ -1,0 +1,14 @@
+pi-robotics
+Copyright 2026
+
+This product includes software developed by Google DeepMind:
+
+  - The agent skills under .pi/skills/mujoco/ are copied from
+    google-deepmind/mujoco (doc/skills), licensed under Apache-2.0.
+
+  - The simulation and live-viewer design follows
+    google-deepmind/robotics-antigravity-plugin (Apache-2.0) and builds on
+    google-deepmind/mujoco (Apache-2.0).
+
+The `mujoco` Python package, `mujoco.studio`, and `mujoco_studio_wasm` are
+installed at runtime and remain under their own Apache-2.0 license.

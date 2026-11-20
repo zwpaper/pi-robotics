@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@earendil-works/pi-coding-agent": [
+        "/Users/kw/.pi/agent/install/releases/1.5.2/node_modules/@earendil-works/pi-coding-agent"
+      ],
+      "@earendil-works/pi-ai": [
+        "/Users/kw/.pi/agent/install/releases/1.5.2/node_modules/@earendil-works/pi-ai"
+      ],
+      "typebox": [
+        "/Users/kw/.pi/agent/install/releases/1.5.2/node_modules/typebox"
+      ]
+    }
+  },
+  "include": ["./*.ts"]
+}

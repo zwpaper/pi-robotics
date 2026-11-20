@@ -1,0 +1,7 @@
+# pi-robotics
+# MuJoCo Python bindings with the bundled Studio web viewer (WASM client).
+# 4.0.1 is the first release that ships `mujoco.studio` + `mujoco_studio_wasm`.
+mujoco>=4.0.1
+# Optional: offscreen frame capture via the `capture` action.
+imageio>=2.34
+pillow>=10.0
