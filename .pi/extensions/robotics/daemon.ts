@@ -20,7 +20,9 @@ export interface StartOptions {
   compact?: boolean;
 }
 
-const START_TIMEOUT_MS = 30000;
+// A first-time Menagerie fetch (e.g. Stretch, ~75 MB) happens before the daemon
+// publishes its session file, so allow generous startup time.
+const START_TIMEOUT_MS = 240000;
 const POLL_INTERVAL_MS = 250;
 
 function sleep(ms: number): Promise<void> {
