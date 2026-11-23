@@ -49,7 +49,9 @@ Only one daemon runs per project. It is discovered through
 4. **Observe** — `state` returns `time`, `qpos`, `qvel`, `ctrl`, `ncon`, site
    positions, and model metadata (joint/actuator names). `capture { width,
    height }` saves an offscreen PNG.
-5. **Show the panel** — `open_panel` reopens the live scene in the browser if it
+5. **Vision grasp loop** — to grasp by looking, run the `look`/`nudge` loop in
+   "Vision grasp loop" below (prefer a subagent — see that section).
+6. **Show the panel** — `open_panel` reopens the live scene in the browser if it
    was closed.
 
 Always pair a physical-sounding claim with a measured number: call `state`
@@ -84,23 +86,49 @@ paused. It reports the measured lift, e.g.
 object back. For a different object or placement, drive the arm yourself with
 `ctrl` on those actuators and read `state`.
 
-## LLM-in-the-loop vision (model sees the camera and drives)
+## Vision grasp loop (`look` → decide → `nudge`) — the model sees the camera
 
 `look { camera }` renders the robot camera and returns it as an **image in the
 tool result**, so the model actually sees the scene. `nudge { extend, lift,
-wrist, grip, settle }` applies relative actuator changes, lets the arm settle, and
-returns a **fresh image** plus the current actuator values. The model runs the
-loop itself:
+wrist, grip, settle }` applies **relative** actuator changes, lets the arm
+settle, and returns a **fresh image** plus the current actuator values. `clear`
+releases the manual hold; `reset` returns the object.
 
-1. `look` — see where the gripper and object are.
-2. `nudge` — move a little.
-3. repeat until the gripper is over the object.
-4. `nudge { grip: -0.005 }` to close, `nudge { lift: 0.3 }` to raise.
-5. `clear` to release the manual hold.
+The loop the model runs:
 
-This is the model perceiving and deciding every step; it needs `imageio` +
-`pillow`. Slower and coarser than `vision_pick`; use it when you want the model
-in the loop, and `vision_pick` for a fast autonomous grasp.
+1. `look` — see where the gripper and the object are.
+2. `nudge` — move a little (`extend` toward the object, `lift` to the object's
+   height, `wrist` to aim; the image and `ctrl` come back).
+3. repeat 1–2 until the gripper is over the object.
+4. `nudge { grip: -0.005 }` to close; `nudge { lift: 0.3 }` to raise.
+5. `clear`.
+
+### Prefer a subagent for this loop
+
+This loop is long (many image-bearing tool calls) and self-contained. **If
+subagents are available, delegate it to one** — keep the image-heavy iteration
+out of the main conversation (a real run here used ~8 frames and several
+retries):
+
+- Spawn a subagent (e.g. the pi-subagents tool) with a task like: *"In this
+  project the pi-robotics daemon is running the Stretch scene. Run a
+  `look`/`nudge` vision loop to pick up the tabletop object, save every frame,
+  then report the sequence and the final result."*
+- Give the subagent the cwd and the goal; it owns `look`/`nudge`/`grip`/`lift`
+  and returns a short summary (plus the frame files it saved).
+- A subagent may not have this project's `robotics` tool loaded. Give it the
+  fallback: drive the daemon over loopback HTTP — read `control_port` from
+  `<cwd>/.pi/robotics/session.json`, then `POST /command`
+  `{"cmd":"look","camera":"camera_rgb"}` and
+  `{"cmd":"nudge","extend":…,"lift":…,"wrist":…,"grip":…}`; decode
+  `png_base64` into a file and inspect it. `capture`/`/capture` saves a PNG too.
+- Only run the loop inline if no subagent tool is available, or the user asks to
+  watch each step in the main thread.
+
+Rules for the loop: never claim a pose without a fresh `look` (or `state`);
+`nudge` values are deltas, `grip` is absolute (0.04 open, -0.005 closed);
+needs `imageio` + `pillow`. Slower/coarser than `vision_pick` — use this when the
+model must perceive and decide, and `vision_pick` for a fast autonomous grasp.
 
 ## Vision-based grasping (closed loop)
 
