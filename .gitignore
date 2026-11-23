@@ -6,3 +6,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 captures/
+
+# VLABench downloaded assets (huge; fetch via scripts/download_assets.py)
+examples/vlabench/obj/
+examples/vlabench/scenes/

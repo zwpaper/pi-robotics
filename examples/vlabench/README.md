@@ -40,17 +40,27 @@ as a standalone MJCF for the pi-robotics daemon.
 ## This example
 
 `models/franka_emika_panda/` is vendored from the VLABench repo (Apache-2.0):
-`panda.xml` + `hand.xml` + meshes. `panda_mounted.xml` is `panda.xml` with the
-robot mounted on the table like `robot_config.json`. `scene_select_mahjong.xml`
-adds the work table (top `z = 0.78`), a row of 7 mahjong tiles (`tile_<value>_<suite>`,
-suites man/pin/sou, faces coloured by suit), a tray, and cameras
-(`top_cam`, `front_cam`, plus the panda's `Franka_wrist_cam`). The VLABench
-instruction is `"Pick up the mahjong of 3 sou"` -> put `tile_3_sou` in the tray.
+`panda.xml` + `hand.xml` + meshes. `panda_mounted.xml` mounts the robot on the
+table like `robot_config.json`.
+
+`scene_select_mahjong.xml` uses the **real VLABench mahjong asset**
+(`obj/meshes/mahjong/mahjong.xml`: meshes `majong_0/1/2` + the `value_suite`
+textures/materials) exactly as VLABench's `Mahjong` component builds a tile
+(base + white + face geoms + a grasp site). The asset's meshes/textures are
+copied next to the robot under `assets/mahjong/` (588 KB) so the robot's
+`meshdir="assets"` resolves them. The scene adds the work table (top `z = 0.78`),
+6 real tiles `tile_<value>_<suite>` in a row, a tray, and cameras `top_cam`,
+`front_cam` (plus the panda's `Franka_wrist_cam`).
+The VLABench instruction is `"Pick up the mahjong of 3 sou"` -> put `tile_3_sou`
+in the tray.
+
+The downloaded `obj/` (9.5 GB) and `scenes/` (1.8 GB) trees are **git-ignored**;
+they come from `scripts/download_assets.py` in the VLABench repo.
 
 ```text
 /robotics load examples/vlabench/models/franka_emika_panda/scene_select_mahjong.xml
 ```
 
-(mahjong tile meshes are not in the VLABench git repo — they need the Google
-Drive `obj.zip` — so the tiles here are modelled as boxes with suit-coloured
-faces, keeping the `value_suite` naming and layout.)
+`scenes/` holds VLABench's full room scenes (`kitchen_0`, `lab_0`, ... plus
+`default/empty.xml`) if you want to build task scenes on a room instead of a bare
+table.
