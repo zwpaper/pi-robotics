@@ -17,6 +17,7 @@ import numpy as np
 import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
+from pi_robotics import ik
 from pi_robotics.reel import Recorder
 
 # Free-camera defaults for the 3D-panel column of an operation reel.
@@ -130,6 +131,7 @@ class SharedState:
             "ctrl": ctrl.tolist(),
             "ncon": int(data.ncon),
             "sites": self._site_positions(model, data),
+            "bodies": self._body_positions(model, data),
         }
         with self._lock:
             step = int(self._state.get("step") or 0) + 1
@@ -144,6 +146,19 @@ class SharedState:
             name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_SITE, sid)
             if name:
                 out[name] = data.site_xpos[sid].tolist()
+        return out
+
+    def _body_positions(
+        self, model: mujoco.MjModel, data: mujoco.MjData
+    ) -> dict[str, list[float]]:
+        # Body world positions let an agent localize objects/props by name.
+        if model.nbody > 200:
+            return {}
+        out: dict[str, list[float]] = {}
+        for bid in range(model.nbody):
+            name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, bid)
+            if name:
+                out[name] = [round(float(v), 4) for v in data.xpos[bid]]
         return out
 
     # -- getters (control thread) -------------------------------------------
@@ -579,6 +594,8 @@ class ControlServer:
             return self._frame(body)
         if cmd == "nudge":
             return self._nudge(body)
+        if cmd == "move_ee":
+            return self._move_ee(body)
         if cmd == "reel":
             return self._reel(body)
         if cmd == "reel_clear":
@@ -693,6 +710,11 @@ class ControlServer:
                 )
         if body.get("grip") is not None:
             current["grip"] = clamp("grip", float(body["grip"]))
+        # Generic control for any robot: {actuator_name: delta}.
+        actuators = body.get("actuators") or {}
+        for name, delta in actuators.items():
+            if name in current:
+                current[name] = clamp(name, current[name] + float(delta))
 
         self._sim_plugin.set_servo(current)
         time.sleep(max(0.1, min(float(body.get("settle", 0.8)), 5.0)))
@@ -706,10 +728,94 @@ class ControlServer:
             "ok": frame.get("ok", False),
             "error": frame.get("error"),
             "ctrl": view,
+            "actuators": {k: round(v, 4) for k, v in current.items()},
             "png_base64": frame.get("png_base64"),
             "panel_base64": frame.get("panel_base64"),
             "recorded": frame.get("recorded"),
         }
+
+    def _move_ee(self, body: dict[str, Any]) -> dict[str, Any]:
+        """IK-moves a site to a target world pose along a straight EE path.
+
+        The site is walked toward the target in ``steps`` waypoints (each solved
+        by IK and held briefly), so the end-effector follows a predictable path
+        instead of a joint-space swing that can sweep props off the table.
+        """
+        model = self._handle.model
+        if model is None:
+            return {"ok": False, "error": "no model loaded"}
+        pos = body.get("pos")
+        if not pos or len(pos) != 3:
+            return {"ok": False, "error": "'pos' [x,y,z] required"}
+        site = str(body.get("site") or "pinch_site")
+        site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, site)
+        if site_id < 0:
+            return {"ok": False, "error": f"unknown site '{site}'"}
+        quat = body.get("quat")
+        steps = max(1, min(int(body.get("steps", 6)), 40))
+        total = max(0.2, min(float(body.get("settle", 1.5)), 6.0))
+        target = np.asarray(pos, dtype=float)
+
+        def current_ctrl(snapshot: dict[str, Any]) -> dict[str, float]:
+            values: dict[str, float] = {}
+            ctrl_list = snapshot.get("ctrl") or []
+            for i in range(model.nu):
+                name = (
+                    mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
+                    or f"act{i}"
+                )
+                values[name] = float(ctrl_list[i]) if i < len(ctrl_list) else 0.0
+            return values
+
+        last_error: dict[str, Any] = {}
+        for step in range(1, steps + 1):
+            snapshot = self._state.snapshot()
+            qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
+            # Current site position from a forward pass over the snapshot.
+            probe = mujoco.MjData(model)
+            if qpos.size == model.nq:
+                probe.qpos[:] = qpos
+            mujoco.mj_forward(model, probe)
+            start = probe.site_xpos[site_id].copy()
+            waypoint = start + (target - start) * (step / steps)
+            try:
+                solution = ik.solve(model, qpos, site, waypoint, quat)
+            except Exception as exc:  # noqa: BLE001
+                return {"ok": False, "error": str(exc)}
+            current = current_ctrl(snapshot)
+            for actuator in range(model.nu):
+                if int(model.actuator_trntype[actuator]) != int(
+                    mujoco.mjtTrn.mjTRN_JOINT
+                ):
+                    continue
+                joint = int(model.actuator_trnid[actuator, 0])
+                jname = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, joint)
+                if jname in solution["joints"]:
+                    aname = (
+                        mujoco.mj_id2name(
+                            model, mujoco.mjtObj.mjOBJ_ACTUATOR, actuator
+                        )
+                        or f"act{actuator}"
+                    )
+                    current[aname] = solution["joints"][jname]
+            self._sim_plugin.set_servo(current)
+            last_error = solution["error"]
+            self._sleep(total / steps)
+        frame = self._frame(body)
+        return {
+            "ok": frame.get("ok", False),
+            "error": frame.get("error"),
+            "site": site,
+            "target": [round(float(v), 4) for v in target],
+            "ik_error": last_error,
+            "steps": steps,
+            "png_base64": frame.get("png_base64"),
+            "panel_base64": frame.get("panel_base64"),
+            "recorded": frame.get("recorded"),
+        }
+
+    def _sleep(self, seconds: float) -> None:
+        time.sleep(max(0.0, seconds))
 
     def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
         hold = body.get("hold")
