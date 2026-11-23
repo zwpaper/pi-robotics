@@ -1,0 +1,105 @@
+<!--
+  VLABench `select_mahjong` example scene.
+
+  A Franka Emika Panda (VLABench's own panda.xml, mounted on the table at
+  [0,-0.4,0.78] euler [0,0,1.57] as in VLABench/configs/robot_config.json) in
+  front of a row of mahjong tiles modelled after VLABench's `Mahjong` component
+  (`{value}_{suite}`, suites man/pin/sou) plus a tray.
+
+  Instruction (VLABench): "Pick up the mahjong of 3 sou" -> put tile_3_sou in the tray.
+
+  Load: robotics { action: "load", path: "examples/vlabench/models/franka_emika_panda/scene_select_mahjong.xml" }
+-->
+<mujoco model="vlabench select_mahjong">
+  <include file="panda_mounted.xml"/>
+
+  <statistic center="0 0 0.85" extent="0.9" meansize="0.03"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="tabletop" rgba="0.62 0.45 0.30 1"/>
+    <material name="tray" rgba="0.30 0.30 0.34 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 2" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- work table (top at 0.78, the robot is mounted on it) -->
+    <body name="table" pos="0 0 0.39">
+      <geom name="table_top" type="box" size="0.45 0.5 0.39" material="tabletop"/>
+    </body>
+
+    <!-- tray (VLABench container) -->
+    <body name="tray" pos="0.28 0.14 0.785">
+      <geom name="tray_bottom" type="box" size="0.08 0.06 0.004" pos="0 0 0.004" material="tray"/>
+      <geom name="tray_wall_x0" type="box" size="0.004 0.06 0.012" pos="0.08 0 0.012" material="tray"/>
+      <geom name="tray_wall_x1" type="box" size="0.004 0.06 0.012" pos="-0.08 0 0.012" material="tray"/>
+      <geom name="tray_wall_y0" type="box" size="0.08 0.004 0.012" pos="0 0.06 0.012" material="tray"/>
+      <geom name="tray_wall_y1" type="box" size="0.08 0.004 0.012" pos="0 -0.06 0.012" material="tray"/>
+      <site name="site_tray" pos="0 0 0.02" size="0.01" rgba="0.1 0.9 0.2 0.6"/>
+    </body>
+
+    <!-- mahjong tiles (row along x, in front of the robot) -->
+    <body name="tile_3_sou" pos="-0.240 0.06 0.786">
+      <freejoint name="tile_3_sou_free"/>
+      <geom name="tile_3_sou_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_3_sou_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.12 0.6 0.25 1"/>
+      <site name="site_tile_3_sou" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_1_man" pos="-0.160 0.06 0.786">
+      <freejoint name="tile_1_man_free"/>
+      <geom name="tile_1_man_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_1_man_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.85 0.15 0.12 1"/>
+      <site name="site_tile_1_man" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_5_pin" pos="-0.080 0.06 0.786">
+      <freejoint name="tile_5_pin_free"/>
+      <geom name="tile_5_pin_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_5_pin_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.15 0.35 0.85 1"/>
+      <site name="site_tile_5_pin" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_2_sou" pos="0.000 0.06 0.786">
+      <freejoint name="tile_2_sou_free"/>
+      <geom name="tile_2_sou_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_2_sou_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.12 0.6 0.25 1"/>
+      <site name="site_tile_2_sou" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_7_man" pos="0.080 0.06 0.786">
+      <freejoint name="tile_7_man_free"/>
+      <geom name="tile_7_man_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_7_man_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.85 0.15 0.12 1"/>
+      <site name="site_tile_7_man" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_4_pin" pos="0.160 0.06 0.786">
+      <freejoint name="tile_4_pin_free"/>
+      <geom name="tile_4_pin_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_4_pin_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.15 0.35 0.85 1"/>
+      <site name="site_tile_4_pin" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+    <body name="tile_9_sou" pos="0.240 0.06 0.786">
+      <freejoint name="tile_9_sou_free"/>
+      <geom name="tile_9_sou_body" type="box" size="0.013 0.0165 0.006" rgba="0.94 0.92 0.85 1" mass="0.02"/>
+      <geom name="tile_9_sou_face" type="box" size="0.0110 0.0140 0.0007" pos="0 0 0.0057" rgba="0.12 0.6 0.25 1"/>
+      <site name="site_tile_9_sou" pos="0 0 0" size="0.004" rgba="0.1 0.1 0.1 0.5"/>
+    </body>
+
+    <!-- cameras for the video -->
+    <camera name="top_cam" pos="0 0.05 1.60" quat="1 0 0 0" fovy="55"/>
+    <camera name="front_cam" pos="0 -1.25 1.05" quat="0.775 0.316 0 0" fovy="45"/>
+  </worldbody>
+
+  <keyframe>
+    <key name="home" qpos="0 -1.04 0 -2.56 0 1.55 -2.32 0.04 0.04
+                           -0.24 0.06 0.786 1 0 0 0   -0.16 0.06 0.786 1 0 0 0   -0.08 0.06 0.786 1 0 0 0   0.00 0.06 0.786 1 0 0 0   0.08 0.06 0.786 1 0 0 0   0.16 0.06 0.786 1 0 0 0   0.24 0.06 0.786 1 0 0 0"/>
+  </keyframe>
+</mujoco>
