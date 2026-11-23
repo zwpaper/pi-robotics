@@ -57,6 +57,7 @@ const ACTIONS = [
   "reel_clear",
   "record_start",
   "record_stop",
+  "chapter",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -215,7 +216,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, record_start, record_stop, pick, vision_pick, vision_stop, cameras, stream.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, record_start, record_stop, chapter, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -264,10 +265,16 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         Type.Array(Type.String(), { description: "camera names to capture on 'look' (default: [camera])." }),
       ),
       panel: Type.Optional(
-        Type.Boolean({ description: "also return the 3D-panel overview image on 'look'/'nudge'." }),
+        Type.Boolean({
+          description:
+            "include the 3D-panel overview image on 'look'/'nudge'/'move_ee' (default false: the model sees only the robot CAMERA image, like real hardware).",
+        }),
       ),
       reel_name: Type.Optional(
         Type.String({ description: "output name (no extension) for action 'reel'." }),
+      ),
+      title: Type.Optional(
+        Type.String({ description: "chapter title for action 'chapter' (marks a new attempt)." }),
       ),
       pos: Type.Optional(
         Type.Array(Type.Number(), {
@@ -295,6 +302,9 @@ export default function roboticsExtension(pi: ExtensionAPI) {
           description: "seconds each recorded frame is shown on 'reel' (default: play at the recorded real pace).",
         }),
       ),
+      cols: Type.Optional(
+        Type.Number({ description: "grid columns for 'reel' (default: auto, square-ish)." }),
+      ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
@@ -318,7 +328,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
             "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site} · clear",
-            "Reel:       record_start {fps,cameras} → do the task → reel {height} builds the video (record_stop/reel_clear)",
+            "Reel:       record_start {fps,cameras} → chapter {title} per attempt → reel {height} (record_stop/reel_clear)",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
@@ -589,6 +599,7 @@ fi`,
             cmd: "look",
             camera: cameras[0],
             ...(params.cameras ? { cameras: params.cameras } : {}),
+            panel: params.panel ?? false,
             width: params.width ?? 640,
             height: params.height ?? 480,
           });
@@ -634,6 +645,7 @@ fi`,
             actuators: params.actuators,
             settle: params.settle,
             camera: params.camera ?? "camera_rgb",
+            panel: params.panel ?? false,
             width: params.width ?? 640,
             height: params.height ?? 480,
           });
@@ -686,6 +698,7 @@ fi`,
               steps: params.steps ?? 6,
               settle: params.settle ?? 1.5,
               camera: params.camera ?? "camera_rgb",
+              panel: params.panel ?? false,
               width: params.width ?? 640,
               height: params.height ?? 480,
             },
@@ -723,6 +736,11 @@ fi`,
           const res = await controlPost(port, "/command", { cmd: "record_stop" });
           return ok(json(res.body), { action });
         }
+        case "chapter": {
+          // Marks a new attempt in the recorded reel (a QuickTime chapter).
+          const res = await controlPost(port, "/command", { cmd: "chapter", title: params.title });
+          return ok(json(res.body), { action });
+        }
         case "reel": {
           // Compose the recorded 3D-panel + camera frames into a video.
           const res = await controlPost(
@@ -733,6 +751,7 @@ fi`,
               fps: params.fps ?? 10,
               hold: params.hold,
               height: params.height ?? 480,
+              cols: params.cols,
               name: params.reel_name,
             },
             120000,
@@ -746,6 +765,10 @@ fi`,
             seconds?: number;
             hold_seconds?: number[];
             columns?: string[];
+            layout?: string;
+            rows?: number;
+            cols?: number;
+            chapters?: Array<{ start: number; end: number; title: string }>;
             error?: string;
           };
           if (!body?.ok || !body.path) {
@@ -754,7 +777,8 @@ fi`,
           if (body.path) await openInBrowser(body.path);
           return ok(
             `Operation reel (${body.format}, ${body.steps} steps / ${body.frames} frames, ${body.seconds}s, ` +
-              `columns: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
+              `${body.layout ?? "grid"} ${body.rows}x${body.cols}, ${(body.chapters ?? []).length} chapter(s); ` +
+              `sources: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
             { action, ...body },
           );
         }

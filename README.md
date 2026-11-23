@@ -155,18 +155,18 @@ than `vision_pick`, which is why both exist — use `vision_pick` for a fast,
 reliable grasp, and `look`/`nudge` when you want the model to perceive and
 decide each step.
 
-#### Operation video (3D panel + cameras)
+#### Operation video (3D panel + every camera, as a grid)
 
-Every `look`/`nudge` also **records one 3D-panel frame plus one frame per
-camera**, in order. When the task is done, `reel { fps, height }` composes them
-into a video: the 3D-panel column plus one column per camera, side by side,
-playing the steps in order (one camera → one column, several → one each). Each
-frame is held for the real elapsed time between recordings, so the video plays
-at the pace the operation actually happened; pass `hold` (seconds per image) to
-force a fixed, slower pace. Output `<cwd>/.pi/robotics/runtime/reels/<name>.mp4`
-(needs `ffmpeg`; GIF fallback) and opens it. `look { cameras: ["camera_rgb",
-"camera_depth"] }` selects cameras per step; `reel_clear` starts a new take;
-`look`/`nudge { panel: true }` also returns the panel image.
+`record_start { fps }` captures the **3D-panel overview plus every camera in the
+model**, continuously. `chapter { title }` marks each **attempt** (record every
+try, including failed ones); `reel { height, cols }` composes them into a video
+with the tiles in a **grid** (3D panel first, then every camera) and a
+**QuickTime chapter track** for the attempts.
+
+The **LLM never sees the 3D panel image** — `look`/`nudge`/`move_ee` return only
+the robot **camera** image(s) (add `panel: true` to override), but the panel is
+always captured for the video. Camera-only input is deliberate: it matches real
+hardware, where no free-camera 3D view exists.
 
 ### Vision-based grasping (camera → detect → control)
 

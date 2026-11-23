@@ -213,10 +213,11 @@ def _render_png(
     try:
         cam = mujoco.MjvCamera()
         if camera:
+            cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, camera)
+            if cam_id < 0:
+                raise ValueError(f"unknown camera '{camera}'")
             cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
-            cam.fixedcamid = mujoco.mj_name2id(
-                model, mujoco.mjtObj.mjOBJ_CAMERA, camera
-            )
+            cam.fixedcamid = cam_id
         else:
             cam.type = mujoco.mjtCamera.mjCAMERA_FREE
             if "distance" in opts:
@@ -610,6 +611,11 @@ class ControlServer:
             return self._record_start(body)
         if cmd == "record_stop":
             return self._record_stop()
+        if cmd == "chapter":
+            count = self.recorder.mark_chapter(
+                str(body.get("title") or f"attempt {self.recorder.count() + 1}")
+            )
+            return {"ok": True, "chapter": count}
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
@@ -644,14 +650,15 @@ class ControlServer:
         width = min(int(body.get("width", 640)), 1280)
         height = min(int(body.get("height", 480)), 960)
         cam_pngs: dict[str, bytes] = {}
+        cam_error: str | None = None
         for name in cameras:
             try:
                 with self._render_lock:
                     cam_pngs[name] = render_png_from_state(
                         model, snapshot, width, height, name, None
                     )
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as exc:  # noqa: BLE001
+                cam_error = f"{name}: {exc}"
         panel_opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
         panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
         panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
@@ -668,12 +675,16 @@ class ControlServer:
         main = cam_pngs.get(requested) or (next(iter(cam_pngs.values())) if cam_pngs else None)
         return {
             "ok": main is not None,
-            "error": None if main is not None else "render failed",
+            "error": None if main is not None else (cam_error or "render failed"),
             "camera": requested,
             "cameras": cameras,
             "model_cameras": model_cameras,
             "png_base64": base64.b64encode(main).decode("ascii") if main else None,
-            "panel_base64": base64.b64encode(panel).decode("ascii") if panel else None,
+            "panel_base64": (
+                base64.b64encode(panel).decode("ascii")
+                if panel and body.get("panel")
+                else None
+            ),
             "recorded": self.recorder.count(),
         }
 
@@ -836,10 +847,12 @@ class ControlServer:
         if self._handle.model is None:
             return {"ok": False, "error": "no model loaded"}
         fps = max(1, min(int(body.get("fps", 6)), 30))
-        cameras = body.get("cameras")
+        # The reel must show every camera: always capture all model cameras
+        # (union with any explicitly requested extras).
+        requested = [str(c) for c in (body.get("cameras") or [])]
+        cameras = list(dict.fromkeys(requested + self.list_cameras()))
         if not cameras:
-            cameras = self.list_cameras() or [str(body.get("camera") or "camera_rgb")]
-        cameras = [str(c) for c in cameras]
+            cameras = [str(body.get("camera") or "camera_rgb")]
         width = min(int(body.get("width", 640)), 1280)
         height = min(int(body.get("height", 480)), 960)
         opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
@@ -901,6 +914,7 @@ class ControlServer:
                 hold=None if hold is None else float(hold),
                 tail=float(body.get("tail", 0.8)),
                 height=int(body.get("height", 480)),
+                cols=(int(body["cols"]) if body.get("cols") else None),
                 name=str(body.get("name", "operation")),
             )
         except Exception as exc:  # noqa: BLE001

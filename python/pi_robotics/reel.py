@@ -1,14 +1,16 @@
-"""Operation reel: compose per-`look` frames (3D panel + cameras) into a video.
+"""Operation reel: compose recorded frames (3D panel + all cameras) into a video.
 
-Each `look`/`nudge` records one *step*: a 3D overview frame (the scene the 3D
-panel shows) plus one frame per camera. `build()` lays the columns out side by
-side, in first-seen order (panel first, then cameras), and encodes an MP4 with
-the system ``ffmpeg`` (falling back to an animated GIF via Pillow).
+A recording captures one *step* per frame: a 3D overview frame (what the 3D
+panel shows) plus one frame per camera. ``build()`` lays the tiles out in a
+**grid** (the 3D panel first, then every camera), writes an MP4 with the system
+``ffmpeg`` (falling back to an animated GIF via Pillow) and attaches a
+**QuickTime chapter track** for the recorded attempts.
 """
 
 from __future__ import annotations
 
 import io
+import math
 import pathlib
 import shutil
 import subprocess
@@ -30,12 +32,25 @@ class Recorder:
         self._steps: list[dict[str, Any]] = []
         self._cameras: list[str] = []
         self._stamps: list[float] = []
+        # (recorded-step index, title) marks used to build a chapter track.
+        self._chapters: list[tuple[int, str]] = []
 
     def clear(self) -> None:
         with self._lock:
             self._steps = []
             self._cameras = []
             self._stamps = []
+            self._chapters = []
+
+    def mark_chapter(self, title: str) -> int:
+        """Marks the start of a new attempt/chapter at the current step."""
+        with self._lock:
+            self._chapters.append((len(self._steps), str(title or "attempt")))
+            return len(self._chapters)
+
+    def chapters(self) -> list[tuple[int, str]]:
+        with self._lock:
+            return list(self._chapters)
 
     def add(self, panel_png: bytes, cameras: dict[str, bytes]) -> int:
         with self._lock:
@@ -64,12 +79,14 @@ class Recorder:
         max_hold: float = 6.0,
         tail: float = 0.8,
         height: int = 360,
+        cols: int | None = None,
         name: str = "operation",
     ) -> dict[str, Any]:
         with self._lock:
             steps = list(self._steps)
             cameras = list(self._cameras)
             stamps = list(self._stamps)
+            chapters = list(self._chapters)
         if not steps:
             raise ValueError("no frames recorded; run 'look' or 'nudge' first")
 
@@ -95,8 +112,29 @@ class Recorder:
         # plays smoothly rather than as a slow slide show.
         if hold is None and min(durations) < 0.08 and max(durations) < 0.25:
             durations = [max(0.08, min(max_hold, d)) for d in durations]
+        # Chapter boundaries (start seconds per recorded step) for the attempts.
+        starts: list[float] = []
+        acc = 0.0
+        for d in durations:
+            starts.append(acc)
+            acc += d
+        total_seconds = acc
+
+        def chapter_spans() -> list[tuple[float, float, str]]:
+            spans: list[tuple[float, float, str]] = []
+            for i, (idx, title) in enumerate(chapters):
+                start = starts[idx] if 0 <= idx < len(starts) else (starts[-1] if starts else 0.0)
+                nxt = chapters[i + 1][0] if i + 1 < len(chapters) else len(starts)
+                end = starts[nxt] if 0 <= nxt < len(starts) else total_seconds
+                spans.append((start, max(end, start + 0.2), title))
+            return spans
+        # Grid layout: the 3D panel + all cameras, arranged in a grid.
         columns = [PANEL_COLUMN, *cameras]
         columns_cams = cameras
+        n_tiles = len(columns)
+        grid_cols = int(cols) if cols else max(1, math.ceil(math.sqrt(n_tiles)))
+        grid_cols = max(1, min(grid_cols, n_tiles))
+        grid_rows = max(1, math.ceil(n_tiles / grid_cols))
 
         def load(png: bytes) -> Image.Image:
             image = Image.open(io.BytesIO(png)).convert("RGB")
@@ -129,17 +167,27 @@ class Recorder:
         frame_width = sum(widths.values())
         frame_dir = out_dir / f"{name}_frames"
         frame_dir.mkdir(parents=True, exist_ok=True)
+        # Per grid-column widths (tiles in a grid column share a width).
+        grid_col_widths = [0] * grid_cols
+        for i, col in enumerate(columns):
+            c = i % grid_cols
+            grid_col_widths[c] = max(grid_col_widths[c], widths[col])
+        frame_width = sum(grid_col_widths)
+        frame_height = grid_rows * height
+
+        def cell_x(c: int) -> int:
+            return sum(grid_col_widths[:c])
+
         encoded = 0
         for i, row in enumerate(tiles):
-            canvas = Image.new("RGB", (frame_width, height), _PLACEHOLDER)
-            x = 0
-            for col in columns:
+            canvas = Image.new("RGB", (frame_width, frame_height), _PLACEHOLDER)
+            for j, col in enumerate(columns):
                 image = row.get(col)
                 if image is None:
-                    x += widths[col]
                     continue
-                canvas.paste(image, (x, 0))
-                x += widths[col]
+                r, c = divmod(j, grid_cols)
+                x = cell_x(c) + (grid_col_widths[c] - image.width) // 2
+                canvas.paste(image, (x, r * height))
             # Hold each recorded frame for its duration (repeat at the output
             # frame rate) so the video is readable instead of a fast flip-book.
             repeats = max(1, round(durations[i] * fps))
@@ -149,6 +197,7 @@ class Recorder:
 
         out_dir.mkdir(parents=True, exist_ok=True)
         ffmpeg = shutil.which("ffmpeg")
+        spans = chapter_spans()
         if ffmpeg:
             output = out_dir / f"{name}.mp4"
             command = [
@@ -160,6 +209,21 @@ class Recorder:
                 str(fps),
                 "-i",
                 str(frame_dir / "frame_%04d.png"),
+            ]
+            meta_path = out_dir / f".{name}.chapters.txt"
+            if spans:
+                lines = [";FFMETADATA1"]
+                for start, end, title in spans:
+                    lines += [
+                        "[CHAPTER]",
+                        "TIMEBASE=1/1000",
+                        f"START={int(round(start * 1000))}",
+                        f"END={int(round(end * 1000))}",
+                        f"title={title}",
+                    ]
+                meta_path.write_text("\n".join(lines) + "\n")
+                command += ["-i", str(meta_path), "-map", "0:v:0", "-map_metadata", "1"]
+            command += [
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -177,6 +241,7 @@ class Recorder:
             try:
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 shutil.rmtree(frame_dir, ignore_errors=True)
+                meta_path.unlink(missing_ok=True)
                 return {
                     "path": str(output),
                     "format": "mp4",
@@ -184,7 +249,14 @@ class Recorder:
                     "frames": encoded,
                     "seconds": round(sum(durations), 2),
                     "hold_seconds": [round(d, 2) for d in durations],
+                    "chapters": [
+                        {"start": round(s, 2), "end": round(e, 2), "title": t}
+                        for s, e, t in spans
+                    ],
                     "columns": columns,
+                    "layout": "grid",
+                    "rows": grid_rows,
+                    "cols": grid_cols,
                     "fps": fps,
                 }
             except subprocess.CalledProcessError:
@@ -212,5 +284,8 @@ class Recorder:
             "seconds": round(sum(durations), 2),
             "hold_seconds": [round(d, 2) for d in durations],
             "columns": columns,
+            "layout": "grid",
+            "rows": grid_rows,
+            "cols": grid_cols,
             "fps": fps,
         }

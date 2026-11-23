@@ -129,35 +129,36 @@ retries):
 - Only run the loop inline if no subagent tool is available, or the user asks to
   watch each step in the main thread.
 
-## Operation video (3D panel + cameras) — independent capability
+## Operation video (3D panel + all cameras, as a grid) — independent capability
 
-Whenever you `look`/`nudge`, the daemon **records one 3D-panel frame plus one
-frame per camera** for that step, in order. This is independent of the grasp
-itself: any `look`/`nudge` sequence can be turned into a video afterwards.
+Whenever recording is active, the daemon captures the **3D-panel overview plus
+every camera in the model**, one step per frame. This is independent of the task:
+any run can be turned into a video.
 
-- `look { cameras: ["camera_rgb", "camera_depth"] }` captures every listed camera
-  for that step (default: the single `camera`).
-- `reel { fps, height, hold, reel_name }` composes the recording into an **operation
-  video**: the 3D-panel column plus one column per camera, side by side, playing
-  the steps in order. Output: `<cwd>/.pi/robotics/runtime/reels/<name>.mp4`
-  (needs `ffmpeg`; falls back to an animated GIF), and it is opened for the user.
-  **Pacing:** each recorded frame is held for the real time that elapsed between
-  recordings (each `nudge` waits for the arm to settle), so the video plays at
-  the pace the operation actually happened and stays readable. Pass `hold`
-  (seconds per image) to force a fixed time, e.g. `reel { hold: 1.5 }`; `fps` is
-  only the output frame rate (default 10).
-- `reel_clear` resets the recording before starting a new take.
-- `look`/`nudge { panel: true }` also returns the 3D-panel image so the model can
-  see it (by default only the camera image is returned, to save context).
+- `record_start { fps, height, cols }` — **continuous** capture of the 3D panel
+  + **all** model cameras (it does not restrict to one camera) at `fps`; the reel
+  is then a real video of the whole operation.
+- `chapter { title }` — marks a new **attempt**; the reel gets a QuickTime
+  **chapter track** so each attempt is a chapter (use it for every try, not just
+  the best one — keep the failed attempts too).
+- `record_stop`, then `reel { height, cols, reel_name, hold }` — composes the
+  frames into an MP4. Tiles are laid out in a **grid** (3D panel first, then
+  every camera; `cols` defaults to a square-ish arrangement), encoded
+  `libx264 -crf 18`, and the chapter track is attached. `reel_clear` starts a new
+  take.
+- The **LLM never sees the 3D panel image**: `look`/`nudge`/`move_ee` return only
+  the robot **camera** image(s) unless `panel: true` is passed, but the panel is
+  always captured for the video. (Camera-only input matches real hardware; the
+  panel is a free-camera render that no real robot has.)
 
-Layout rule: columns are laid out in first-seen order with the 3D panel first,
-then the cameras. One camera → one column; several → one column each; a camera
-that first appears on a later step gets a blank column in earlier frames.
+Layout rule: the 3D panel is tile 0, then the cameras in first-seen order; one
+camera → one tile, several → one tile each. A camera that first appears later
+gets a blank tile in earlier frames.
 
 With the reel, a subagent's run is self-documenting: the daemon records while
-the child drives `look`/`nudge`; afterwards **either the child or the parent**
-can call `reel` (the recorder lives in the daemon, shared across the session).
-Typical finish: `reel { fps: 10 }` then report the video path.
+the child drives the robot; afterwards either the child or the parent can `reel`
+(the recorder lives in the daemon). Typical finish: `record_stop` →
+`reel { fps: 10, height: 480 }` → report the video path.
 
 Rules for the loop: never claim a pose without a fresh `look` (or `state`);
 `nudge` values are deltas, `grip` is absolute (0.04 open, -0.005 closed);
