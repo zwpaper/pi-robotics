@@ -24,6 +24,8 @@ import pathlib
 import re
 import shutil
 
+import numpy as np
+
 TASKS = [
     "DiningPlaceBananaInBowl",
     "ToolsPlaceCanOpenerInLeftCompartment",
@@ -39,6 +41,40 @@ def _rewrite_asset_dirs(scene_xml: pathlib.Path, asset_dir: str) -> None:
         text = re.sub(r"<compiler\b[^>]*/>", compiler, text, count=1)
     else:
         text = re.sub(r"(<mujoco\b[^>]*>)", r"\1\n  " + compiler, text, count=1)
+    scene_xml.write_text(text)
+
+
+def _write_start_keyframe(scene_xml: pathlib.Path, qpos: np.ndarray) -> None:
+    """Bakes a valid initial layout into the first keyframe.
+
+    dm_control arranges the free-standing props in ``initialize_episode`` (i.e.
+    at ``env.reset()``), not in the compiled model, so the exported model starts
+    with every prop at the origin, overlapping. Capture the reset state and store
+    it as the keyframe, so `reset` puts the scene in a sensible arrangement.
+    """
+    text = scene_xml.read_text()
+    values = " ".join(f"{float(v):.6g}" for v in qpos)
+    match = re.search(r"<key\b[^>]*?qpos=\"[^\"]*\"[^>]*>", text, re.DOTALL)
+    if match:
+        block = match.group(0)
+        replaced = re.sub(r'qpos="[^"]*"', f'qpos="{values}"', block, count=1)
+        text = text.replace(block, replaced, 1)
+    elif re.search(r"<keyframe\b", text):
+        text = re.sub(
+            r"(<keyframe\b[^>]*>)",
+            r'\1\n    <key name="start" qpos="' + values + '"/>',
+            text,
+            count=1,
+        )
+    else:
+        text = re.sub(
+            r"</mujoco>",
+            '  <keyframe>\n    <key name="start" qpos="'
+            + values
+            + '"/>\n  </keyframe>\n</mujoco>',
+            text,
+            count=1,
+        )
     scene_xml.write_text(text)
 
 
@@ -65,6 +101,9 @@ def main() -> int:
 
     for name in args.tasks:
         env = task_suite.create_task_env(name, time_limit=10.0, cameras=())
+        # Apply one episode's layout so the props have real positions to bake.
+        env.reset()
+        start_qpos = np.asarray(env.physics.data.qpos, dtype=float).copy()
         root = env.task.root_entity.mjcf_model
         staging = out / f".{name}.staging"
         shutil.rmtree(staging, ignore_errors=True)
@@ -82,6 +121,7 @@ def main() -> int:
                     moved += 1
         shutil.rmtree(staging, ignore_errors=True)
         _rewrite_asset_dirs(scene_dir / "scene.xml", "../assets")
+        _write_start_keyframe(scene_dir / "scene.xml", start_qpos)
         print(f"{name}: {moved} new assets -> {scene_dir / 'scene.xml'}")
 
     print(f"done: {out}")

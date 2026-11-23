@@ -1,2 +1,32 @@
 ERROR collisionTask (engine_collision_driver.c:2191) Mon Nov 23 18:14:02 2026: collision function returned 0 contacts, expected at most -284231474 from pairMaxContact
 
+WARNING Mon Nov 23 18:32:34 2026: Nan, Inf or huge value in QACC at DOF 24. The simulation is unstable. Time = 0.0520.
+
+WARNING Mon Nov 23 18:32:34 2026: Nan, Inf or huge value in QACC at DOF 24. The simulation is unstable. Time = 0.0320.
+
+WARNING Mon Nov 23 18:32:34 2026: Nan, Inf or huge value in QACC at DOF 24. The simulation is unstable. Time = 0.0240.
+
+WARNING Mon Nov 23 18:32:34 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.0160.
+
+WARNING Mon Nov 23 18:32:44 2026: Nan, Inf or huge value in QACC at DOF 16. The simulation is unstable. Time = 0.2060.
+
+WARNING Mon Nov 23 18:32:44 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.1180.
+
+WARNING Mon Nov 23 18:32:44 2026: Nan, Inf or huge value in QACC at DOF 23. The simulation is unstable. Time = 0.0680.
+
+WARNING Mon Nov 23 18:32:45 2026: Nan, Inf or huge value in QACC at DOF 17. The simulation is unstable. Time = 0.0400.
+
+WARNING Mon Nov 23 18:33:58 2026: Nan, Inf or huge value in QACC at DOF 23. The simulation is unstable. Time = 0.6820.
+
+WARNING Mon Nov 23 18:33:58 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.0980.
+
+WARNING Mon Nov 23 18:33:58 2026: Nan, Inf or huge value in QACC at DOF 23. The simulation is unstable. Time = 0.0340.
+
+WARNING Mon Nov 23 18:34:33 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 1.2280.
+
+WARNING Mon Nov 23 18:35:50 2026: Nan, Inf or huge value in QACC at DOF 23. The simulation is unstable. Time = 0.3840.
+
+WARNING Mon Nov 23 18:35:50 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.3880.
+
+WARNING Mon Nov 23 18:35:50 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.4940.
+
