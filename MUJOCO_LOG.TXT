@@ -32,3 +32,9 @@ WARNING Mon Nov 23 18:35:50 2026: Nan, Inf or huge value in QACC at DOF 22. The 
 
 ERROR mjv_cameraFrustum (engine_vis_visualize.c:549) Mon Nov 23 19:06:55 2026: fixed camera id is outside valid range
 
+WARNING Mon Nov 23 19:31:21 2026: Nan, Inf or huge value in QACC at DOF 24. The simulation is unstable. Time = 0.4840.
+
+WARNING Mon Nov 23 19:31:21 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.0540.
+
+WARNING Mon Nov 23 19:31:22 2026: Nan, Inf or huge value in QACC at DOF 22. The simulation is unstable. Time = 0.0300.
+

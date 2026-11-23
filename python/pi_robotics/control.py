@@ -18,7 +18,7 @@ import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
 from pi_robotics import ik
-from pi_robotics.reel import Recorder
+from pi_robotics.reel import Recorder, compose_video
 
 # Free-camera defaults for the 3D-panel column of an operation reel.
 PANEL_WIDTH = 800
@@ -236,6 +236,20 @@ def _render_png(
     return iio.imwrite("<bytes>", frame, extension=".png")
 
 
+def _scratch_from_snapshot(
+    model: mujoco.MjModel, snapshot: dict[str, Any]
+) -> mujoco.MjData:
+    """A scratch MjData seeded with the published state (for offscreen render)."""
+    scratch = mujoco.MjData(model)
+    qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
+    qvel = np.asarray(snapshot.get("qvel", []), dtype=float)
+    if qpos.size == model.nq:
+        scratch.qpos[:] = qpos
+    if qvel.size == model.nv:
+        scratch.qvel[:] = qvel
+    return scratch
+
+
 def render_png_from_state(
     model: mujoco.MjModel,
     snapshot: dict[str, Any],
@@ -403,6 +417,7 @@ class ControlServer:
 
     def stop(self) -> None:
         self._stream_stop.set()
+        self._record_stop()
         if self._server is not None:
             self._server.shutdown()
             self._server.server_close()
@@ -620,6 +635,52 @@ class ControlServer:
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
 
+    # -- offscreen rendering --------------------------------------------------
+    # NOTE: `mujoco.Renderer` owns a GL context tied to the thread that created
+    # it, and ThreadingHTTPServer handles each request on a NEW thread. A
+    # renderer must therefore never outlive the request/thread that made it.
+    # `_render_array` creates (and closes) one per call unless a caller passes
+    # its own renderer — used by `reel`, which creates one per camera inside its
+    # single request and reuses it across all frames (fast and thread-safe).
+    def _render_array(
+        self,
+        model: mujoco.MjModel,
+        scratch: mujoco.MjData,
+        width: int,
+        height: int,
+        camera: str | None,
+        camera_opts: dict[str, Any] | None = None,
+        renderer: Any = None,
+    ) -> np.ndarray:
+        """Renders one camera (or the free panel view) to an RGB uint8 array."""
+        own = renderer is None
+        if own:
+            renderer = mujoco.Renderer(model, height=int(height), width=int(width))
+        try:
+            mujoco.mj_forward(model, scratch)
+            if camera:
+                cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, camera)
+                if cam_id < 0:
+                    raise ValueError(f"unknown camera '{camera}'")
+                renderer.update_scene(scratch, camera=cam_id)
+            else:
+                opts = camera_opts or {}
+                cam = mujoco.MjvCamera()
+                cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+                cam.distance = float(opts.get("distance", 2.0))
+                cam.elevation = float(opts.get("elevation", -20))
+                cam.azimuth = float(opts.get("azimuth", 120))
+                if opts.get("lookat") is not None:
+                    cam.lookat[:] = np.asarray(opts["lookat"], dtype=float)[:3]
+                renderer.update_scene(scratch, camera=cam)
+            return np.asarray(renderer.render()).copy()
+        finally:
+            if own:
+                try:
+                    renderer.close()
+                except Exception:  # noqa: BLE001
+                    pass
+
     def _camera_and_size(
         self, body: dict[str, Any]
     ) -> tuple[str, int, int, dict[str, Any] | None]:
@@ -629,62 +690,74 @@ class ControlServer:
         return camera, width, height, body.get("camera_opts")
 
     def _collect(self, body: dict[str, Any]) -> dict[str, Any]:
-        """Renders a 3D-panel overview + one frame per camera and records them.
+        """Renders the requested camera(s) (and, on request, the 3D panel).
 
-        The panel column is a free-camera render of the same scene the 3D panel
-        shows; the camera columns are the requested robot cameras. All columns
-        share one recorded step so a reel can play them side by side.
+        The agent sees only robot camera images; the 3D panel is a free-camera
+        render used only for the recorded video (and returned only when
+        ``panel: true``). Recording now stores the state timeline, so this no
+        longer feeds the reel.
         """
         model = self._handle.model
         if model is None:
             return {"ok": False, "error": "no model loaded"}
         snapshot = self._state.snapshot()
         model_cameras = self.list_cameras()
-        if body.get("cameras"):
-            cameras = [str(c) for c in body["cameras"]]
-        else:
-            # Default: capture every camera in the model, so a reel always has
-            # one column per camera with no blank frames.
-            cameras = model_cameras or [str(body.get("camera") or "camera_rgb")]
-        requested = str(body.get("camera") or cameras[0])
+        requested = str(
+            body.get("camera")
+            or (model_cameras[0] if model_cameras else "camera_rgb")
+        )
+        # Only render what is returned (the requested camera(s)).
+        render_list = list(
+            dict.fromkeys(
+                [requested] + [str(c) for c in (body.get("cameras") or [])]
+            )
+        )
         width = min(int(body.get("width", 640)), 1280)
         height = min(int(body.get("height", 480)), 960)
-        cam_pngs: dict[str, bytes] = {}
+        cam_arrays: dict[str, np.ndarray] = {}
         cam_error: str | None = None
-        for name in cameras:
+        scratch = _scratch_from_snapshot(model, snapshot)
+        for name in render_list:
             try:
                 with self._render_lock:
-                    cam_pngs[name] = render_png_from_state(
-                        model, snapshot, width, height, name, None
+                    cam_arrays[name] = self._render_array(
+                        model, scratch, width, height, name, None
                     )
             except Exception as exc:  # noqa: BLE001
                 cam_error = f"{name}: {exc}"
-        panel_opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
-        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
-        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
-        panel: bytes | None = None
-        try:
-            with self._render_lock:
-                panel = render_png_from_state(
-                    model, snapshot, panel_w, panel_h, None, panel_opts
-                )
-        except Exception:  # noqa: BLE001
-            panel = None
-        if panel is not None and self._rec_thread is None:
-            self.recorder.add(panel, cam_pngs)
-        main = cam_pngs.get(requested) or (next(iter(cam_pngs.values())) if cam_pngs else None)
+        panel: np.ndarray | None = None
+        if body.get("panel"):
+            panel_opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
+            panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
+            panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
+            try:
+                with self._render_lock:
+                    panel = self._render_array(
+                        model, scratch, panel_w, panel_h, None, panel_opts
+                    )
+            except Exception:  # noqa: BLE001
+                panel = None
+        main = cam_arrays.get(requested)
+        if main is None and cam_arrays:
+            main = next(iter(cam_arrays.values()))
+
+        def png(array: np.ndarray | None) -> str | None:
+            if array is None:
+                return None
+            from PIL import Image  # optional dependency
+
+            buf = io.BytesIO()
+            Image.fromarray(array).save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode("ascii")
+
         return {
             "ok": main is not None,
             "error": None if main is not None else (cam_error or "render failed"),
             "camera": requested,
-            "cameras": cameras,
+            "cameras": render_list,
             "model_cameras": model_cameras,
-            "png_base64": base64.b64encode(main).decode("ascii") if main else None,
-            "panel_base64": (
-                base64.b64encode(panel).decode("ascii")
-                if panel and body.get("panel")
-                else None
-            ),
+            "png_base64": png(main),
+            "panel_base64": png(panel) if body.get("panel") else None,
             "recorded": self.recorder.count(),
         }
 
@@ -846,7 +919,10 @@ class ControlServer:
         self._record_stop()
         if self._handle.model is None:
             return {"ok": False, "error": "no model loaded"}
-        fps = max(1, min(int(body.get("fps", 6)), 30))
+        fps = max(1, min(int(body.get("fps", 8)), 30))
+        # The panel (a free-camera render) is only needed for the video backdrop;
+        # capture it less often than the cameras so the cameras can run faster.
+        panel_fps = max(0.5, min(float(body.get("panel_fps", max(1.0, fps / 4.0))), float(fps)))
         # The reel must show every camera: always capture all model cameras
         # (union with any explicitly requested extras).
         requested = [str(c) for c in (body.get("cameras") or [])]
@@ -862,36 +938,30 @@ class ControlServer:
         self._rec_stop = stop
 
         def loop() -> None:
+            # Cheap: only samples qpos (no OpenGL), so it can run fast and never
+            # starves the control requests. Rendering happens later in `reel`.
             period = 1.0 / fps
             while not stop.is_set():
                 model = self._handle.model
                 if model is not None:
-                    snapshot = self._state.snapshot()
-                    cams: dict[str, bytes] = {}
-                    for name in cameras:
-                        try:
-                            with self._render_lock:
-                                cams[name] = render_png_from_state(
-                                    model, snapshot, width, height, name, None
-                                )
-                        except Exception:  # noqa: BLE001
-                            pass
-                    try:
-                        with self._render_lock:
-                            panel = render_png_from_state(
-                                model, snapshot, panel_w, panel_h, None, opts
-                            )
-                    except Exception:  # noqa: BLE001
-                        panel = None
-                    if panel is not None:
-                        self.recorder.add(panel, cams)
+                    qpos = np.asarray(
+                        self._state.snapshot().get("qpos", []), dtype=float
+                    )
+                    if qpos.size == model.nq:
+                        self.recorder.add_state(qpos)
                 stop.wait(period)
 
         self._rec_thread = threading.Thread(
             target=loop, name="pi-robotics-rec", daemon=True
         )
         self._rec_thread.start()
-        return {"ok": True, "recording": True, "fps": fps, "cameras": cameras}
+        return {
+            "ok": True,
+            "recording": True,
+            "fps": fps,
+            "panel_fps": panel_fps,
+            "cameras": cameras,
+        }
 
     def _record_stop(self) -> dict[str, Any]:
         stop = self._rec_stop
@@ -905,13 +975,73 @@ class ControlServer:
         return {"ok": True, "recording": False}
 
     def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Renders the recorded state timeline into a grid video.
+
+        Recording only stored qpos, so the (expensive) multi-camera rendering
+        happens here, once, after the run — keeping capture smooth and cheap.
+        """
         self._record_stop()
-        hold = body.get("hold")
+        states, chapters = self.recorder.timeline()
+        if not states:
+            return {"ok": False, "error": "nothing recorded; run record_start first"}
+        model = self._handle.model
+        if model is None:
+            return {"ok": False, "error": "no model loaded"}
+        cameras = self.list_cameras() or [str(body.get("camera") or "camera_rgb")]
+        width = min(int(body.get("width", 480)), 1280)
+        height = min(int(body.get("height", 480)), 960)
+        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
+        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
+        opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
+        # Decimate by default: render at most `fps` states per second of wall
+        # time, so a long recording does not render every captured state.
+        out_fps = float(body.get("fps", 10))
+        step = 1
+        if body.get("decimate", True) and out_fps > 0 and len(states) > 1:
+            span = max(1e-6, states[-1][0] - states[0][0])
+            step = max(1, int(round((len(states) / span) / out_fps)))
+        sampled = states[::step]
+        # One renderer per camera, created and used on THIS request's thread (a
+        # Renderer's GL context is thread-bound) and reused across all frames.
+        renderers: dict[str, Any] = {}
+        panel_renderer = None
         try:
-            result = self.recorder.build(
+            for name in cameras:
+                renderers[name] = mujoco.Renderer(
+                    model, height=height, width=width
+                )
+            panel_renderer = mujoco.Renderer(
+                model, height=panel_h, width=panel_w
+            )
+            frames: list[dict[str, Any]] = []
+            stamps: list[float] = []
+            for t, qpos in sampled:
+                scratch = mujoco.MjData(model)
+                if qpos.size == model.nq:
+                    scratch.qpos[:] = qpos
+                cams: dict[str, Any] = {}
+                for name in cameras:
+                    try:
+                        cams[name] = self._render_array(
+                            model, scratch, width, height, name, None,
+                            renderer=renderers[name],
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                panel = self._render_array(
+                    model, scratch, panel_w, panel_h, None, opts,
+                    renderer=panel_renderer,
+                )
+                frames.append({"panel": panel, "cameras": cams})
+                stamps.append(t)
+            result = compose_video(
                 self._state.runtime_dir / "reels",
-                fps=float(body.get("fps", 10)),
-                hold=None if hold is None else float(hold),
+                frames,
+                stamps,
+                chapters,
+                fps=out_fps,
+                hold=None if body.get("hold") is None else float(body["hold"]),
+                min_hold=float(body.get("min_hold", 0.0)),
                 tail=float(body.get("tail", 0.8)),
                 height=int(body.get("height", 480)),
                 cols=(int(body["cols"]) if body.get("cols") else None),
@@ -919,7 +1049,15 @@ class ControlServer:
             )
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": str(exc)}
+        finally:
+            for renderer in [*renderers.values(), panel_renderer]:
+                if renderer is not None:
+                    try:
+                        renderer.close()
+                    except Exception:  # noqa: BLE001
+                        pass
         result["ok"] = True
+        result["rendered"] = len(frames)
         return result
 
     def _capture(self, body: dict[str, Any]) -> dict[str, Any]:
