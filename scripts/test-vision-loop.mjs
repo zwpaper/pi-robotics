@@ -55,6 +55,6 @@ await call("nudge", { extend: 0.13, lift: -0.07, wrist: 0.15, settle: 0.9 });
 await call("nudge", { grip: -0.005, settle: 1.0 });
 await call("nudge", { lift: 0.3, settle: 1.5 });
 // Compose the recorded 3D panel + cameras into an operation video.
-await call("reel", { fps: 4, height: 300, reel_name: "llm_loop" });
+await call("reel", { height: 300, reel_name: "llm_loop" });
 await call("clear");
 console.log("DONE");

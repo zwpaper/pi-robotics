@@ -712,10 +712,12 @@ class ControlServer:
         }
 
     def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
+        hold = body.get("hold")
         try:
             result = self.recorder.build(
                 self._state.runtime_dir / "reels",
-                fps=float(body.get("fps", 4)),
+                fps=float(body.get("fps", 10)),
+                hold=None if hold is None else float(hold),
                 height=int(body.get("height", 360)),
                 name=str(body.get("name", "operation")),
             )

@@ -13,6 +13,7 @@ import pathlib
 import shutil
 import subprocess
 import threading
+import time
 from typing import Any
 
 from PIL import Image
@@ -28,11 +29,13 @@ class Recorder:
         self._lock = threading.Lock()
         self._steps: list[dict[str, Any]] = []
         self._cameras: list[str] = []
+        self._stamps: list[float] = []
 
     def clear(self) -> None:
         with self._lock:
             self._steps = []
             self._cameras = []
+            self._stamps = []
 
     def add(self, panel_png: bytes, cameras: dict[str, bytes]) -> int:
         with self._lock:
@@ -40,6 +43,7 @@ class Recorder:
                 if name not in self._cameras:
                     self._cameras.append(name)
             self._steps.append({"panel": panel_png, "cameras": dict(cameras)})
+            self._stamps.append(time.time())
             return len(self._steps)
 
     def count(self) -> int:
@@ -54,16 +58,35 @@ class Recorder:
         self,
         out_dir: pathlib.Path,
         *,
-        fps: float = 4.0,
+        fps: float = 10.0,
+        hold: float | None = None,
+        min_hold: float = 0.6,
+        max_hold: float = 6.0,
         height: int = 360,
         name: str = "operation",
     ) -> dict[str, Any]:
         with self._lock:
             steps = list(self._steps)
             cameras = list(self._cameras)
+            stamps = list(self._stamps)
         if not steps:
             raise ValueError("no frames recorded; run 'look' or 'nudge' first")
 
+        # How long each recorded frame is shown. By default this is the real
+        # elapsed time between recordings, so the video plays at the pace the
+        # operation actually happened (each `nudge` waits for the arm to
+        # settle). `hold` forces a fixed per-image time instead.
+        count = len(steps)
+        if hold is not None:
+            durations = [float(hold)] * count
+        elif len(stamps) == count and count >= 2:
+            durations = [
+                stamps[i + 1] - stamps[i] for i in range(count - 1)
+            ]
+            durations.append(max(min_hold, durations[-1] if durations else min_hold))
+        else:
+            durations = [max(min_hold, 1.2)] * count
+        durations = [max(min_hold, min(max_hold, d)) for d in durations]
         columns = [PANEL_COLUMN, *cameras]
         columns_cams = cameras
 
@@ -98,6 +121,7 @@ class Recorder:
         frame_width = sum(widths.values())
         frame_dir = out_dir / f"{name}_frames"
         frame_dir.mkdir(parents=True, exist_ok=True)
+        encoded = 0
         for i, row in enumerate(tiles):
             canvas = Image.new("RGB", (frame_width, height), _PLACEHOLDER)
             x = 0
@@ -108,7 +132,12 @@ class Recorder:
                     continue
                 canvas.paste(image, (x, 0))
                 x += widths[col]
-            canvas.save(frame_dir / f"frame_{i:04d}.png")
+            # Hold each recorded frame for its duration (repeat at the output
+            # frame rate) so the video is readable instead of a fast flip-book.
+            repeats = max(1, round(durations[i] * fps))
+            for _ in range(repeats):
+                canvas.save(frame_dir / f"frame_{encoded:04d}.png")
+                encoded += 1
 
         out_dir.mkdir(parents=True, exist_ok=True)
         ffmpeg = shutil.which("ffmpeg")
@@ -137,7 +166,10 @@ class Recorder:
                 return {
                     "path": str(output),
                     "format": "mp4",
-                    "frames": len(tiles),
+                    "steps": len(tiles),
+                    "frames": encoded,
+                    "seconds": round(sum(durations), 2),
+                    "hold_seconds": [round(d, 2) for d in durations],
                     "columns": columns,
                     "fps": fps,
                 }
@@ -146,9 +178,10 @@ class Recorder:
 
         # Fallback: animated GIF.
         output = out_dir / f"{name}.gif"
-        images = []
-        for i in range(len(tiles)):
-            images.append(Image.open(frame_dir / f"frame_{i:04d}.png").convert("RGB"))
+        images = [
+            Image.open(frame_dir / f"frame_{i:04d}.png").convert("RGB")
+            for i in range(encoded)
+        ]
         images[0].save(
             output,
             save_all=True,
@@ -160,7 +193,10 @@ class Recorder:
         return {
             "path": str(output),
             "format": "gif",
+            "steps": len(tiles),
             "frames": len(images),
+            "seconds": round(sum(durations), 2),
+            "hold_seconds": [round(d, 2) for d in durations],
             "columns": columns,
             "fps": fps,
         }

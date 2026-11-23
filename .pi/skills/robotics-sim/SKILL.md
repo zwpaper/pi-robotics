@@ -137,10 +137,15 @@ itself: any `look`/`nudge` sequence can be turned into a video afterwards.
 
 - `look { cameras: ["camera_rgb", "camera_depth"] }` captures every listed camera
   for that step (default: the single `camera`).
-- `reel { fps, height, reel_name }` composes the recording into an **operation
+- `reel { fps, height, hold, reel_name }` composes the recording into an **operation
   video**: the 3D-panel column plus one column per camera, side by side, playing
   the steps in order. Output: `<cwd>/.pi/robotics/runtime/reels/<name>.mp4`
   (needs `ffmpeg`; falls back to an animated GIF), and it is opened for the user.
+  **Pacing:** each recorded frame is held for the real time that elapsed between
+  recordings (each `nudge` waits for the arm to settle), so the video plays at
+  the pace the operation actually happened and stays readable. Pass `hold`
+  (seconds per image) to force a fixed time, e.g. `reel { hold: 1.5 }`; `fps` is
+  only the output frame rate (default 10).
 - `reel_clear` resets the recording before starting a new take.
 - `look`/`nudge { panel: true }` also returns the 3D-panel image so the model can
   see it (by default only the camera image is returned, to save context).
@@ -152,7 +157,7 @@ that first appears on a later step gets a blank column in earlier frames.
 With the reel, a subagent's run is self-documenting: the daemon records while
 the child drives `look`/`nudge`; afterwards **either the child or the parent**
 can call `reel` (the recorder lives in the daemon, shared across the session).
-Typical finish: `reel { fps: 4 }` then report the video path.
+Typical finish: `reel { fps: 10 }` then report the video path.
 
 Rules for the loop: never claim a pose without a fresh `look` (or `state`);
 `nudge` values are deltas, `grip` is absolute (0.04 open, -0.005 closed);

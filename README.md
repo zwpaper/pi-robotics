@@ -160,11 +160,13 @@ decide each step.
 Every `look`/`nudge` also **records one 3D-panel frame plus one frame per
 camera**, in order. When the task is done, `reel { fps, height }` composes them
 into a video: the 3D-panel column plus one column per camera, side by side,
-playing the steps in order (one camera → one column, several → one each). Output
-`<cwd>/.pi/robotics/runtime/reels/<name>.mp4` (needs `ffmpeg`; GIF fallback) and
-opens it. `look { cameras: ["camera_rgb", "camera_depth"] }` captures multiple
-cameras per step; `reel_clear` starts a new take; `look`/`nudge { panel: true }`
-also returns the panel image.
+playing the steps in order (one camera → one column, several → one each). Each
+frame is held for the real elapsed time between recordings, so the video plays
+at the pace the operation actually happened; pass `hold` (seconds per image) to
+force a fixed, slower pace. Output `<cwd>/.pi/robotics/runtime/reels/<name>.mp4`
+(needs `ffmpeg`; GIF fallback) and opens it. `look { cameras: ["camera_rgb",
+"camera_depth"] }` selects cameras per step; `reel_clear` starts a new take;
+`look`/`nudge { panel: true }` also returns the panel image.
 
 ### Vision-based grasping (camera → detect → control)
 

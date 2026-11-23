@@ -233,7 +233,9 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         Type.String({ description: "Camera name for action 'stream' (default 'camera_rgb')." }),
       ),
       fps: Type.Optional(
-        Type.Number({ description: "Stream frame rate for action 'stream' (default 15)." }),
+        Type.Number({
+          description: "Video frame rate for 'stream' (default 15) and the output frame rate for 'reel' (default 10).",
+        }),
       ),
       plane_z: Type.Optional(
         Type.Number({
@@ -263,6 +265,11 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       ),
       reel_name: Type.Optional(
         Type.String({ description: "output name (no extension) for action 'reel'." }),
+      ),
+      hold: Type.Optional(
+        Type.Number({
+          description: "seconds each recorded frame is shown on 'reel' (default: play at the recorded real pace).",
+        }),
       ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
@@ -643,14 +650,23 @@ fi`,
           const res = await controlPost(
             port,
             "/command",
-            { cmd: "reel", fps: params.fps ?? 4, height: params.height ?? 360, name: params.reel_name },
+            {
+              cmd: "reel",
+              fps: params.fps ?? 10,
+              hold: params.hold,
+              height: params.height ?? 360,
+              name: params.reel_name,
+            },
             120000,
           );
           const body = res.body as {
             ok?: boolean;
             path?: string;
             format?: string;
+            steps?: number;
             frames?: number;
+            seconds?: number;
+            hold_seconds?: number[];
             columns?: string[];
             error?: string;
           };
@@ -659,7 +675,8 @@ fi`,
           }
           if (body.path) await openInBrowser(body.path);
           return ok(
-            `Operation reel (${body.format}, ${body.frames} frames, columns: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
+            `Operation reel (${body.format}, ${body.steps} steps / ${body.frames} frames, ${body.seconds}s, ` +
+              `columns: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
             { action, ...body },
           );
         }
