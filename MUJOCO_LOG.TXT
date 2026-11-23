@@ -1,0 +1,2 @@
+ERROR collisionTask (engine_collision_driver.c:2191) Mon Nov 23 18:14:02 2026: collision function returned 0 contacts, expected at most -284231474 from pairMaxContact
+
