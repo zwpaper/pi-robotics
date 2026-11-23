@@ -51,6 +51,7 @@ const ACTIONS = [
   "capture",
   "look",
   "nudge",
+  "move_ee",
   "clear",
   "reel",
   "reel_clear",
@@ -212,7 +213,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, clear, reel, reel_clear, pick, vision_pick, vision_stop, cameras, stream.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -266,6 +267,27 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       reel_name: Type.Optional(
         Type.String({ description: "output name (no extension) for action 'reel'." }),
       ),
+      pos: Type.Optional(
+        Type.Array(Type.Number(), {
+          description: "target world position [x,y,z] for action 'move_ee'.",
+        }),
+      ),
+      quat: Type.Optional(
+        Type.Array(Type.Number(), {
+          description: "target orientation [w,x,y,z] for action 'move_ee' (optional; else position only).",
+        }),
+      ),
+      site: Type.Optional(
+        Type.String({ description: "site to control for 'move_ee' (default 'pinch_site')." }),
+      ),
+      steps: Type.Optional(
+        Type.Number({ description: "waypoints for 'move_ee' straight-line path (default 6)." }),
+      ),
+      actuators: Type.Optional(
+        Type.Record(Type.String(), Type.Number(), {
+          description: "{actuator_name: delta} for action 'nudge' (any robot).",
+        }),
+      ),
       hold: Type.Optional(
         Type.Number({
           description: "seconds each recorded frame is shown on 'reel' (default: play at the recorded real pace).",
@@ -293,7 +315,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Stepping:   step {n} · reset",
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
-            "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip} · clear",
+            "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site} · clear",
             "Reel:       look/nudge record 3D panel + cameras · reel {fps,height} builds an operation video · reel_clear",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
@@ -607,6 +629,7 @@ fi`,
             lift: params.lift,
             wrist: params.wrist,
             grip: params.grip,
+            actuators: params.actuators,
             settle: params.settle,
             camera: params.camera ?? "camera_rgb",
             width: params.width ?? 480,
@@ -643,6 +666,44 @@ fi`,
               details,
             };
           }
+          return withFrame(text, body.png_base64, details);
+        }
+        case "move_ee": {
+          // IK-move a site to a world pose (for multi-DOF arms).
+          if (!params.pos || params.pos.length !== 3) {
+            return fail("action 'move_ee' needs pos [x,y,z].", { action });
+          }
+          const res = await controlPost(
+            port,
+            "/command",
+            {
+              cmd: "move_ee",
+              pos: params.pos,
+              quat: params.quat,
+              site: params.site ?? "pinch_site",
+              steps: params.steps ?? 6,
+              settle: params.settle ?? 1.5,
+              camera: params.camera ?? "camera_rgb",
+              width: params.width ?? 480,
+              height: params.height ?? 360,
+            },
+            120000,
+          );
+          const body = res.body as {
+            ok?: boolean;
+            png_base64?: string;
+            panel_base64?: string;
+            ik_error?: unknown;
+            recorded?: number;
+            error?: string;
+          };
+          if (!body?.ok || !body.png_base64) {
+            return fail(`move_ee failed: ${body?.error ?? "no frame"}`, { action });
+          }
+          const text =
+            `Moved ${params.site ?? "pinch_site"} to ${json(params.pos)} ` +
+            `(ik_error ${json(body.ik_error)}; reel recorded ${body.recorded ?? 0} steps)`;
+          const details = { action, ik_error: body.ik_error, recorded: body.recorded };
           return withFrame(text, body.png_base64, details);
         }
         case "reel": {
