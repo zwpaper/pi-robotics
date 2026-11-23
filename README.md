@@ -83,7 +83,8 @@ In a pi session in this project:
 /robotics scenes              # list built-in + Menagerie scenes
 /robotics scene cartpole      # switch scene
 /robotics scene stretch       # load the Hello Robot Stretch (fetches ~75 MB first time)
-/robotics pick                # Stretch grasps and lifts the tabletop object
+/robotics pick                # Stretch grasps and lifts the tabletop object (scripted)
+/robotics vision              # camera -> detect -> control closed-loop grasp
 /robotics camera              # play the robot camera as live video in the browser
 /robotics cameras             # list the model's cameras
 /robotics capture             # save a frame
@@ -104,6 +105,7 @@ Or via the tool (the agent does this automatically):
 { "action": "open_panel" }                  // alias: "panel"
 { "action": "scene", "scene": "stretch" }     // load Hello Robot Stretch
 { "action": "pick", "object": "object" }     // scripted grasp + lift
+{ "action": "vision_pick", "object": "object" } // camera->detect->control grasp
 { "action": "stream", "camera": "camera_rgb" } // live robot-camera video
 { "action": "fetch", "scene": "stretch" }    // pre-download a Menagerie model
 ```
@@ -130,6 +132,33 @@ The object starts at z≈0.52 on the table and ends held ≈0.92 by the gripper
 (~0.40 m lift). `reset` returns it to the table. For a different object or
 placement, drive the arm yourself with `ctrl` on `lift` / `arm_extend` /
 `wrist_yaw` / `grip` and read `state`.
+
+### Vision-based grasping (camera → detect → control)
+
+`pick` is a fixed, calibrated sequence — it only works for the object at the
+built-in position. `vision_pick` is a **closed loop** driven by the robot's own
+camera:
+
+1. **Camera** — renders `camera_rgb` offscreen with MuJoCo's **segmentation**
+   renderer (per-geom ids, so detection is robust to colour and lighting),
+   reading only the published state snapshot.
+2. **Detect / localize** — takes the target body's image centroid and
+   back-projects it through the camera model onto the tabletop plane
+   (`plane_z`, default 0.52 m), giving the object's world position.
+3. **Control** — measures the gripper fingertip by forward kinematics and drives
+   `arm_extend` (→ y) and `lift` (→ z) to move the fingertip onto the
+   camera-localized object; when aligned it closes the gripper and lifts.
+
+```jsonc
+// robotics { action: "vision_pick", object: "object", camera: "camera_rgb" }
+{ "done": true, "aligned": true, "iterations": 4,
+  "target": [-0.019, -0.449, 0.52], "lifted": 0.2614 }
+```
+
+The loop runs in the daemon (fast, no LLM in the control path); the tool action
+reports `target` (camera-localized object), the per-iteration error, and the
+measured lift. `vision_stop` cancels it. It is robust to the object being moved,
+as long as it stays on the tabletop plane and in the camera's view.
 
 ### Playing the robot camera as live video
 

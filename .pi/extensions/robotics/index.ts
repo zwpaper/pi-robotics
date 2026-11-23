@@ -50,6 +50,8 @@ const ACTIONS = [
   "speed",
   "capture",
   "pick",
+  "vision_pick",
+  "vision_stop",
   "fetch",
   "cameras",
   "stream",
@@ -178,6 +180,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty; Menagerie robots: stretch, stretch3) and 'load' for an XML/URDF/MJB file.",
       "For Hello Robot Stretch: scene 'stretch' (fetched once from MuJoCo Menagerie into .pi/robotics/models/), then action 'pick' to grasp and lift the tabletop object.",
       "Use robotics action 'stream' to play the robot's camera as a live MJPEG video in the browser (the Stretch head RealSense is 'camera_rgb'); 'cameras' lists them.",
+      "robotics 'vision_pick' runs a camera->detect->control closed loop: it localizes the object from the robot camera and servos the arm onto it, then grasps. Prefer it over the fixed 'pick' when the object is placed by the user.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
     ],
@@ -186,7 +189,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -208,6 +211,11 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       ),
       fps: Type.Optional(
         Type.Number({ description: "Stream frame rate for action 'stream' (default 15)." }),
+      ),
+      plane_z: Type.Optional(
+        Type.Number({
+          description: "Tabletop plane height (m) for 'vision_pick' back-projection (default 0.52).",
+        }),
       ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
@@ -231,7 +239,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Stepping:   step {n} · reset",
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height}",
-            "Manip:      pick {object}   (scripted grasp+lift on the Stretch scene)",
+            "Manip:      pick {object}   (scripted grasp+lift)\n" +
+            "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
             "",
             `Built-in scenes: ${DEFAULT_SCENES.join(", ")}`,
@@ -460,6 +469,34 @@ fi`,
           }
           return ok(json(pick), { action, pick, success: true });
         }
+        case "vision_pick": {
+          // Camera -> detect -> control: the daemon runs the servo thread.
+          const start = await controlPost(port, "/command", {
+            cmd: "vision_pick",
+            object: params.object ?? "object",
+            camera: params.camera ?? "camera_rgb",
+            ...(params.plane_z !== undefined ? { plane_z: params.plane_z } : {}),
+          });
+          if (!(start.body as { ok?: boolean })?.ok) {
+            return fail(`vision_pick failed to start: ${json(start.body)}`, { action });
+          }
+          const deadline = Date.now() + 45000;
+          let servo: Record<string, unknown> = { active: true };
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 500));
+            const s = await controlGet(port, "/state");
+            servo = ((s.body as { servo?: Record<string, unknown> })?.servo ?? {}) as Record<string, unknown>;
+            if (servo.done === true || servo.error) break;
+          }
+          if (servo.done !== true) {
+            return fail(`vision_pick did not finish: ${json(servo)}`, { action, servo });
+          }
+          return ok(json(servo), { action, servo, success: true });
+        }
+        case "vision_stop": {
+          const res = await controlPost(port, "/command", { cmd: "vision_stop" });
+          return ok(json(res.body), { action });
+        }
         default:
           return fail(`Unknown action '${action}'. Try action 'help'.`, { action });
       }
@@ -478,7 +515,7 @@ fi`,
 
   pi.registerCommand("robotics", {
     description:
-      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | pick [object] | camera [name] | cameras | capture | setup)",
+      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | pick [object] | vision_pick [object] [camera] | camera [name] | cameras | capture | setup)",
     handler: async (args, ctx) => {
       const paths = resolvePaths(ctx.cwd);
       const [sub, ...rest] = (args ?? "").trim().split(/\s+/).filter(Boolean);
@@ -558,6 +595,34 @@ fi`,
               ? `robotics: picked up \u2014 lifted ${pick.lifted} m`
               : `robotics pick failed: ${JSON.stringify(pick)}`,
             pick.done === true ? "info" : "error",
+          );
+          return;
+        }
+        if (sub === "vision" || sub === "vision_pick") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
+            return;
+          }
+          ctx.ui.notify("robotics: vision pick (camera \u2192 detect \u2192 control)\u2026", "info");
+          await controlPost(port, "/command", {
+            cmd: "vision_pick",
+            object: rest[0] ?? "object",
+            camera: rest[1] ?? "camera_rgb",
+          });
+          const deadline = Date.now() + 45000;
+          let servo: Record<string, unknown> = {};
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 500));
+            const s = await controlGet(port, "/state");
+            servo = ((s.body as { servo?: Record<string, unknown> })?.servo ?? {}) as Record<string, unknown>;
+            if (servo.done === true || servo.error) break;
+          }
+          ctx.ui.notify(
+            servo.done === true
+              ? `robotics: vision pick lifted ${servo.lifted} m (aligned=${servo.aligned})`
+              : `robotics vision pick failed: ${JSON.stringify(servo)}`,
+            servo.done === true ? "info" : "error",
           );
           return;
         }

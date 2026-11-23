@@ -43,6 +43,7 @@ class SharedState:
         self._scene_xml = ""
         self._errors: dict[str, str] = {}
         self._pick: dict[str, Any] = {"active": False}
+        self._servo: dict[str, Any] = {"active": False}
 
     # -- setters (sim thread) ------------------------------------------------
     def set_viewer_port(self, port: int) -> None:
@@ -75,6 +76,10 @@ class SharedState:
     def clear_pick(self) -> None:
         with self._lock:
             self._pick = {"active": False}
+
+    def set_servo(self, info: dict[str, Any]) -> None:
+        with self._lock:
+            self._servo = dict(info)
 
     def publish_model(self, model: mujoco.MjModel) -> None:
         def name_of(objtype: mujoco.mjtObj, i: int, fallback: str) -> str:
@@ -135,6 +140,7 @@ class SharedState:
             out = dict(self._state)
             out["model"] = dict(self._model_meta)
             out["pick"] = dict(self._pick)
+            out["servo"] = dict(self._servo)
             return out
 
     def model_meta(self) -> dict[str, Any]:
@@ -155,6 +161,7 @@ class SharedState:
                 "runtime_dir": str(self.runtime_dir),
                 "errors": dict(self._errors),
                 "pick": dict(self._pick),
+                "servo": dict(self._servo),
                 "model": dict(self._model_meta),
             }
 
@@ -244,13 +251,16 @@ class ControlServer:
         state: SharedState,
         handle: viewer_handle.ViewerHandle,
         sim_plugin: Any,
+        vision: Any = None,
+        render_lock: threading.Lock | None = None,
     ) -> None:
         self._state = state
         self._handle = handle
+        self._vision = vision
         self._sim_plugin = sim_plugin
         self._server: http.server.ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
-        self._render_lock = threading.Lock()
+        self._render_lock = render_lock or threading.Lock()
         self._stream_stop = threading.Event()
         self.port = 0
 
@@ -510,6 +520,25 @@ class ControlServer:
             )
             self._sim_plugin.start_pick(object_name=object_name)
             return {"ok": True, "pick": object_name}
+        if cmd == "vision_pick":
+            if self._vision is None:
+                return {"ok": False, "error": "vision servo unavailable"}
+            # The servo needs the sim running.
+            self._handle.dispatch(
+                messages.RequestPauseEvent(pause_state=sim.PauseState.UNPAUSED)
+            )
+            kwargs: dict[str, Any] = {}
+            if body.get("plane_z") is not None:
+                kwargs["plane_z"] = float(body["plane_z"])
+            return self._vision.start(
+                object_body=str(body.get("object") or "object"),
+                camera=str(body.get("camera") or "camera_rgb"),
+                **kwargs,
+            )
+        if cmd == "vision_stop":
+            if self._vision is not None:
+                self._vision.stop()
+            return {"ok": True}
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}

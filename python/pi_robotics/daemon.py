@@ -41,6 +41,7 @@ from mujoco.studio import (
 
 from pi_robotics import menagerie, scenes
 from pi_robotics.control import ControlServer, SharedState
+from pi_robotics.vision import VisionServo
 
 # Default head pose so the RealSense camera looks at the tabletop workspace.
 STRETCH_LOOK_AT: dict[str, float] = {"head_pan": -1.5, "head_tilt": -0.9}
@@ -70,6 +71,13 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         self._scene_params = dict(state.scene_params)
         self._commands: queue.Queue[dict[str, Any]] = queue.Queue()
         self._pick: dict[str, Any] | None = None
+        self._servo: dict[str, float] | None = None
+        self._servo_lock = threading.Lock()
+
+    def set_servo(self, ctrl: dict[str, float] | None) -> None:
+        """Sets (or clears) the actuator override written by the vision servo."""
+        with self._servo_lock:
+            self._servo = None if ctrl is None else dict(ctrl)
 
     # -- command ingress (called from the control-server thread) -------------
     def enqueue(self, command: dict[str, Any]) -> None:
@@ -230,7 +238,16 @@ class RoboticsSimPlugin(plugin.SimPlugin):
                 self._apply_command(model, data, cmd, applied)
             except Exception:  # noqa: BLE001
                 self._state.record_error("command", traceback.format_exc())
-        if self._pick is not None:
+        with self._servo_lock:
+            servo = None if self._servo is None else dict(self._servo)
+        if servo is not None:
+            data.ctrl[:] = 0.0
+            for name, value in servo.items():
+                aid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
+                if aid >= 0:
+                    data.ctrl[aid] = value
+            applied.append("servo")
+        elif self._pick is not None:
             self._advance_pick(model, data)
             applied.append("pick")
         if applied:
@@ -360,6 +377,7 @@ def run(args: argparse.Namespace) -> int:
             print(f"[pi-robotics] model fetch failed: {exc}", file=sys.stderr)
 
     sim_plugin = RoboticsSimPlugin(state, models_root)
+    render_lock = threading.Lock()
 
     plugins: list[Any] = [
         AppInitPlugin(compact=args.compact),
@@ -380,6 +398,7 @@ def run(args: argparse.Namespace) -> int:
 
     exit_code = 0
     with launch_web.launch(config, plugins=plugins) as handle:
+        vision = VisionServo(state, handle, sim_plugin, render_lock)
         # Initial model: file path if given, otherwise the Python scene.
         if model_path:
             sim_plugin.reload_scene(model_path=model_path)
@@ -399,7 +418,9 @@ def run(args: argparse.Namespace) -> int:
         if not state.viewer_port:
             print("[pi-robotics] viewer did not bind a port", file=sys.stderr)
 
-        control = ControlServer(state, handle, sim_plugin)
+        control = ControlServer(
+            state, handle, sim_plugin, vision=vision, render_lock=render_lock
+        )
         control.start()
         state.control_port = control.port
 

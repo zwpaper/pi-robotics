@@ -72,6 +72,9 @@ await call("capture", { width: 320, height: 240 });
 // Stretch: load the Menagerie robot and run the scripted pick.
 await call("scene", { scene: "stretch" });
 await call("cameras");
+// Camera -> detect -> control closed loop.
+await call("vision_pick", { object: "object" });
+await call("reset");
 await call("pick", { object: "object" });
 await call("stop");
 await call("status");

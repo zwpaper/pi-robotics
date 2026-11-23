@@ -65,8 +65,9 @@ another machine, port-forward (e.g. `ssh -L 8080:127.0.0.1:8080 <agent-host>`)
 and open `http://localhost:8080/`.
 
 Commands: `/robotics start [scene]`, `/robotics open`, `/robotics scenes`,
-`/robotics scene <name>`, `/robotics pick [object]`, `/robotics camera [name]`,
-`/robotics cameras`, `/robotics capture`, `/robotics stop`, `/robotics status`.
+`/robotics scene <name>`, `/robotics pick [object]`, `/robotics vision [object]`,
+`/robotics camera [name]`, `/robotics cameras`, `/robotics capture`,
+`/robotics stop`, `/robotics status`.
 
 ## Hello Robot Stretch and `pick`
 
@@ -82,6 +83,22 @@ paused. It reports the measured lift, e.g.
 `{ done: true, start_z: 0.52, end_z: 0.92, lifted: 0.40 }`. `reset` puts the
 object back. For a different object or placement, drive the arm yourself with
 `ctrl` on those actuators and read `state`.
+
+## Vision-based grasping (closed loop)
+
+`vision_pick { object, camera }` is the perception-driven version, for when the
+object has been moved. It runs in the daemon (no LLM in the control path):
+
+1. render the robot camera with MuJoCo's segmentation renderer;
+2. detect the target body's image centroid and back-project it onto the tabletop
+   plane (`plane_z`, default 0.52 m) to get its world position;
+3. measure the gripper fingertip by forward kinematics and servo `arm_extend`
+   (y) and `lift` (z) until the fingertip reaches the object;
+4. close the gripper and lift.
+
+It reports `target` (camera-localized object), `aligned`, `iterations`, and
+`lifted`. `vision_stop` cancels a running servo. It assumes the target is on the
+table plane and in the camera's field of view.
 
 ## Robot camera stream
 
