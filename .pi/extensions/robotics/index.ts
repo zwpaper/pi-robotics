@@ -55,6 +55,8 @@ const ACTIONS = [
   "clear",
   "reel",
   "reel_clear",
+  "record_start",
+  "record_stop",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -213,7 +215,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, pick, vision_pick, vision_stop, cameras, stream.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, record_start, record_stop, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -316,7 +318,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
             "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site} · clear",
-            "Reel:       look/nudge record 3D panel + cameras · reel {fps,height} builds an operation video · reel_clear",
+            "Reel:       record_start {fps,cameras} → do the task → reel {height} builds the video (record_stop/reel_clear)",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
@@ -587,8 +589,8 @@ fi`,
             cmd: "look",
             camera: cameras[0],
             ...(params.cameras ? { cameras: params.cameras } : {}),
-            width: params.width ?? 480,
-            height: params.height ?? 360,
+            width: params.width ?? 640,
+            height: params.height ?? 480,
           });
           const body = res.body as {
             ok?: boolean;
@@ -632,8 +634,8 @@ fi`,
             actuators: params.actuators,
             settle: params.settle,
             camera: params.camera ?? "camera_rgb",
-            width: params.width ?? 480,
-            height: params.height ?? 360,
+            width: params.width ?? 640,
+            height: params.height ?? 480,
           });
           const body = res.body as {
             ok?: boolean;
@@ -684,8 +686,8 @@ fi`,
               steps: params.steps ?? 6,
               settle: params.settle ?? 1.5,
               camera: params.camera ?? "camera_rgb",
-              width: params.width ?? 480,
-              height: params.height ?? 360,
+              width: params.width ?? 640,
+              height: params.height ?? 480,
             },
             120000,
           );
@@ -706,6 +708,21 @@ fi`,
           const details = { action, ik_error: body.ik_error, recorded: body.recorded };
           return withFrame(text, body.png_base64, details);
         }
+        case "record_start": {
+          // Continuous capture of the 3D panel + cameras (real video, not key frames).
+          const res = await controlPost(port, "/command", {
+            cmd: "record_start",
+            fps: params.fps ?? 6,
+            cameras: params.cameras,
+            width: params.width ?? 640,
+            height: params.height ?? 480,
+          });
+          return ok(json(res.body), { action });
+        }
+        case "record_stop": {
+          const res = await controlPost(port, "/command", { cmd: "record_stop" });
+          return ok(json(res.body), { action });
+        }
         case "reel": {
           // Compose the recorded 3D-panel + camera frames into a video.
           const res = await controlPost(
@@ -715,7 +732,7 @@ fi`,
               cmd: "reel",
               fps: params.fps ?? 10,
               hold: params.hold,
-              height: params.height ?? 360,
+              height: params.height ?? 480,
               name: params.reel_name,
             },
             120000,

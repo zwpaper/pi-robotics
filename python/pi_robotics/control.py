@@ -21,8 +21,8 @@ from pi_robotics import ik
 from pi_robotics.reel import Recorder
 
 # Free-camera defaults for the 3D-panel column of an operation reel.
-PANEL_WIDTH = 480
-PANEL_HEIGHT = 360
+PANEL_WIDTH = 800
+PANEL_HEIGHT = 600
 PANEL_CAMERA_OPTS = {
     "distance": 2.4,
     "elevation": -22,
@@ -309,6 +309,10 @@ class ControlServer:
         self._thread: threading.Thread | None = None
         self._render_lock = render_lock or threading.Lock()
         self._stream_stop = threading.Event()
+        self._recorder_lock = threading.Lock()
+        self._rec_stop: threading.Event | None = None
+        self._rec_thread: threading.Thread | None = None
+        self._rec_cfg: dict[str, Any] = {}
         self.recorder = Recorder()
         self.port = 0
 
@@ -599,8 +603,13 @@ class ControlServer:
         if cmd == "reel":
             return self._reel(body)
         if cmd == "reel_clear":
+            self._record_stop()
             self.recorder.clear()
             return {"ok": True, "steps": 0}
+        if cmd == "record_start":
+            return self._record_start(body)
+        if cmd == "record_stop":
+            return self._record_stop()
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
@@ -609,8 +618,8 @@ class ControlServer:
         self, body: dict[str, Any]
     ) -> tuple[str, int, int, dict[str, Any] | None]:
         camera = str(body.get("camera") or "camera_rgb")
-        width = min(int(body.get("width", 480)), 640)
-        height = min(int(body.get("height", 360)), 480)
+        width = min(int(body.get("width", 640)), 1280)
+        height = min(int(body.get("height", 480)), 960)
         return camera, width, height, body.get("camera_opts")
 
     def _collect(self, body: dict[str, Any]) -> dict[str, Any]:
@@ -632,8 +641,8 @@ class ControlServer:
             # one column per camera with no blank frames.
             cameras = model_cameras or [str(body.get("camera") or "camera_rgb")]
         requested = str(body.get("camera") or cameras[0])
-        width = min(int(body.get("width", 480)), 640)
-        height = min(int(body.get("height", 360)), 480)
+        width = min(int(body.get("width", 640)), 1280)
+        height = min(int(body.get("height", 480)), 960)
         cam_pngs: dict[str, bytes] = {}
         for name in cameras:
             try:
@@ -644,8 +653,8 @@ class ControlServer:
             except Exception:  # noqa: BLE001
                 pass
         panel_opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
-        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 640)
-        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 480)
+        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
+        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
         panel: bytes | None = None
         try:
             with self._render_lock:
@@ -654,7 +663,7 @@ class ControlServer:
                 )
         except Exception:  # noqa: BLE001
             panel = None
-        if panel is not None:
+        if panel is not None and self._rec_thread is None:
             self.recorder.add(panel, cam_pngs)
         main = cam_pngs.get(requested) or (next(iter(cam_pngs.values())) if cam_pngs else None)
         return {
@@ -817,14 +826,81 @@ class ControlServer:
     def _sleep(self, seconds: float) -> None:
         time.sleep(max(0.0, seconds))
 
+    def _record_start(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Starts continuous recording of the 3D panel + cameras at a frame rate.
+
+        Unlike per-`look` steps, this samples the whole operation, so the reel is
+        a real (smooth) video of the task instead of a key-frame slide show.
+        """
+        self._record_stop()
+        if self._handle.model is None:
+            return {"ok": False, "error": "no model loaded"}
+        fps = max(1, min(int(body.get("fps", 6)), 30))
+        cameras = body.get("cameras")
+        if not cameras:
+            cameras = self.list_cameras() or [str(body.get("camera") or "camera_rgb")]
+        cameras = [str(c) for c in cameras]
+        width = min(int(body.get("width", 640)), 1280)
+        height = min(int(body.get("height", 480)), 960)
+        opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
+        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
+        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
+        stop = threading.Event()
+        self._rec_stop = stop
+
+        def loop() -> None:
+            period = 1.0 / fps
+            while not stop.is_set():
+                model = self._handle.model
+                if model is not None:
+                    snapshot = self._state.snapshot()
+                    cams: dict[str, bytes] = {}
+                    for name in cameras:
+                        try:
+                            with self._render_lock:
+                                cams[name] = render_png_from_state(
+                                    model, snapshot, width, height, name, None
+                                )
+                        except Exception:  # noqa: BLE001
+                            pass
+                    try:
+                        with self._render_lock:
+                            panel = render_png_from_state(
+                                model, snapshot, panel_w, panel_h, None, opts
+                            )
+                    except Exception:  # noqa: BLE001
+                        panel = None
+                    if panel is not None:
+                        self.recorder.add(panel, cams)
+                stop.wait(period)
+
+        self._rec_thread = threading.Thread(
+            target=loop, name="pi-robotics-rec", daemon=True
+        )
+        self._rec_thread.start()
+        return {"ok": True, "recording": True, "fps": fps, "cameras": cameras}
+
+    def _record_stop(self) -> dict[str, Any]:
+        stop = self._rec_stop
+        thread = self._rec_thread
+        self._rec_stop = None
+        self._rec_thread = None
+        if stop is not None:
+            stop.set()
+        if thread is not None:
+            thread.join(timeout=3.0)
+        return {"ok": True, "recording": False}
+
     def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
+        self._record_stop()
         hold = body.get("hold")
         try:
             result = self.recorder.build(
                 self._state.runtime_dir / "reels",
                 fps=float(body.get("fps", 10)),
                 hold=None if hold is None else float(hold),
-                height=int(body.get("height", 360)),
+                tail=float(body.get("tail", 0.8)),
+                height=int(body.get("height", 480)),
                 name=str(body.get("name", "operation")),
             )
         except Exception as exc:  # noqa: BLE001

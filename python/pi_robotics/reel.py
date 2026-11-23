@@ -62,6 +62,7 @@ class Recorder:
         hold: float | None = None,
         min_hold: float = 0.6,
         max_hold: float = 6.0,
+        tail: float = 0.8,
         height: int = 360,
         name: str = "operation",
     ) -> dict[str, Any]:
@@ -87,6 +88,13 @@ class Recorder:
         else:
             durations = [max(min_hold, 1.2)] * count
         durations = [max(min_hold, min(max_hold, d)) for d in durations]
+        # Hold the final pose a moment so the finished state is clearly visible.
+        if tail and durations:
+            durations[-1] = min(max_hold, durations[-1] + float(tail))
+        # Swallow tiny jitter: clamp per-frame hold so a dense continuous take
+        # plays smoothly rather than as a slow slide show.
+        if hold is None and min(durations) < 0.08 and max(durations) < 0.25:
+            durations = [max(0.08, min(max_hold, d)) for d in durations]
         columns = [PANEL_COLUMN, *cameras]
         columns_cams = cameras
 
@@ -154,8 +162,14 @@ class Recorder:
                 str(frame_dir / "frame_%04d.png"),
                 "-c:v",
                 "libx264",
+                "-preset",
+                "medium",
+                "-crf",
+                "18",
                 "-pix_fmt",
                 "yuv420p",
+                "-movflags",
+                "+faststart",
                 "-vf",
                 "pad=ceil(iw/2)*2:ceil(ih/2)*2",
                 str(output),

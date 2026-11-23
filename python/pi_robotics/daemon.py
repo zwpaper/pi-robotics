@@ -142,6 +142,13 @@ class RoboticsSimPlugin(plugin.SimPlugin):
 
     @messages.handler(priority=messages.Priority.CRITICAL)
     def on_post_model(self, event: messages.PostModelEvent) -> None:
+        # Enable larger offscreen renders (reels/captures) than the 640x480 default.
+        try:
+            global_ = event.model.vis.global_
+            global_.offwidth = max(int(global_.offwidth), 1280)
+            global_.offheight = max(int(global_.offheight), 960)
+        except Exception:  # noqa: BLE001
+            pass
         self._state.publish_model(event.model)
         self._state.record_error(None, None)
         if self._pick is None:
