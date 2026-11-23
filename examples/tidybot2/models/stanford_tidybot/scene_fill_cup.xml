@@ -1,0 +1,85 @@
+<!--
+  TidyBot++ task scene: fill the cup with water.
+
+  The robot places the cup under the dispenser's spout to fill it. MuJoCo does
+  not simulate fluid, so the water in the cup and the stream from the spout are
+  translucent visual placeholders; the task is the manipulation motion.
+
+  Load with:
+    robotics { action: "load", path: "examples/tidybot2/models/stanford_tidybot/scene_fill_cup.xml" }
+-->
+<mujoco model="tidybot fill_cup scene">
+  <include file="tidybot.xml"/>
+
+  <statistic center="0.55 0 0.5" extent="1.0" meansize="0.05"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.25 0.25 0.25" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="130" elevation="-18"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5"/>
+    <material name="table_mat" rgba="0.62 0.45 0.30 1"/>
+    <material name="cup" rgba="0.90 0.90 0.94 1"/>
+    <material name="water" rgba="0.25 0.6 0.95 0.55"/>
+    <material name="dispenser" rgba="0.85 0.86 0.88 1"/>
+    <material name="accent" rgba="0.20 0.55 0.75 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.4 0 2.0" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+    <!-- workbench in front of the robot -->
+    <body name="table" pos="0.62 0 0.19">
+      <geom name="table_top" type="box" size="0.22 0.30 0.19" material="table_mat"/>
+    </body>
+
+    <!-- water dispenser (fixed), spout over the cup position -->
+    <body name="dispenser" pos="0.62 0.20 0.38">
+      <geom name="dispenser_base" type="box" size="0.06 0.06 0.02" pos="0 0 0.02" material="dispenser"/>
+      <geom name="dispenser_post" type="box" size="0.016 0.016 0.11" pos="0 0 0.13" material="dispenser"/>
+      <geom name="dispenser_arm" type="box" size="0.014 0.11 0.012" pos="0 -0.09 0.245" material="dispenser"/>
+      <geom name="dispenser_knob" type="cylinder" size="0.02 0.012" pos="0 0 0.26" euler="0.0 0.0 0.0"
+        material="accent"/>
+      <geom name="spout" type="cylinder" size="0.009 0.022" pos="0 -0.20 0.232" material="accent"/>
+      <!-- cosmetic water stream from the spout down into the cup -->
+      <geom name="stream" type="cylinder" size="0.006 0.070" pos="0 -0.20 0.150" material="water"
+        contype="0" conaffinity="0" mass="0"/>
+    </body>
+
+    <!-- cup (free body the robot moves under the spout) -->
+    <body name="cup" pos="0.62 0.0 0.40">
+      <freejoint name="cup_free"/>
+      <geom name="cup_bottom" type="cylinder" size="0.032 0.005" pos="0 0 0.005" material="cup" mass="0.03"/>
+      <geom name="cup_wall_0" type="box" size="0.004 0.010 0.048" pos="0.032 0 0.05" euler="0 0 0"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_1" type="box" size="0.004 0.010 0.048" pos="0.0259 0.0188 0.05" euler="0 0 36"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_2" type="box" size="0.004 0.010 0.048" pos="0.0099 0.0304 0.05" euler="0 0 72"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_3" type="box" size="0.004 0.010 0.048" pos="-0.0099 0.0304 0.05" euler="0 0 108"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_4" type="box" size="0.004 0.010 0.048" pos="-0.0259 0.0188 0.05" euler="0 0 144"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_5" type="box" size="0.004 0.010 0.048" pos="-0.032 0 0.05" euler="0 0 180"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_6" type="box" size="0.004 0.010 0.048" pos="-0.0259 -0.0188 0.05" euler="0 0 216"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_7" type="box" size="0.004 0.010 0.048" pos="-0.0099 -0.0304 0.05" euler="0 0 252"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_8" type="box" size="0.004 0.010 0.048" pos="0.0099 -0.0304 0.05" euler="0 0 288"
+        material="cup" mass="0.005"/>
+      <geom name="cup_wall_9" type="box" size="0.004 0.010 0.048" pos="0.0259 -0.0188 0.05" euler="0 0 324"
+        material="cup" mass="0.005"/>
+      <!-- start empty; a translucent water column shows the intended fill level -->
+      <geom name="cup_water" type="cylinder" size="0.028 0.030" pos="0 0 0.031" material="water"
+        contype="0" conaffinity="0" mass="0"/>
+    </body>
+  </worldbody>
+</mujoco>

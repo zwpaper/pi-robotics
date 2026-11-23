@@ -273,6 +273,7 @@ pi-robotics/
 │   ├── requirements.txt
 │   └── pi_robotics/                 # daemon, scenes, menagerie fetch, control server
 ├── examples/scenes/                 # example MJCF
+├── examples/tidybot2/               # TidyBot++ MuJoCo models + water_plant / fill_cup scenes
 └── scripts/test-extension.mjs       # headless extension smoke test
 ```
 
