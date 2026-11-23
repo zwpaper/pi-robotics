@@ -58,6 +58,7 @@ const ACTIONS = [
   "record_start",
   "record_stop",
   "chapter",
+  "contains",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -231,7 +232,10 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       ),
       name: Type.Optional(Type.String({ description: "Actuator name for a named 'ctrl'." })),
       object: Type.Optional(
-        Type.String({ description: "Body name to pick up (for action 'pick'; default 'object')." }),
+        Type.String({ description: "Body name to pick up / to test (for 'pick'/'contains')." }),
+      ),
+      container: Type.Optional(
+        Type.String({ description: "Container body for action 'contains' (is 'object' inside its AABB?)." }),
       ),
       camera: Type.Optional(
         Type.String({ description: "Camera name for action 'stream' (default 'camera_rgb')." }),
@@ -735,6 +739,15 @@ fi`,
         case "record_stop": {
           const res = await controlPost(port, "/command", { cmd: "record_stop" });
           return ok(json(res.body), { action });
+        }
+        case "contains": {
+          // VLABench-style `contain` success check: is `object` inside `container`?
+          const res = await controlPost(port, "/command", {
+            cmd: "contains",
+            object: params.object,
+            container: params.container,
+          });
+          return ok(json(res.body), { action, ...(res.body as object) });
         }
         case "chapter": {
           // Marks a new attempt in the recorded reel (a QuickTime chapter).

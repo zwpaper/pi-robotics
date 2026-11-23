@@ -107,6 +107,17 @@ The loop the model runs:
 5. `clear` to release the manual hold.
 6. `reel` to build the operation video (see "Operation video").
 
+**Stop as soon as the task succeeds.** Once it succeeds, do NOT keep operating
+or retrying: confirm with one `look` (or the `contains` check below), then
+`record_stop` and `reel`. The successful attempt is the **last** chapter; keep
+the earlier failed attempts before it. Only run more attempts if the task failed,
+or if the user explicitly asked for several candidate strategies.
+
+For a VLABench-style placement task, `contains { object, container }` (POST
+`/command {"cmd":"contains",...}`) reports `contained: true|false` — the
+VLABench `contain` condition (the object's centre over the container's
+footprint) — so success does not have to be guessed from pixels.
+
 ### Prefer a subagent for this loop
 
 This loop is long (many image-bearing tool calls) and self-contained. **If
