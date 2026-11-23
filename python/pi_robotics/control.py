@@ -17,6 +17,18 @@ import numpy as np
 import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
+from pi_robotics.reel import Recorder
+
+# Free-camera defaults for the 3D-panel column of an operation reel.
+PANEL_WIDTH = 480
+PANEL_HEIGHT = 360
+PANEL_CAMERA_OPTS = {
+    "distance": 2.4,
+    "elevation": -22,
+    "azimuth": 130,
+    "lookat": [-0.1, -0.4, 0.6],
+}
+
 
 class SharedState:
     """Thread-safe snapshot the control server reads and the sim thread writes."""
@@ -282,6 +294,7 @@ class ControlServer:
         self._thread: threading.Thread | None = None
         self._render_lock = render_lock or threading.Lock()
         self._stream_stop = threading.Event()
+        self.recorder = Recorder()
         self.port = 0
 
     def start(self, port: int = 0) -> None:
@@ -566,6 +579,11 @@ class ControlServer:
             return self._frame(body)
         if cmd == "nudge":
             return self._nudge(body)
+        if cmd == "reel":
+            return self._reel(body)
+        if cmd == "reel_clear":
+            self.recorder.clear()
+            return {"ok": True, "steps": 0}
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
@@ -578,27 +596,64 @@ class ControlServer:
         height = min(int(body.get("height", 360)), 480)
         return camera, width, height, body.get("camera_opts")
 
-    def _frame(self, body: dict[str, Any]) -> dict[str, Any]:
-        """Renders one camera frame from the state snapshot and returns it inline."""
+    def _collect(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Renders a 3D-panel overview + one frame per camera and records them.
+
+        The panel column is a free-camera render of the same scene the 3D panel
+        shows; the camera columns are the requested robot cameras. All columns
+        share one recorded step so a reel can play them side by side.
+        """
         model = self._handle.model
         if model is None:
             return {"ok": False, "error": "no model loaded"}
-        camera, width, height, opts = self._camera_and_size(body)
+        snapshot = self._state.snapshot()
+        model_cameras = self.list_cameras()
+        if body.get("cameras"):
+            cameras = [str(c) for c in body["cameras"]]
+        else:
+            # Default: capture every camera in the model, so a reel always has
+            # one column per camera with no blank frames.
+            cameras = model_cameras or [str(body.get("camera") or "camera_rgb")]
+        requested = str(body.get("camera") or cameras[0])
+        width = min(int(body.get("width", 480)), 640)
+        height = min(int(body.get("height", 360)), 480)
+        cam_pngs: dict[str, bytes] = {}
+        for name in cameras:
+            try:
+                with self._render_lock:
+                    cam_pngs[name] = render_png_from_state(
+                        model, snapshot, width, height, name, None
+                    )
+            except Exception:  # noqa: BLE001
+                pass
+        panel_opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
+        panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 640)
+        panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 480)
+        panel: bytes | None = None
         try:
             with self._render_lock:
-                png = render_png_from_state(
-                    model, self._state.snapshot(), width, height, camera, opts
+                panel = render_png_from_state(
+                    model, snapshot, panel_w, panel_h, None, panel_opts
                 )
-        except Exception as exc:  # noqa: BLE001
-            return {"ok": False, "error": f"render failed: {exc}"}
+        except Exception:  # noqa: BLE001
+            panel = None
+        if panel is not None:
+            self.recorder.add(panel, cam_pngs)
+        main = cam_pngs.get(requested) or (next(iter(cam_pngs.values())) if cam_pngs else None)
         return {
-            "ok": True,
-            "camera": camera,
-            "width": width,
-            "height": height,
-            "cameras": self.list_cameras(),
-            "png_base64": base64.b64encode(png).decode("ascii"),
+            "ok": main is not None,
+            "error": None if main is not None else "render failed",
+            "camera": requested,
+            "cameras": cameras,
+            "model_cameras": model_cameras,
+            "png_base64": base64.b64encode(main).decode("ascii") if main else None,
+            "panel_base64": base64.b64encode(panel).decode("ascii") if panel else None,
+            "recorded": self.recorder.count(),
         }
+
+    def _frame(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Renders the panel + camera frame(s) and records one reel step."""
+        return self._collect(body)
 
     def _nudge(self, body: dict[str, Any]) -> dict[str, Any]:
         """Applies relative actuator deltas, settles, and returns a fresh frame.
@@ -652,7 +707,22 @@ class ControlServer:
             "error": frame.get("error"),
             "ctrl": view,
             "png_base64": frame.get("png_base64"),
+            "panel_base64": frame.get("panel_base64"),
+            "recorded": frame.get("recorded"),
         }
+
+    def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
+        try:
+            result = self.recorder.build(
+                self._state.runtime_dir / "reels",
+                fps=float(body.get("fps", 4)),
+                height=int(body.get("height", 360)),
+                name=str(body.get("name", "operation")),
+            )
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": str(exc)}
+        result["ok"] = True
+        return result
 
     def _capture(self, body: dict[str, Any]) -> dict[str, Any]:
         model = self._handle.model

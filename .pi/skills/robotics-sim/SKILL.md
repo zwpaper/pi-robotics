@@ -50,8 +50,11 @@ Only one daemon runs per project. It is discovered through
    positions, and model metadata (joint/actuator names). `capture { width,
    height }` saves an offscreen PNG.
 5. **Vision grasp loop** — to grasp by looking, run the `look`/`nudge` loop in
-   "Vision grasp loop" below (prefer a subagent — see that section).
-6. **Show the panel** — `open_panel` reopens the live scene in the browser if it
+   "Vision grasp loop" below (prefer a subagent — see that section). Every
+   `look`/`nudge` is also recorded for the operation reel.
+6. **Operation video** — `reel` stitches the recorded 3D-panel + camera frames
+   into a video (see "Operation video").
+7. **Show the panel** — `open_panel` reopens the live scene in the browser if it
    was closed.
 
 Always pair a physical-sounding claim with a measured number: call `state`
@@ -101,7 +104,8 @@ The loop the model runs:
    height, `wrist` to aim; the image and `ctrl` come back).
 3. repeat 1–2 until the gripper is over the object.
 4. `nudge { grip: -0.005 }` to close; `nudge { lift: 0.3 }` to raise.
-5. `clear`.
+5. `clear` to release the manual hold.
+6. `reel` to build the operation video (see "Operation video").
 
 ### Prefer a subagent for this loop
 
@@ -124,6 +128,31 @@ retries):
   `png_base64` into a file and inspect it. `capture`/`/capture` saves a PNG too.
 - Only run the loop inline if no subagent tool is available, or the user asks to
   watch each step in the main thread.
+
+## Operation video (3D panel + cameras) — independent capability
+
+Whenever you `look`/`nudge`, the daemon **records one 3D-panel frame plus one
+frame per camera** for that step, in order. This is independent of the grasp
+itself: any `look`/`nudge` sequence can be turned into a video afterwards.
+
+- `look { cameras: ["camera_rgb", "camera_depth"] }` captures every listed camera
+  for that step (default: the single `camera`).
+- `reel { fps, height, reel_name }` composes the recording into an **operation
+  video**: the 3D-panel column plus one column per camera, side by side, playing
+  the steps in order. Output: `<cwd>/.pi/robotics/runtime/reels/<name>.mp4`
+  (needs `ffmpeg`; falls back to an animated GIF), and it is opened for the user.
+- `reel_clear` resets the recording before starting a new take.
+- `look`/`nudge { panel: true }` also returns the 3D-panel image so the model can
+  see it (by default only the camera image is returned, to save context).
+
+Layout rule: columns are laid out in first-seen order with the 3D panel first,
+then the cameras. One camera → one column; several → one column each; a camera
+that first appears on a later step gets a blank column in earlier frames.
+
+With the reel, a subagent's run is self-documenting: the daemon records while
+the child drives `look`/`nudge`; afterwards **either the child or the parent**
+can call `reel` (the recorder lives in the daemon, shared across the session).
+Typical finish: `reel { fps: 4 }` then report the video path.
 
 Rules for the loop: never claim a pose without a fresh `look` (or `state`);
 `nudge` values are deltas, `grip` is absolute (0.04 open, -0.005 closed);

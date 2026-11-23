@@ -47,12 +47,14 @@ async function call(action, extra = {}) {
 
 await call("scene", { scene: "stretch" });
 await call("reset");
-await call("look", { camera: "camera_rgb" });
-await call("look", { camera: "camera_depth" });
+await call("reel_clear");
+await call("look", { cameras: ["camera_rgb", "camera_depth"] });
 // A few nudge steps as an LLM would do them (move, then look at the result).
 await call("nudge", { extend: 0.15, settle: 0.8 });
 await call("nudge", { extend: 0.13, lift: -0.07, wrist: 0.15, settle: 0.9 });
 await call("nudge", { grip: -0.005, settle: 1.0 });
 await call("nudge", { lift: 0.3, settle: 1.5 });
+// Compose the recorded 3D panel + cameras into an operation video.
+await call("reel", { fps: 4, height: 300, reel_name: "llm_loop" });
 await call("clear");
 console.log("DONE");

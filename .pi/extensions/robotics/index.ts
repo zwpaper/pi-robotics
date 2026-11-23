@@ -52,6 +52,8 @@ const ACTIONS = [
   "look",
   "nudge",
   "clear",
+  "reel",
+  "reel_clear",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -210,7 +212,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, clear, pick, vision_pick, vision_stop, cameras, stream.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, clear, reel, reel_clear, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -253,6 +255,15 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       settle: Type.Optional(
         Type.Number({ description: "seconds to let the arm settle after a 'nudge' (default 0.8)." }),
       ),
+      cameras: Type.Optional(
+        Type.Array(Type.String(), { description: "camera names to capture on 'look' (default: [camera])." }),
+      ),
+      panel: Type.Optional(
+        Type.Boolean({ description: "also return the 3D-panel overview image on 'look'/'nudge'." }),
+      ),
+      reel_name: Type.Optional(
+        Type.String({ description: "output name (no extension) for action 'reel'." }),
+      ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
@@ -276,6 +287,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
             "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip} · clear",
+            "Reel:       look/nudge record 3D panel + cameras · reel {fps,height} builds an operation video · reel_clear",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
@@ -539,22 +551,46 @@ fi`,
           return ok(json(res.body), { action });
         }
         case "look": {
-          // Returns the robot camera frame as an image the model can see.
+          // Returns the robot camera frame as an image the model can see; the
+          // 3D-panel overview frame is recorded for the operation reel.
+          const cameras = params.cameras ?? [params.camera ?? "camera_rgb"];
           const res = await controlPost(port, "/command", {
             cmd: "look",
-            camera: params.camera ?? "camera_rgb",
+            camera: cameras[0],
+            ...(params.cameras ? { cameras: params.cameras } : {}),
             width: params.width ?? 480,
             height: params.height ?? 360,
           });
-          const body = res.body as { ok?: boolean; png_base64?: string; cameras?: string[]; error?: string };
+          const body = res.body as {
+            ok?: boolean;
+            png_base64?: string;
+            panel_base64?: string;
+            camera?: string;
+            cameras?: string[];
+            model_cameras?: string[];
+            recorded?: number;
+            error?: string;
+          };
           if (!body?.ok || !body.png_base64) {
             return fail(`look failed: ${body?.error ?? "no frame"}`, { action });
           }
-          return withFrame(
-            `Robot camera '${params.camera ?? "camera_rgb"}' (cameras: ${(body.cameras ?? []).join(", ") || "none"}).`,
-            body.png_base64,
-            { action, camera: params.camera ?? "camera_rgb" },
-          );
+          const captured = body.cameras ?? cameras;
+          const text =
+            `Looked via camera '${body.camera ?? cameras[0]}' ` +
+            `(captured: ${captured.join(", ")}; model cameras: ${(body.model_cameras ?? []).join(", ") || "none"}); ` +
+            `operation reel recorded ${body.recorded ?? 0} step(s) [panel + ${captured.length} camera(s)].`;
+          const details = { action, cameras: captured, recorded: body.recorded };
+          if (params.panel && body.panel_base64) {
+            return {
+              content: [
+                { type: "text", text },
+                { type: "image", data: body.png_base64, mimeType: "image/png" },
+                { type: "image", data: body.panel_base64, mimeType: "image/png" },
+              ],
+              details,
+            };
+          }
+          return withFrame(text, body.png_base64, details);
         }
         case "nudge": {
           // Move the arm a little and return a fresh camera frame.
@@ -569,7 +605,14 @@ fi`,
             width: params.width ?? 480,
             height: params.height ?? 360,
           });
-          const body = res.body as { ok?: boolean; png_base64?: string; ctrl?: Record<string, number>; error?: string };
+          const body = res.body as {
+            ok?: boolean;
+            png_base64?: string;
+            panel_base64?: string;
+            ctrl?: Record<string, number>;
+            recorded?: number;
+            error?: string;
+          };
           if (!body?.ok || !body.png_base64) {
             return fail(`nudge failed: ${body?.error ?? "no frame"}`, { action });
           }
@@ -579,11 +622,50 @@ fi`,
             params.wrist !== undefined ? `wrist${params.wrist >= 0 ? "+" : ""}${params.wrist}` : null,
             params.grip !== undefined ? `grip=${params.grip}` : null,
           ].filter(Boolean);
-          return withFrame(
-            `Applied ${deltas.join(", ") || "(no change)"}. Current actuators: ${json(body.ctrl)}`,
-            body.png_base64,
-            { action, ctrl: body.ctrl },
+          const text =
+            `Applied ${deltas.join(", ") || "(no change)"}. Current actuators: ${json(body.ctrl)} ` +
+            `(reel recorded ${body.recorded ?? 0} steps)`;
+          const details = { action, ctrl: body.ctrl, recorded: body.recorded };
+          if (params.panel && body.panel_base64) {
+            return {
+              content: [
+                { type: "text", text },
+                { type: "image", data: body.png_base64, mimeType: "image/png" },
+                { type: "image", data: body.panel_base64, mimeType: "image/png" },
+              ],
+              details,
+            };
+          }
+          return withFrame(text, body.png_base64, details);
+        }
+        case "reel": {
+          // Compose the recorded 3D-panel + camera frames into a video.
+          const res = await controlPost(
+            port,
+            "/command",
+            { cmd: "reel", fps: params.fps ?? 4, height: params.height ?? 360, name: params.reel_name },
+            120000,
           );
+          const body = res.body as {
+            ok?: boolean;
+            path?: string;
+            format?: string;
+            frames?: number;
+            columns?: string[];
+            error?: string;
+          };
+          if (!body?.ok || !body.path) {
+            return fail(`reel failed: ${body?.error ?? "unknown"}`, { action });
+          }
+          if (body.path) await openInBrowser(body.path);
+          return ok(
+            `Operation reel (${body.format}, ${body.frames} frames, columns: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
+            { action, ...body },
+          );
+        }
+        case "reel_clear": {
+          const res = await controlPost(port, "/command", { cmd: "reel_clear" });
+          return ok(json(res.body), { action });
         }
         default:
           return fail(`Unknown action '${action}'. Try action 'help'.`, { action });

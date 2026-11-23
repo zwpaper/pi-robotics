@@ -155,6 +155,17 @@ than `vision_pick`, which is why both exist — use `vision_pick` for a fast,
 reliable grasp, and `look`/`nudge` when you want the model to perceive and
 decide each step.
 
+#### Operation video (3D panel + cameras)
+
+Every `look`/`nudge` also **records one 3D-panel frame plus one frame per
+camera**, in order. When the task is done, `reel { fps, height }` composes them
+into a video: the 3D-panel column plus one column per camera, side by side,
+playing the steps in order (one camera → one column, several → one each). Output
+`<cwd>/.pi/robotics/runtime/reels/<name>.mp4` (needs `ffmpeg`; GIF fallback) and
+opens it. `look { cameras: ["camera_rgb", "camera_depth"] }` captures multiple
+cameras per step; `reel_clear` starts a new take; `look`/`nudge { panel: true }`
+also returns the panel image.
+
 ### Vision-based grasping (camera → detect → control)
 
 `pick` is a fixed, calibrated sequence — it only works for the object at the
