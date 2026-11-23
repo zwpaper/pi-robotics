@@ -49,6 +49,9 @@ const ACTIONS = [
   "ctrl",
   "speed",
   "capture",
+  "look",
+  "nudge",
+  "clear",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -69,7 +72,9 @@ const DEFAULT_SCENES = [
 const MENAGERIE_SCENES = ["stretch", "stretch3"];
 
 interface ToolResult {
-  content: Array<{ type: "text"; text: string }>;
+  content: Array<
+    { type: "text"; text: string } | { type: "image"; data: string; mimeType: string }
+  >;
   details: Record<string, unknown>;
   isError?: boolean;
 }
@@ -84,6 +89,21 @@ function fail(text: string, details: Record<string, unknown> = {}): ToolResult {
 
 function json(value: unknown): string {
   return JSON.stringify(value, null, 2);
+}
+
+/** A tool result that carries a camera frame the model can see. */
+function withFrame(
+  text: string,
+  pngBase64: string,
+  details: Record<string, unknown>,
+): ToolResult {
+  return {
+    content: [
+      { type: "text", text },
+      { type: "image", data: pngBase64, mimeType: "image/png" },
+    ],
+    details,
+  };
 }
 
 function setStatus(ctx: ExtensionContext, paths: RoboticsPaths): void {
@@ -181,6 +201,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "For Hello Robot Stretch: scene 'stretch' (fetched once from MuJoCo Menagerie into .pi/robotics/models/), then action 'pick' to grasp and lift the tabletop object.",
       "Use robotics action 'stream' to play the robot's camera as a live MJPEG video in the browser (the Stretch head RealSense is 'camera_rgb'); 'cameras' lists them.",
       "robotics 'vision_pick' runs a camera->detect->control closed loop: it localizes the object from the robot camera and servos the arm onto it, then grasps. Prefer it over the fixed 'pick' when the object is placed by the user.",
+      "To grasp by looking at the camera yourself (LLM in the loop): call robotics 'look' to get a robot-camera image, then robotics 'nudge' {extend,lift,wrist,grip,settle} to move a little and get a fresh image, and repeat until the gripper is over the object; then nudge {grip:-0.005} to close and nudge {lift:0.3} to raise. 'clear' releases the manual hold.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
     ],
@@ -189,7 +210,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         ACTIONS.map((v) => Type.Literal(v)),
         {
           description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, pick, vision_pick, vision_stop, cameras, stream.",
+            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, clear, pick, vision_pick, vision_stop, cameras, stream.",
         },
       ),
       scene: Type.Optional(
@@ -217,6 +238,21 @@ export default function roboticsExtension(pi: ExtensionAPI) {
           description: "Tabletop plane height (m) for 'vision_pick' back-projection (default 0.52).",
         }),
       ),
+      extend: Type.Optional(
+        Type.Number({ description: "arm_extend delta (m) for action 'nudge'." }),
+      ),
+      lift: Type.Optional(
+        Type.Number({ description: "lift delta (m) for action 'nudge'." }),
+      ),
+      wrist: Type.Optional(
+        Type.Number({ description: "wrist_yaw delta (rad) for action 'nudge'." }),
+      ),
+      grip: Type.Optional(
+        Type.Number({ description: "absolute gripper target (0.04 open, -0.005 closed) for action 'nudge'." }),
+      ),
+      settle: Type.Optional(
+        Type.Number({ description: "seconds to let the arm settle after a 'nudge' (default 0.8)." }),
+      ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
@@ -238,7 +274,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Control:    ctrl {values}|{name,value} · qpos {values} · pause {paused} · speed {value}",
             "Stepping:   step {n} · reset",
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
-            "Frames:     capture {width,height}",
+            "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
+            "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip} · clear",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
@@ -496,6 +533,57 @@ fi`,
         case "vision_stop": {
           const res = await controlPost(port, "/command", { cmd: "vision_stop" });
           return ok(json(res.body), { action });
+        }
+        case "clear": {
+          const res = await controlPost(port, "/command", { cmd: "clear" });
+          return ok(json(res.body), { action });
+        }
+        case "look": {
+          // Returns the robot camera frame as an image the model can see.
+          const res = await controlPost(port, "/command", {
+            cmd: "look",
+            camera: params.camera ?? "camera_rgb",
+            width: params.width ?? 480,
+            height: params.height ?? 360,
+          });
+          const body = res.body as { ok?: boolean; png_base64?: string; cameras?: string[]; error?: string };
+          if (!body?.ok || !body.png_base64) {
+            return fail(`look failed: ${body?.error ?? "no frame"}`, { action });
+          }
+          return withFrame(
+            `Robot camera '${params.camera ?? "camera_rgb"}' (cameras: ${(body.cameras ?? []).join(", ") || "none"}).`,
+            body.png_base64,
+            { action, camera: params.camera ?? "camera_rgb" },
+          );
+        }
+        case "nudge": {
+          // Move the arm a little and return a fresh camera frame.
+          const res = await controlPost(port, "/command", {
+            cmd: "nudge",
+            extend: params.extend,
+            lift: params.lift,
+            wrist: params.wrist,
+            grip: params.grip,
+            settle: params.settle,
+            camera: params.camera ?? "camera_rgb",
+            width: params.width ?? 480,
+            height: params.height ?? 360,
+          });
+          const body = res.body as { ok?: boolean; png_base64?: string; ctrl?: Record<string, number>; error?: string };
+          if (!body?.ok || !body.png_base64) {
+            return fail(`nudge failed: ${body?.error ?? "no frame"}`, { action });
+          }
+          const deltas = [
+            params.extend !== undefined ? `extend${params.extend >= 0 ? "+" : ""}${params.extend}` : null,
+            params.lift !== undefined ? `lift${params.lift >= 0 ? "+" : ""}${params.lift}` : null,
+            params.wrist !== undefined ? `wrist${params.wrist >= 0 ? "+" : ""}${params.wrist}` : null,
+            params.grip !== undefined ? `grip=${params.grip}` : null,
+          ].filter(Boolean);
+          return withFrame(
+            `Applied ${deltas.join(", ") || "(no change)"}. Current actuators: ${json(body.ctrl)}`,
+            body.png_base64,
+            { action, ctrl: body.ctrl },
+          );
         }
         default:
           return fail(`Unknown action '${action}'. Try action 'help'.`, { action });

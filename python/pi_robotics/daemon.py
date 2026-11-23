@@ -154,10 +154,18 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         """Points the head camera at the workspace on the Stretch scene."""
         if self._scene_name not in menagerie.MODELS:
             return
+        joints = {"head_pan": "joint_head_pan", "head_tilt": "joint_head_tilt"}
         for name, value in STRETCH_LOOK_AT.items():
             aid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
             if aid >= 0:
                 data.ctrl[aid] = value
+            jid = mujoco.mj_name2id(
+                model, mujoco.mjtObj.mjOBJ_JOINT, joints.get(name, name)
+            )
+            if jid >= 0:
+                # Move the head immediately so the camera is aimed right away.
+                data.qpos[model.jnt_qposadr[jid]] = value
+        mujoco.mj_forward(model, data)
 
     # -- scripted manipulation ----------------------------------------------
     def start_pick(

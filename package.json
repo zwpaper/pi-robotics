@@ -10,6 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p .pi/extensions/robotics/tsconfig.json",
-    "test:extension": "node scripts/test-extension.mjs"
+    "test:extension": "node scripts/test-extension.mjs",
+    "test:vision": "node scripts/test-vision-loop.mjs"
   }
 }

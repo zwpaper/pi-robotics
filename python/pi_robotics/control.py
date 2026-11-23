@@ -208,6 +208,26 @@ def _render_png(
     return iio.imwrite("<bytes>", frame, extension=".png")
 
 
+def render_png_from_state(
+    model: mujoco.MjModel,
+    snapshot: dict[str, Any],
+    width: int,
+    height: int,
+    camera: str | None,
+    camera_opts: dict[str, Any] | None = None,
+) -> bytes:
+    """Renders a camera frame from the published state snapshot (no live data)."""
+    scratch = mujoco.MjData(model)
+    qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
+    qvel = np.asarray(snapshot.get("qvel", []), dtype=float)
+    if qpos.size == model.nq:
+        scratch.qpos[:] = qpos
+    if qvel.size == model.nv:
+        scratch.qvel[:] = qvel
+    mujoco.mj_forward(model, scratch)
+    return _render_png(model, scratch, width, height, camera, camera_opts)
+
+
 def _encode_jpeg(frame: np.ndarray, quality: int = 80) -> bytes:
     """Encodes an HxWx3 uint8 RGB frame as JPEG (needs Pillow)."""
     from PIL import Image  # optional dependency
@@ -539,9 +559,100 @@ class ControlServer:
             if self._vision is not None:
                 self._vision.stop()
             return {"ok": True}
+        if cmd == "clear":
+            self._sim_plugin.set_servo(None)
+            return {"ok": True}
+        if cmd == "look":
+            return self._frame(body)
+        if cmd == "nudge":
+            return self._nudge(body)
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
+
+    def _camera_and_size(
+        self, body: dict[str, Any]
+    ) -> tuple[str, int, int, dict[str, Any] | None]:
+        camera = str(body.get("camera") or "camera_rgb")
+        width = min(int(body.get("width", 480)), 640)
+        height = min(int(body.get("height", 360)), 480)
+        return camera, width, height, body.get("camera_opts")
+
+    def _frame(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Renders one camera frame from the state snapshot and returns it inline."""
+        model = self._handle.model
+        if model is None:
+            return {"ok": False, "error": "no model loaded"}
+        camera, width, height, opts = self._camera_and_size(body)
+        try:
+            with self._render_lock:
+                png = render_png_from_state(
+                    model, self._state.snapshot(), width, height, camera, opts
+                )
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": f"render failed: {exc}"}
+        return {
+            "ok": True,
+            "camera": camera,
+            "width": width,
+            "height": height,
+            "cameras": self.list_cameras(),
+            "png_base64": base64.b64encode(png).decode("ascii"),
+        }
+
+    def _nudge(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Applies relative actuator deltas, settles, and returns a fresh frame.
+
+        This is the primitive for a human/LLM-in-the-loop visual servo: the
+        caller moves the arm a little, then looks at the returned image.
+        """
+        model = self._handle.model
+        if model is None:
+            return {"ok": False, "error": "no model loaded"}
+        ranges: dict[str, tuple[float, float]] = {}
+        current: dict[str, float] = {}
+        ctrl_list = self._state.snapshot().get("ctrl") or []
+        for i in range(model.nu):
+            name = (
+                mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
+                or f"act{i}"
+            )
+            lo, hi = model.actuator_ctrlrange[i]
+            ranges[name] = (float(lo), float(hi))
+            current[name] = float(ctrl_list[i]) if i < len(ctrl_list) else 0.0
+
+        def clamp(name: str, value: float) -> float:
+            lo, hi = ranges.get(name, (0.0, 0.0))
+            if hi > lo:
+                return max(lo, min(hi, value))
+            return value
+
+        for key, actuator in (
+            ("extend", "arm_extend"),
+            ("lift", "lift"),
+            ("wrist", "wrist_yaw"),
+        ):
+            if body.get(key) is not None:
+                current[actuator] = clamp(
+                    actuator, current.get(actuator, 0.0) + float(body[key])
+                )
+        if body.get("grip") is not None:
+            current["grip"] = clamp("grip", float(body["grip"]))
+
+        self._sim_plugin.set_servo(current)
+        time.sleep(max(0.1, min(float(body.get("settle", 0.8)), 5.0)))
+        frame = self._frame(body)
+        view = {
+            k: round(current[k], 4)
+            for k in ("lift", "arm_extend", "wrist_yaw", "grip")
+            if k in current
+        }
+        return {
+            "ok": frame.get("ok", False),
+            "error": frame.get("error"),
+            "ctrl": view,
+            "png_base64": frame.get("png_base64"),
+        }
 
     def _capture(self, body: dict[str, Any]) -> dict[str, Any]:
         model = self._handle.model

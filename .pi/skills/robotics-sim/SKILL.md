@@ -84,6 +84,24 @@ paused. It reports the measured lift, e.g.
 object back. For a different object or placement, drive the arm yourself with
 `ctrl` on those actuators and read `state`.
 
+## LLM-in-the-loop vision (model sees the camera and drives)
+
+`look { camera }` renders the robot camera and returns it as an **image in the
+tool result**, so the model actually sees the scene. `nudge { extend, lift,
+wrist, grip, settle }` applies relative actuator changes, lets the arm settle, and
+returns a **fresh image** plus the current actuator values. The model runs the
+loop itself:
+
+1. `look` — see where the gripper and object are.
+2. `nudge` — move a little.
+3. repeat until the gripper is over the object.
+4. `nudge { grip: -0.005 }` to close, `nudge { lift: 0.3 }` to raise.
+5. `clear` to release the manual hold.
+
+This is the model perceiving and deciding every step; it needs `imageio` +
+`pillow`. Slower and coarser than `vision_pick`; use it when you want the model
+in the loop, and `vision_pick` for a fast autonomous grasp.
+
 ## Vision-based grasping (closed loop)
 
 `vision_pick { object, camera }` is the perception-driven version, for when the

@@ -133,6 +133,28 @@ The object starts at z≈0.52 on the table and ends held ≈0.92 by the gripper
 placement, drive the arm yourself with `ctrl` on `lift` / `arm_extend` /
 `wrist_yaw` / `grip` and read `state`.
 
+### Driving the grasp from the camera (LLM in the loop)
+
+This is the *model-looks-and-acts* path. `look` renders the robot camera and
+returns it as an **image the model actually sees**; `nudge` applies relative
+actuator changes and returns a **fresh image**. The model runs the loop itself:
+
+```jsonc
+{ "action": "look", "camera": "camera_rgb" }                         // the model sees the scene
+{ "action": "nudge", "extend": 0.15 }                                // move a little, get a new frame
+{ "action": "nudge", "extend": 0.13, "lift": -0.07, "wrist": 0.15 }
+{ "action": "nudge", "grip": -0.005 }                                // close the gripper
+{ "action": "nudge", "lift": 0.3 }                                   // raise
+{ "action": "clear" }                                                  // release manual control
+```
+
+Each `nudge` returns the new frame plus the current actuator values, so the
+model can decide the next step from pixels. (`look`/`nudge` need `imageio` +
+`pillow`.) This is genuinely the model in the control loop: slower and coarser
+than `vision_pick`, which is why both exist — use `vision_pick` for a fast,
+reliable grasp, and `look`/`nudge` when you want the model to perceive and
+decide each step.
+
 ### Vision-based grasping (camera → detect → control)
 
 `pick` is a fixed, calibrated sequence — it only works for the object at the
