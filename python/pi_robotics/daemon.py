@@ -436,7 +436,7 @@ def run(args: argparse.Namespace) -> int:
         control = ControlServer(
             state, handle, sim_plugin, vision=vision, render_lock=render_lock
         )
-        control.start()
+        control.start(args.control_port)
         state.control_port = control.port
 
         payload = {
