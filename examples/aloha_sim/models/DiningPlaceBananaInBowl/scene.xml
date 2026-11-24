@@ -1,0 +1,810 @@
+<mujoco model="google_64k scene">
+  <compiler angle="radian" meshdir="../assets" texturedir="../assets"/>
+  <option impratio="10" cone="elliptic" noslip_iterations="0">
+    <flag multiccd="enable"/>
+  </option>
+  <statistic meansize="0.050000000000000003" extent="0.59999999999999998" center="0 -0.10000000000000001 0.20000000000000001"/>
+  <visual>
+    <global offwidth="848" offheight="480"/>
+    <headlight ambient="0.59999999999999998 0.59999999999999998 0.59999999999999998" diffuse="0.59999999999999998 0.59999999999999998 0.59999999999999998" specular="0 0 0" active="1"/>
+  </visual>
+  <default>
+    <default class="/">
+      <default class="frame">
+        <geom type="mesh" group="1" material="extrusion_material"/>
+      </default>
+      <default class="vx300s">
+        <joint axis="0 1 0" actuatorfrcrange="-35 35"/>
+        <site group="4"/>
+        <default class="waist">
+          <joint axis="0 0 1" range="-3.1415799999999998 3.1415799999999998" damping="5.7599999999999998"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="43"/>
+        </default>
+        <default class="shoulder">
+          <joint range="-1.85005 1.25664" actuatorfrcrange="-144 144" armature="0.39500000000000002" damping="20" frictionloss="2"/>
+          <position ctrlrange="-1.85005 1.25664" kp="265"/>
+        </default>
+        <default class="elbow">
+          <joint range="-1.76278 1.6056999999999999" actuatorfrcrange="-59 59" armature="0.38300000000000001" damping="18.489999999999998" frictionloss="1.1499999999999999"/>
+          <position ctrlrange="-1.76278 1.6056999999999999" kp="227"/>
+        </default>
+        <default class="forearm_roll">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" actuatorfrcrange="-22 22" armature="0.14000000000000001" damping="6.7800000000000002"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="78"/>
+        </default>
+        <default class="wrist_angle">
+          <joint range="-1.8674999999999999 2.2340200000000001" armature="0.0080000000000000002" damping="6.2800000000000002"/>
+          <position ctrlrange="-1.8674999999999999 2.2340200000000001" kp="37"/>
+        </default>
+        <default class="wrist_rotate">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" damping="1.2"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="10.4"/>
+        </default>
+        <default class="finger">
+          <joint type="slide" armature="0.24299999999999999" damping="40"/>
+          <position ctrlrange="0.002 0.036999999999999998" kp="2000" kv="124"/>
+          <default class="left_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+          <default class="right_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+        </default>
+        <default class="visual">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="arm_material" density="0"/>
+        </default>
+        <default class="collision">
+          <geom type="mesh" group="3"/>
+          <default class="finger_collision">
+            <geom condim="4" friction="1 0.0050000000000000001 0.0001" solref="0.01 1" solimp="2 1 0.01"/>
+          </default>
+          <default class="sphere_collision">
+            <geom type="sphere" size="0.00059999999999999995" rgba="1 0 0 1"/>
+          </default>
+        </default>
+      </default>
+    </default>
+    <default class="025_mug/">
+      <default class="025_mug/025_mug">
+        <default class="025_mug/visual_025_mug">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="025_mug/texture" density="200"/>
+        </default>
+        <default class="025_mug/collision_025_mug">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="writing_pens/">
+      <default class="writing_pens/writing_pens">
+        <default class="writing_pens/visual_writing_pens">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" density="200"/>
+        </default>
+        <default class="writing_pens/collision_writing_pens">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="011_banana/">
+      <default class="011_banana/011_banana">
+        <default class="011_banana/visual_011_banana">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="011_banana/texture" density="200"/>
+        </default>
+        <default class="011_banana/collision_011_banana">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="029_plate/">
+      <default class="029_plate/029_plate">
+        <default class="029_plate/visual_029_plate">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="029_plate/texture" density="200"/>
+        </default>
+        <default class="029_plate/collision_029_plate">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="024_bowl/">
+      <default class="024_bowl/024_bowl">
+        <default class="024_bowl/visual_024_bowl">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="024_bowl/texture" density="200"/>
+        </default>
+        <default class="024_bowl/collision_024_bowl">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/">
+      <default class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028">
+        <default class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/visual_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/texture" density="200"/>
+        </default>
+        <default class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="aloha_6_raw_skybox_1024x768_flipped" class="/" type="skybox" file="aloha_6_raw_skybox_1024x768_flipped-bd31f9f14363b07147a3fd7068df2e3405a28a0a.png" gridsize="3 4" gridlayout=".U..LFRB.D.."/>
+    <material name="black" class="/" rgba="0 0 0 1"/>
+    <texture name="table_top_rgb" class="/" type="2d" file="table_top_BaseColor-1585b10ffbfec59f62047fa30aa1fce3556eca9c.png"/>
+    <texture name="table_top_orm" class="/" type="2d" file="table_top_ORM-57b467a0022d2a212e2b1534e2bf557ede032628.png"/>
+    <texture name="table_top_normal" class="/" type="2d" file="table_top_Normal-2bbf40eb8f9b56ab226118148a5351fc3582083a.png"/>
+    <material name="table_top_material" class="/">
+      <layer texture="table_top_rgb" role="rgb"/>
+      <layer texture="table_top_orm" role="orm"/>
+      <layer texture="table_top_normal" role="normal"/>
+    </material>
+    <texture name="extrusion_rgb" class="/" type="2d" file="extrusions_BaseColor-ec640658b998cd324871d520eac8084807edd24f.png"/>
+    <texture name="extrusion_orm" class="/" type="2d" file="extrusions_ORM-2bd9ff3622b22e8008b77d509e892309a47eb548.png"/>
+    <texture name="extrusion_normal" class="/" type="2d" file="extrusions_Normal-5301ede9fb276e07ac1990b3f1c7459315cb7214.png"/>
+    <material name="extrusion_material" class="/">
+      <layer texture="extrusion_rgb" role="rgb"/>
+      <layer texture="extrusion_orm" role="orm"/>
+      <layer texture="extrusion_normal" role="normal"/>
+    </material>
+    <mesh name="cell_extrusions" class="/" file="cell_extrusions-8bf5c46dea23b42f39aa9cdef466278cd850f533.obj"/>
+    <mesh name="overhead_mount" class="/" file="overhead_mount-4655c489f7559abe6b2156002e171a0dfc5e5397.obj"/>
+    <mesh name="wormseye_mount" class="/" file="wormseye_mount-64325a673a8924f05232af40e9cace4d02766dd4.obj"/>
+    <mesh name="tablelegs" class="/" file="tablelegs-d0aaf6399ee429de60273fe61f29a7a7fcd20440.obj"/>
+    <mesh name="table_mesh_mapped" class="/" file="table_mesh_mapped-6c055adb309111efb32fb9fc0417883865cf9bf2.obj"/>
+    <texture name="arm_rgb" class="/" type="2d" file="Arm_material_BaseColor-10f49ecf80d41b43d7f59dd74ab7cdfd50513cc0.png"/>
+    <texture name="arm_orm" class="/" type="2d" file="Arm_material_ORM-5c912f3253053ad6f3da15ad6df43c15eac6868e.png"/>
+    <texture name="arm_normal" class="/" type="2d" file="Arm_material_Normal-9ecc07a1fa8c5e6fd0fdb9075d4d370dba7fb9e7.png"/>
+    <material name="arm_material" class="/">
+      <layer texture="arm_rgb" role="rgb"/>
+      <layer texture="arm_orm" role="orm"/>
+      <layer texture="arm_normal" role="normal"/>
+    </material>
+    <mesh name="vx300s_1_base" class="/" file="vx300s_1_base-b22bdb5ebce1cd0f24150745bfa18925df0b0da2.obj"/>
+    <mesh name="vx300s_2_shoulder" class="/" file="vx300s_2_shoulder-716094251bd290046342a234b684402b91a8131d.obj"/>
+    <mesh name="vx300s_3_upper_arm" class="/" file="vx300s_3_upper_arm-d03be6c3961caeb347b3c07797042b912cba8427.obj"/>
+    <mesh name="vx300s_4_upper_forearm" class="/" file="vx300s_4_upper_forearm-806ba514d68ef71f7eaaf7416faf8c35be9663ff.obj"/>
+    <mesh name="vx300s_5_lower_forearm" class="/" file="vx300s_5_lower_forearm-c82e1d0e67175305a7dc4a781d96785152c4e5fd.obj"/>
+    <mesh name="vx300s_6_wrist" class="/" file="vx300s_6_wrist-13c0bd6fdd13e224fcbb610c2ebc17f6497d383f.obj"/>
+    <mesh name="vx300s_7_gripper_prop_bar" class="/" file="vx300s_7_gripper_prop_bar-845484fbb9046b9a937dab1db68e894a0d5be188.obj"/>
+    <mesh name="vx300s_8_custom_finger_left" class="/" file="vx300s_8_custom_finger_left-c16cf4d6a74180770b5c767065593af36af88ad1.obj"/>
+    <mesh name="vx300s_8_custom_finger_right" class="/" file="vx300s_8_custom_finger_right-a9aae8dd4000df33c3d46e89e19dfef7f4d6376e.obj"/>
+    <mesh name="d405_solid" class="/" file="d405_solid-450946d01a73f6f2e11205134a5bf2a1433f31b3.obj"/>
+    <texture name="025_mug/texture" class="025_mug/" type="2d" file="texture_map-67bccf4b6b7b33f510c4499ed6dee1fb4df417bb.png"/>
+    <material name="025_mug/texture" class="025_mug/" texture="025_mug/texture"/>
+    <mesh name="025_mug/textured" class="025_mug/" file="textured-67831101dc1f99c699926c71d15fe9d1ab0b36b1.obj"/>
+    <mesh name="025_mug/coacd_part_000" class="025_mug/" file="coacd_part_000-c5ac7d3badf9d1bfd37fa09c55456b77fb259c40.obj"/>
+    <mesh name="025_mug/coacd_part_001" class="025_mug/" file="coacd_part_001-67dcfac56f2e944fd87c9b8696c793c2e74c7387.obj"/>
+    <mesh name="025_mug/coacd_part_002" class="025_mug/" file="coacd_part_002-8526dee31556d88386a9fec6171e8e6fc89fc49a.obj"/>
+    <mesh name="025_mug/coacd_part_003" class="025_mug/" file="coacd_part_003-9b752838d49530b81b52c78a01ae3317440a285a.obj"/>
+    <mesh name="025_mug/coacd_part_004" class="025_mug/" file="coacd_part_004-615118d9b24741ed820115e9e23cf7a724044e1e.obj"/>
+    <mesh name="025_mug/coacd_part_005" class="025_mug/" file="coacd_part_005-0c20e7518179a431999960715b4793acece49269.obj"/>
+    <mesh name="025_mug/coacd_part_006" class="025_mug/" file="coacd_part_006-91c1516d7e3a459578fe2d0063ccd61fd3e20c8d.obj"/>
+    <mesh name="025_mug/coacd_part_007" class="025_mug/" file="coacd_part_007-496ca0a9c3b047959ddcaa752d00542d5958eec4.obj"/>
+    <mesh name="025_mug/coacd_part_008" class="025_mug/" file="coacd_part_008-2edf18109b3c4255c90fd2d6123804af3f66a3e7.obj"/>
+    <mesh name="025_mug/coacd_part_009" class="025_mug/" file="coacd_part_009-0af45754cef0deed3c2addce55e7543656701ee6.obj"/>
+    <mesh name="025_mug/coacd_part_010" class="025_mug/" file="coacd_part_010-24bfa30cfefa57c1af1dc0f3ace662efc4a2bd78.obj"/>
+    <mesh name="025_mug/coacd_part_011" class="025_mug/" file="coacd_part_011-c0f79e18310d674b0469bd11ef62cc1e4c8cb12f.obj"/>
+    <mesh name="025_mug/coacd_part_012" class="025_mug/" file="coacd_part_012-150cf71fde4c19b7f1c55e2f095e275efc44016d.obj"/>
+    <mesh name="025_mug/coacd_part_013" class="025_mug/" file="coacd_part_013-0718923e140f70baed0ac516aa3af3a2486fbbbc.obj"/>
+    <mesh name="025_mug/coacd_part_014" class="025_mug/" file="coacd_part_014-72e9ccdbe44704e1af1281675824c9438fd22028.obj"/>
+    <mesh name="025_mug/coacd_part_015" class="025_mug/" file="coacd_part_015-ec159ae069fa279cdc98025dcbc34f4687533971.obj"/>
+    <mesh name="025_mug/coacd_part_016" class="025_mug/" file="coacd_part_016-451dec64a7ccd91efe5f4c3055bc82da01cdbbc4.obj"/>
+    <mesh name="025_mug/coacd_part_017" class="025_mug/" file="coacd_part_017-406f9cef89a490ea909f88fbf13c641a53d8c0dd.obj"/>
+    <mesh name="025_mug/coacd_part_018" class="025_mug/" file="coacd_part_018-8d2bbc6231fd084a199a7ec989e607efa8c7b632.obj"/>
+    <mesh name="025_mug/coacd_part_019" class="025_mug/" file="coacd_part_019-ce69117dc3accc5092f20cfa886b5e0973bb2509.obj"/>
+    <mesh name="025_mug/coacd_part_020" class="025_mug/" file="coacd_part_020-9eb10dd44ab898c266adba8ede14be12441fb618.obj"/>
+    <mesh name="025_mug/coacd_part_021" class="025_mug/" file="coacd_part_021-981d348a0ea85c21c2ce1e1a86d598d7feb8e8dc.obj"/>
+    <mesh name="025_mug/coacd_part_022" class="025_mug/" file="coacd_part_022-416fd6bdaef9593ea093f2ab763e5c4d6c0fbf63.obj"/>
+    <mesh name="025_mug/coacd_part_023" class="025_mug/" file="coacd_part_023-8b54a2934f49d5ee5376653694e30b7396ae1eba.obj"/>
+    <mesh name="025_mug/coacd_part_024" class="025_mug/" file="coacd_part_024-5481a22df16351524e98013611b973caa4fe4b19.obj"/>
+    <mesh name="025_mug/coacd_part_025" class="025_mug/" file="coacd_part_025-7eadc03f52ab8dfc2a5dd580c9e6c27771078712.obj"/>
+    <mesh name="025_mug/coacd_part_026" class="025_mug/" file="coacd_part_026-3d020a17d276d0a9d4daa34fcff82452b6f1e259.obj"/>
+    <mesh name="025_mug/coacd_part_027" class="025_mug/" file="coacd_part_027-42482624a5ba7124e6c8b865aaf3db9f61ecd47d.obj"/>
+    <mesh name="025_mug/coacd_part_028" class="025_mug/" file="coacd_part_028-9192deece57b535f8167192b3fbc526b44f727b2.obj"/>
+    <mesh name="025_mug/coacd_part_029" class="025_mug/" file="coacd_part_029-b5d59af463419ce93c9f8150efd50dcf6f1b04a0.obj"/>
+    <mesh name="025_mug/coacd_part_030" class="025_mug/" file="coacd_part_030-8650facb99709c89bf6e43fee4a342ff61086e93.obj"/>
+    <mesh name="025_mug/coacd_part_031" class="025_mug/" file="coacd_part_031-f9e14507ef03f870d9a22d733b9133e7d4fa0e3f.obj"/>
+    <mesh name="025_mug/coacd_part_032" class="025_mug/" file="coacd_part_032-d814443ac8a72fcc7188634df17c4455724e0a9e.obj"/>
+    <mesh name="025_mug/coacd_part_033" class="025_mug/" file="coacd_part_033-43730ba4ec46d7e16b23a01308781113f80af18d.obj"/>
+    <mesh name="025_mug/coacd_part_034" class="025_mug/" file="coacd_part_034-e20183e5e40e4e22e130f70e5f3d9c9b878431d6.obj"/>
+    <mesh name="025_mug/coacd_part_035" class="025_mug/" file="coacd_part_035-2679587f12472923474f45bc83d8e600bd75050b.obj"/>
+    <mesh name="025_mug/coacd_part_036" class="025_mug/" file="coacd_part_036-248216fda3698ec6ceb19f0f46b414094d1a9d98.obj"/>
+    <mesh name="025_mug/coacd_part_037" class="025_mug/" file="coacd_part_037-ff521b045760fb44738bc72d7371001b3ce64805.obj"/>
+    <mesh name="025_mug/coacd_part_038" class="025_mug/" file="coacd_part_038-6181a5e1cba6127b36ed2d58f1f25c07c0d8d293.obj"/>
+    <mesh name="025_mug/coacd_part_039" class="025_mug/" file="coacd_part_039-fd440745fd27be5498e9cffc619e19f83a0836d5.obj"/>
+    <mesh name="025_mug/coacd_part_040" class="025_mug/" file="coacd_part_040-3886820ec4eddf100253a68cb479c25fb1410a7a.obj"/>
+    <mesh name="025_mug/coacd_part_041" class="025_mug/" file="coacd_part_041-1e5478e88fc6ff2d0af54a5eb9a883ff1c94bba5.obj"/>
+    <mesh name="025_mug/coacd_part_042" class="025_mug/" file="coacd_part_042-265adc9fe3820c236c1e99a8f6afb7311365f387.obj"/>
+    <mesh name="025_mug/coacd_part_043" class="025_mug/" file="coacd_part_043-f2edd625c6bb088c1c372419c72b67bc58254049.obj"/>
+    <mesh name="025_mug/coacd_part_044" class="025_mug/" file="coacd_part_044-ee337478316cdd5cccd9f25a55e5493a551009b0.obj"/>
+    <mesh name="025_mug/coacd_part_045" class="025_mug/" file="coacd_part_045-fb2b3a5c1e9b569506344dcdf0aff9d6e08fb0dd.obj"/>
+    <mesh name="025_mug/coacd_part_046" class="025_mug/" file="coacd_part_046-d82a0a69e41ad90fc800fcef3628de70dcb0d200.obj"/>
+    <mesh name="025_mug/coacd_part_047" class="025_mug/" file="coacd_part_047-95c7e8c94070725dc9d65c221d57e29299a286b4.obj"/>
+    <mesh name="025_mug/coacd_part_048" class="025_mug/" file="coacd_part_048-6ab5a07885e0b332c2aad16740606c233333f9df.obj"/>
+    <mesh name="025_mug/coacd_part_049" class="025_mug/" file="coacd_part_049-e9223c8f10bde830ff66ffc70bdb735c555af373.obj"/>
+    <mesh name="025_mug/coacd_part_050" class="025_mug/" file="coacd_part_050-f0da719686a22d5bf5664718ede86ae1559c04fe.obj"/>
+    <mesh name="025_mug/coacd_part_051" class="025_mug/" file="coacd_part_051-b3792cfc843a68735dea16067c8d193b07cd8dcf.obj"/>
+    <mesh name="025_mug/coacd_part_052" class="025_mug/" file="coacd_part_052-6f5cf36e66ba36b0b1d1f67d6d4b7b1162d3ff22.obj"/>
+    <mesh name="025_mug/coacd_part_053" class="025_mug/" file="coacd_part_053-c3292a81be3f1d81af8f60d894b4b5dc48e061db.obj"/>
+    <mesh name="025_mug/coacd_part_054" class="025_mug/" file="coacd_part_054-9c0ce361a2893a831b6978770f0f0ea54e806885.obj"/>
+    <mesh name="025_mug/coacd_part_055" class="025_mug/" file="coacd_part_055-ac4b51886fadd79f272e1ccf66cfe85276632d10.obj"/>
+    <mesh name="025_mug/coacd_part_056" class="025_mug/" file="coacd_part_056-e4d5a0a3fc65d9bc6a695679234fd6b38cbfdb8b.obj"/>
+    <mesh name="025_mug/coacd_part_057" class="025_mug/" file="coacd_part_057-ed4bcdfaa30e4d52c765d45299370a8bedadbfa5.obj"/>
+    <mesh name="025_mug/coacd_part_058" class="025_mug/" file="coacd_part_058-36971322e281feb2c3717acbb7490db3f559fc53.obj"/>
+    <mesh name="025_mug/coacd_part_059" class="025_mug/" file="coacd_part_059-6af6b87d1944896ddda674d36c392629b64430cc.obj"/>
+    <mesh name="025_mug/coacd_part_060" class="025_mug/" file="coacd_part_060-9a4f020b8c8b46fd2f28c809a0b4f1d65676b5c2.obj"/>
+    <mesh name="025_mug/coacd_part_061" class="025_mug/" file="coacd_part_061-56886a93269b438215126a47d003d4a35fc6d5f8.obj"/>
+    <mesh name="025_mug/coacd_part_062" class="025_mug/" file="coacd_part_062-f2667f59252280c6593d0efb45b2020c746e7853.obj"/>
+    <mesh name="025_mug/coacd_part_063" class="025_mug/" file="coacd_part_063-fcef79d5beea0bbbfe0ad87a6c324eb275e356f4.obj"/>
+    <mesh name="025_mug/coacd_part_064" class="025_mug/" file="coacd_part_064-0164cada3de40d8c30226f05c08c7de73117090f.obj"/>
+    <mesh name="025_mug/coacd_part_065" class="025_mug/" file="coacd_part_065-cb7b6c29954635160edbcd2e7dfc39a3a1b30bad.obj"/>
+    <mesh name="025_mug/coacd_part_066" class="025_mug/" file="coacd_part_066-db7a87811c7b2d2307b9e1c47412984295655cbe.obj"/>
+    <mesh name="025_mug/coacd_part_067" class="025_mug/" file="coacd_part_067-dc0b60991fabee58b7af853201af0e2de1bc01e2.obj"/>
+    <mesh name="025_mug/coacd_part_068" class="025_mug/" file="coacd_part_068-ba9c6cfac5f0e13650f5c98cf7988c6f7fe8448d.obj"/>
+    <mesh name="025_mug/coacd_part_069" class="025_mug/" file="coacd_part_069-e4230b118d9718e508ff58d264f75472f42ba31e.obj"/>
+    <mesh name="025_mug/coacd_part_070" class="025_mug/" file="coacd_part_070-928ab998b02268d386e544e99624e98e3cc63a46.obj"/>
+    <mesh name="025_mug/coacd_part_071" class="025_mug/" file="coacd_part_071-7c1cb2c6e0b3ef89a0fff26a7dbeaae225da1c0b.obj"/>
+    <mesh name="025_mug/coacd_part_072" class="025_mug/" file="coacd_part_072-5a356b154cef246cdefdb3aa789dc2207c70625e.obj"/>
+    <mesh name="025_mug/coacd_part_073" class="025_mug/" file="coacd_part_073-607072df6c16dc403030b6f5eb653cf152022c42.obj"/>
+    <mesh name="writing_pens/textured" class="writing_pens/" file="textured-3bc5ee662e618f35d2802e5d731928c2b7c1f8d3.obj" scale="1.5 1 1.5"/>
+    <mesh name="writing_pens/coacd_part_000" class="writing_pens/" file="coacd_part_000-30dc7bf1fbeeacce0887857474b5ef214f1598d0.obj" scale="1.5 1 1.5"/>
+    <texture name="011_banana/texture" class="011_banana/" type="2d" file="texture_map-88da2029ee47fd47fea268d1008f126113b1e1e1.png"/>
+    <material name="011_banana/texture" class="011_banana/" texture="011_banana/texture"/>
+    <mesh name="011_banana/textured" class="011_banana/" file="textured-51c4ec36b1898c40cf4351a2fb8278749ecb1e5f.obj"/>
+    <mesh name="011_banana/coacd_part_000" class="011_banana/" file="coacd_part_000-298868f071591a70a05f6e0bd3b66d3cfaf6053c.obj"/>
+    <mesh name="011_banana/coacd_part_001" class="011_banana/" file="coacd_part_001-b9f35b05da18f5929fdc2d207244bf05acd5e456.obj"/>
+    <mesh name="011_banana/coacd_part_002" class="011_banana/" file="coacd_part_002-bba84b55bc0d5b740405043a8213c8877325aaef.obj"/>
+    <mesh name="011_banana/coacd_part_003" class="011_banana/" file="coacd_part_003-6948a2f5df3ab69a8ec3c1fa0575641a251ae902.obj"/>
+    <texture name="029_plate/texture" class="029_plate/" type="2d" file="plate_blue_color-70fedbb50b8ba9b382760cbf54aae817240dc9dd.png"/>
+    <material name="029_plate/texture" class="029_plate/" texture="029_plate/texture"/>
+    <mesh name="029_plate/textured" class="029_plate/" file="textured-ae59b79608d10ed4f14fc89638cda3b265c0ae91.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_000" class="029_plate/" file="coacd_part_000-09255f01f0a2dbafb79b7c2672e436c783ac65a1.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_001" class="029_plate/" file="coacd_part_001-e332a09eaab2ca6ee5cb534976e6a8955b4122a3.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_002" class="029_plate/" file="coacd_part_002-416af83ab983f69f3b38022287bfc10ad01058b8.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_003" class="029_plate/" file="coacd_part_003-6c8ea1969f7100d569387d4e326729bfd7698fec.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_004" class="029_plate/" file="coacd_part_004-a6d4566ce0238509abcdffafaee17525af940149.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_005" class="029_plate/" file="coacd_part_005-ec929a116c77495570135edee2fa66fb09f25bee.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_006" class="029_plate/" file="coacd_part_006-7d1492c3f02216cf89e86c7806734f024cd3f4a5.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_007" class="029_plate/" file="coacd_part_007-91d21a0ab337ac882f4502be90256174135a871b.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_008" class="029_plate/" file="coacd_part_008-40326e9d217cfc56260043760ea540042d2b3b3f.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_009" class="029_plate/" file="coacd_part_009-bfe91ca1b28e301ef5f6efb6b4145f3fdb823cbf.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_010" class="029_plate/" file="coacd_part_010-eec697def8caadcabdf58f35c3e783b06ee456ab.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_011" class="029_plate/" file="coacd_part_011-ab7d4e6ceea7ee092e454f58b26ca6f7b85af086.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_012" class="029_plate/" file="coacd_part_012-cb241107632268076471a5fbde90befdf0f910cd.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_013" class="029_plate/" file="coacd_part_013-74d9b0bc31e9cbc73a368b45922687d6e752c1b3.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_014" class="029_plate/" file="coacd_part_014-37e9006e42ee53e530a21c7bba070093180e3b00.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_015" class="029_plate/" file="coacd_part_015-f29f2c62d4cd01f85039505428e1b7bc4748589f.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_016" class="029_plate/" file="coacd_part_016-f4093553d43975bc8ef45173340d0a2ea66a5bee.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="029_plate/coacd_part_017" class="029_plate/" file="coacd_part_017-f2f2e7d4aabc0437359e07554fd96f26163a5ce0.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <texture name="024_bowl/texture" class="024_bowl/" type="2d" file="bowl_blue_color-53a22180e1c87a1e7dbea1e08aaae9922dd7ac91.png"/>
+    <material name="024_bowl/texture" class="024_bowl/" texture="024_bowl/texture"/>
+    <mesh name="024_bowl/textured" class="024_bowl/" file="textured-79c8e11e00e2cc995b6236f31b7cadcd5db6752d.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_000" class="024_bowl/" file="coacd_part_000-99bf54c0e37279eb02cbde65b0ebb864eb904796.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_001" class="024_bowl/" file="coacd_part_001-2bad1af0ddd90729e0405982e97d4764882585e8.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_002" class="024_bowl/" file="coacd_part_002-bf3fd41780aaf3dc59ffe8d14973e704f9a6cf52.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_003" class="024_bowl/" file="coacd_part_003-48531e3b6cf55121d19177a4ba290ada93ce46e3.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_004" class="024_bowl/" file="coacd_part_004-cd35e2b16bfa3de497461756e00d42850be3fb65.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_005" class="024_bowl/" file="coacd_part_005-944cec5b3a95da26b63e6b023290ed9878d13993.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_006" class="024_bowl/" file="coacd_part_006-6793a5128bac621ccb426a78e8b9c57e5dfcbbef.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_007" class="024_bowl/" file="coacd_part_007-bc2ff3ddbf7a375f982150f1ee42ac8972ea6ba1.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_008" class="024_bowl/" file="coacd_part_008-e6b51a5b764db78f4d00b4b8955ac571d5d1c15a.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_009" class="024_bowl/" file="coacd_part_009-f2f37b9d127b8ec31450112e0caf53b795be179b.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_010" class="024_bowl/" file="coacd_part_010-424e58317cbb58bae4a12ad3f02844738e8b18f3.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_011" class="024_bowl/" file="coacd_part_011-5ba0000d4c99e92e978149efcfd234d3b0edfe30.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_012" class="024_bowl/" file="coacd_part_012-a7c1ac886d06b65b0e6c8ccc1184bd89ce54d52c.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_013" class="024_bowl/" file="coacd_part_013-911ef968efa0aa70a79cc1a0810dff2636ebc8b0.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_014" class="024_bowl/" file="coacd_part_014-276dddb05f4d7ea19f26551b5f154f1e13ee3de8.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_015" class="024_bowl/" file="coacd_part_015-f1b8bc12cfb8970776706109e1099f24c90184d2.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_016" class="024_bowl/" file="coacd_part_016-a0ffd294ab77e5e93ea7a0eacdc81ff1c5915291.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_017" class="024_bowl/" file="coacd_part_017-8812a6e63eeeb38859c83c29220d2b1777ff177e.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_018" class="024_bowl/" file="coacd_part_018-8e3db405dbf290a34c16da878b52a0e2aa5af9df.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_019" class="024_bowl/" file="coacd_part_019-5ed183331b981ebc9daf8a4083d951bd8d87dfaa.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_020" class="024_bowl/" file="coacd_part_020-e5ee9edc4db65313aad59e108e3b2d9763b090a8.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_021" class="024_bowl/" file="coacd_part_021-eeb4c01a5e02154f2eae3632f0777532a952fd9d.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_022" class="024_bowl/" file="coacd_part_022-f37dd856ac80cfec2c662f01810798bfb45bdde7.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_023" class="024_bowl/" file="coacd_part_023-368bff441acb2531aa804907824641659deb285c.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_024" class="024_bowl/" file="coacd_part_024-dfa52d91871224d435468b40692a928c55443f7b.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_025" class="024_bowl/" file="coacd_part_025-83f8458e006bd224e3325461106865851cbab36e.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_026" class="024_bowl/" file="coacd_part_026-84ae5256c7d60db90b0f4f6493ce3bbf467ae412.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_027" class="024_bowl/" file="coacd_part_027-698956640261f4540ea3e1bbc14b5384e2638cb3.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_028" class="024_bowl/" file="coacd_part_028-0482c5314ea8716f18b5f7e3b8cb824230fb62ff.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_029" class="024_bowl/" file="coacd_part_029-01f1e8fcd67dfad8347cf9981d2aec105b6be422.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_030" class="024_bowl/" file="coacd_part_030-bc3b6b3ed7e6076d1bf986f47c1d0beba8825d08.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_031" class="024_bowl/" file="coacd_part_031-e12c3bdb5501e7acd7a601e892f196568253f5ab.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_032" class="024_bowl/" file="coacd_part_032-b53a2010866c84427754e0da27378a535f580988.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_033" class="024_bowl/" file="coacd_part_033-7b7268769cfa6607c6fc6dc94951537302df279c.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_034" class="024_bowl/" file="coacd_part_034-c6f608c60c3114fa2117eb3d4d21d5bc03a13ea7.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_035" class="024_bowl/" file="coacd_part_035-89557438e23b2fde46347f4d99420f4575379626.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_036" class="024_bowl/" file="coacd_part_036-70768776cb8695aca6bddfd1afd2d3c06430b5d1.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_037" class="024_bowl/" file="coacd_part_037-187293c8a967feaded8efba740bc6788ae6d843d.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_038" class="024_bowl/" file="coacd_part_038-5f386daee4b429ec724d9ae5fcd5560f00b58933.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_039" class="024_bowl/" file="coacd_part_039-ac7d441ea20cf47540bafd629f720c6e531e416a.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_040" class="024_bowl/" file="coacd_part_040-d68312c7891bc25d5c8be1c89a6ebf5de5f9fabd.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_041" class="024_bowl/" file="coacd_part_041-4f995848d529d5f339193436d7da396f7c77ddac.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_042" class="024_bowl/" file="coacd_part_042-ff1e82c3a40de3a7736d56dfae37ad9a0f4d0f98.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_043" class="024_bowl/" file="coacd_part_043-11c78e203962244ec929c1d3b0b90d57f69bbcf9.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_044" class="024_bowl/" file="coacd_part_044-7ce603da17fda5e061701e476328c53b72af4741.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_045" class="024_bowl/" file="coacd_part_045-3efaf57226464c5f55dee95140bd9decc4053f0d.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_046" class="024_bowl/" file="coacd_part_046-5b725f6190514fd87999570c519a438358039a04.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_047" class="024_bowl/" file="coacd_part_047-148d2b584d5374747ec086afa3c983edcb1c5fbd.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_048" class="024_bowl/" file="coacd_part_048-9dfc1dac64369271c0fec42e006894449e4ed139.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_049" class="024_bowl/" file="coacd_part_049-6068750bedf72a6d78f4b72a6a39870c2470c2a8.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_050" class="024_bowl/" file="coacd_part_050-01d6159c906ec8917952bb6409a946d41ac552fa.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_051" class="024_bowl/" file="coacd_part_051-8f2273245e2a9c38703469adc1ef9484a3dc4996.obj" scale="1.5 1.5 1.5"/>
+    <mesh name="024_bowl/coacd_part_052" class="024_bowl/" file="coacd_part_052-c26734b50f3df8b1043cb1f84f6cec46359e5a30.obj" scale="1.5 1.5 1.5"/>
+    <texture name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/texture" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" type="2d" file="texture-182a3d9e8c502491cdabc012f7becd442d715d59.png"/>
+    <material name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/texture" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" texture="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/texture"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/model" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="model-7d69a8c1b87d9a61412c4130219dbafb4dad7c10.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_000" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_000-52bc73e9891d9b506b55973a867c9ee147ec7f2a.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_001" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_001-8b49e94981a2034a9d1edf3a12da47b3417df048.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_002" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_002-429ca8322212c3ac452d3b8ad52f354d5c82a7eb.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_003" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_003-e22b4f7467cd9e3de17fd274ba1b586cb307b5e1.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_004" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_004-31e3d906115e8c4bad69cd0abc24df28a5bc172c.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_005" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_005-b5d057ced63db952a758902e056365a085451b29.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_006" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_006-98b554e036ea04a370757f327dd58b9ffea3f141.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_007" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_007-962a1326ce40d9a102825a247cb877de92c26132.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_008" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_008-54c0397b13d714f7b64eeb7ccdeb1eadd7a7581f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_009" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_009-c5981738e24971fd5ac050c69627c501f3162ae4.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_010" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_010-daaf9ca5ae9f373229ee763315a120e09611051f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_011" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_011-b00cd9dc5c52390982d62670310db415cca69b9f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_012" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_012-502b6c0419c986b9240158fac4bcad11316c110d.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_013" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_013-9d065dde9fc1fa10e339e0b5e14a57916d9bc11a.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_014" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_014-c754831dbd162ee59e9245c0c64784d6703fac3f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_015" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_015-b94959d9d07cf09555f82325071b734579953a3f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_016" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_016-b64afd3efa21e87dc8bf2b9cdd554f60db960357.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_017" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_017-7e8e4ddcf6bb19e9939a2a8f273f1725fa9a2cbd.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_018" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_018-000cbe4d116b35d3d5d88667e114444d5c24621d.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_019" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_019-95e857dac5a96de241abf73f06f29fb7adc8df97.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_020" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_020-ce03e9353559de03a3418cc832748175fe3fc1d2.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_021" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_021-1b4315b13e37014aed760c705e818d3c7cad7fae.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_022" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_022-3078fa79631fcc72bfe3c2e8c25e17968cc0b8cf.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_023" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_023-63f9303a5a54d9502e49e0ea2f59e5522efad30e.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_024" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_024-c681a69329c73e7181cf1387e437429389d66a81.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_025" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_025-06d15a80a8422a29b7d052a1edecda50fa362cfd.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_026" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_026-c74fe9cab2d14e4928f21ca2f0e027256efde956.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_027" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_027-232b038fbc9fee1d3913d5c4528926635eb42731.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_028" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_028-59655af2d1936990fa038cf00aaaca5b4ff78da2.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_029" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_029-d780826068938dc5e8591dcd820d0cab4550177f.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_030" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_030-cd7d2b6f5252a8aec49de04e6bf3cc924c5ea8cc.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_031" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_031-6b76909ac32662cd6403c4d7c90b272907408f3b.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_032" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_032-70b736bf0ff8e5d1bcbec15de6e1e8ab5a05f8b0.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_033" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_033-5f3bcc7ca901494e643632994464a3031909f1a7.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_034" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_034-5d0e8396fd9c51982e423ece913ade6e864b4032.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_035" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_035-5ae6dac848d9244ad4f0c72dcbf46854bdb452b2.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_036" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_036-9cbcf83ae2e05b533ea7d99f0955bf25ea207702.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_037" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_037-234e68a15a89433da2f966b309bf24edf17191b4.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_038" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_038-b4240500100e8450a4c19d52177612d2f8525746.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_039" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_039-a60d8c7c869e8aed924cedd916c40562140504ad.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_040" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_040-49b9225448930915fb95e11f24aad238e6a01438.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_041" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_041-98773b0771705b4e6b17e28ef3664097eaf20217.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_042" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_042-e76900522240882f2969abb6ed67b198f43406e9.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_043" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_043-e7b8a163dfadb2ba78372b608317b23b2489e11d.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_044" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_044-8e88d9d8ada2c3467f76570142d9899352673522.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_045" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_045-ae2f0bcdf19e530f10e288c92987784f62828445.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_046" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_046-d8b99f3d30c5959c586a088a58c427dcd4f5a2bb.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_047" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_047-668072f07ada87b3dd4b6dc80ae99520f97d5260.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_048" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_048-c6dfbbaef83ee4ca94b26947efd552827efb4ba5.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_049" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_049-ced9bc0ed2be9e6a9b8a4dbd4dc22c8193f8852b.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_050" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_050-73a3f11f61ae54412e1df316c2afa5fea6a5b358.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+    <mesh name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_051" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/" file="coacd_part_051-99eae6752a1c877cf3f4e009614fc4a099691c76.obj" scale="0.59999999999999998 0.59999999999999998 0.59999999999999998"/>
+  </asset>
+  <worldbody>
+    <body name="table" pos="0 0 -0.72099999999999997">
+      <site name="worldref" class="/"/>
+      <geom name="//unnamed_geom_0" class="visual" material="table_top_material" quat="1 0 0 1" mesh="table_mesh_mapped"/>
+      <geom name="//unnamed_geom_1" class="frame" quat="1 0 0 1" mesh="tablelegs"/>
+      <geom name="table" class="collision" type="box" size="0.60999999999999999 0.38100000000000001 0.10000000000000001" pos="0 0 0.65090000000000003"/>
+    </body>
+    <camera name="overhead_cam" class="/" resolution="1280 720" pos="0 -0.30379400000000001 1.0252399999999999" quat="0.97633199999999998 0.216277 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <camera name="worms_eye_cam" class="/" resolution="1280 720" pos="0 -0.37716699999999997 0.061605499999999994" quat="0.67265900000000001 0.73995299999999997 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <geom name="//unnamed_geom_3" class="visual" material="extrusion_material" pos="0 -0.40200000000000002 0.041999999999999996" quat="1 1 0 0" mesh="cell_extrusions"/>
+    <geom name="//unnamed_geom_4" class="frame" pos="0 -0.30379400000000001 1.0252399999999999" quat="0 0 0.97629600000000005 0.21643999999999999" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_5" class="frame" pos="0 -0.37716699999999997 0.031605500000000002" quat="0 0 -0.67236700000000005 -0.74021800000000004" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_6" class="frame" pos="0 -0.35099999999999998 1.03" quat="0 0 1 1" mesh="overhead_mount"/>
+    <geom name="//unnamed_geom_7" class="frame" pos="0 -0.39100000000000001 -0.01" quat="0 0 0 1" mesh="wormseye_mount"/>
+    <camera name="teleoperator_pov" class="/" pos="0 -1.3540000000000001 0.68500000000000005" xyaxes="1 0 0 0 0.20000000000000001 0.80000000000000004"/>
+    <camera name="collaborator_pov" class="/" pos="0 1.5 0.80000000000000004" xyaxes="-1 0 0 0 -0.20000000000000001 0.80000000000000004"/>
+    <body name="left\base_link" childclass="vx300s" pos="-0.46899999999999997 -0.019 0.02">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_8" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_9" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="left\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="left\waist" class="waist"/>
+        <geom name="//unnamed_geom_10" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_11" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="left\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="left\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_12" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_13" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="left\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="left\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_14" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_15" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="left\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="left\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_16" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_17" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="left\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="left\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_18" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_19" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="left\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="left\wrist_rotate" class="wrist_rotate"/>
+                  <site name="left\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="left\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_20" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_21" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_22" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_23" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_left" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="left\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="left\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_24" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_25" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_26" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_27" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_28" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="left\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="left\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_29" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_30" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_31" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_32" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_33" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="right\base_link" childclass="vx300s" pos="0.46899999999999997 -0.019 0.02" quat="0 0 0 1">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_34" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_35" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="right\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="right\waist" class="waist"/>
+        <geom name="//unnamed_geom_36" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_37" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="right\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="right\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_38" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_39" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="right\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="right\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_40" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_41" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="right\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="right\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_42" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_43" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="right\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="right\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_44" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_45" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="right\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="right\wrist_rotate" class="wrist_rotate"/>
+                  <site name="right\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="right\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_46" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_47" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_48" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_49" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_right" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="right\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="right\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_50" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_51" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_52" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_53" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_54" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="right\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="right\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_55" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_56" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_57" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_58" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_59" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="025_mug/">
+      <freejoint name="025_mug/"/>
+      <body name="025_mug//unnamed_body_0" childclass="025_mug/025_mug" pos="0 0 0">
+        <geom name="025_mug//unnamed_geom_0" class="025_mug/visual_025_mug" mesh="025_mug/textured"/>
+        <geom name="025_mug//unnamed_geom_1" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="025_mug//unnamed_geom_2" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="025_mug//unnamed_geom_3" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="025_mug//unnamed_geom_4" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="025_mug//unnamed_geom_5" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_6" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_7" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_8" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="025_mug//unnamed_geom_9" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_10" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="025_mug//unnamed_geom_11" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="025_mug//unnamed_geom_12" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="025_mug//unnamed_geom_13" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="025_mug//unnamed_geom_14" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+        <geom name="025_mug//unnamed_geom_15" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_014" rgba="0.034000000000000002 0.91000000000000003 0.26000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_16" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_015" rgba="0.66300000000000003 0.31 0.52000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_17" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_016" rgba="0.54700000000000004 0.17999999999999999 0.96999999999999997 1"/>
+        <geom name="025_mug//unnamed_geom_18" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_017" rgba="0.77500000000000002 0.93999999999999995 0.89000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_19" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_018" rgba="0.59799999999999998 0.92000000000000004 0.089999999999999997 1"/>
+        <geom name="025_mug//unnamed_geom_20" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_019" rgba="0.19600000000000001 0.050000000000000003 0.33000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_21" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_020" rgba="0.38900000000000001 0.27000000000000002 0.82999999999999996 1"/>
+        <geom name="025_mug//unnamed_geom_22" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_021" rgba="0.35699999999999998 0.28000000000000003 0.54000000000000004 1"/>
+        <geom name="025_mug//unnamed_geom_23" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_022" rgba="0.14099999999999999 0.80000000000000004 0.070000000000000007 1"/>
+        <geom name="025_mug//unnamed_geom_24" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_023" rgba="0.98699999999999999 0.77000000000000002 0.20000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_25" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_024" rgba="0.0060000000000000001 0.81999999999999995 0.70999999999999996 1"/>
+        <geom name="025_mug//unnamed_geom_26" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_025" rgba="0.72899999999999998 0.77000000000000002 0.070000000000000007 1"/>
+        <geom name="025_mug//unnamed_geom_27" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_026" rgba="0.35799999999999998 0.12 0.85999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_28" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_027" rgba="0.623 0.33000000000000002 0.059999999999999998 1"/>
+        <geom name="025_mug//unnamed_geom_29" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_028" rgba="0.311 0.33000000000000002 0.72999999999999998 1"/>
+        <geom name="025_mug//unnamed_geom_30" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_029" rgba="0.63800000000000001 0.89000000000000001 0.46999999999999997 1"/>
+        <geom name="025_mug//unnamed_geom_31" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_030" rgba="0.12 0.70999999999999996 0.76000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_32" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_031" rgba="0.56100000000000005 0.77000000000000002 0.48999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_33" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_032" rgba="0.52300000000000002 0.42999999999999999 0.029999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_34" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_033" rgba="0.108 0.029999999999999999 0.64000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_35" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_034" rgba="0.314 0.51000000000000001 0.91000000000000003 1"/>
+        <geom name="025_mug//unnamed_geom_36" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_035" rgba="0.249 0.40999999999999998 0.76000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_37" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_036" rgba="0.22900000000000001 0.080000000000000002 0.28999999999999998 1"/>
+        <geom name="025_mug//unnamed_geom_38" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_037" rgba="0.161 0.93000000000000005 0.81000000000000005 1"/>
+        <geom name="025_mug//unnamed_geom_39" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_038" rgba="0.63300000000000001 0.87 0.80000000000000004 1"/>
+        <geom name="025_mug//unnamed_geom_40" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_039" rgba="0.187 0.89000000000000001 0.54000000000000004 1"/>
+        <geom name="025_mug//unnamed_geom_41" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_040" rgba="0.80700000000000005 0.90000000000000002 0.32000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_42" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_041" rgba="0.11 0.23000000000000001 0.42999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_43" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_042" rgba="0.81799999999999995 0.85999999999999999 0.01 1"/>
+        <geom name="025_mug//unnamed_geom_44" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_043" rgba="0.51100000000000001 0.41999999999999998 0.22 1"/>
+        <geom name="025_mug//unnamed_geom_45" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_044" rgba="0.12 0.34000000000000002 0.93999999999999995 1"/>
+        <geom name="025_mug//unnamed_geom_46" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_045" rgba="0.32300000000000001 0.52000000000000002 0.69999999999999996 1"/>
+        <geom name="025_mug//unnamed_geom_47" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_046" rgba="0.36399999999999999 0.96999999999999997 0.95999999999999996 1"/>
+        <geom name="025_mug//unnamed_geom_48" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_047" rgba="0.252 0.5 0.29999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_49" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_048" rgba="0.28499999999999998 0.040000000000000001 0.60999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_50" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_049" rgba="0.503 0.050000000000000003 0.28000000000000003 1"/>
+        <geom name="025_mug//unnamed_geom_51" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_050" rgba="0.90800000000000003 0.23999999999999999 0.14000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_52" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_051" rgba="0.48899999999999999 0.98999999999999999 0.23999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_53" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_052" rgba="0.67200000000000004 0.76000000000000001 0.23999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_54" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_053" rgba="0.72799999999999998 0.37 0.63 1"/>
+        <geom name="025_mug//unnamed_geom_55" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_054" rgba="0.63400000000000001 0.54000000000000004 0.089999999999999997 1"/>
+        <geom name="025_mug//unnamed_geom_56" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_055" rgba="0.83499999999999996 0.32000000000000001 0.19 1"/>
+        <geom name="025_mug//unnamed_geom_57" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_056" rgba="0.041000000000000002 0.58999999999999997 0.68000000000000005 1"/>
+        <geom name="025_mug//unnamed_geom_58" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_057" rgba="0.017000000000000001 0.51000000000000001 0.23000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_59" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_058" rgba="0.64500000000000002 0.17000000000000001 0.68999999999999995 1"/>
+        <geom name="025_mug//unnamed_geom_60" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_059" rgba="0.38700000000000001 0.93999999999999995 0.14000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_61" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_060" rgba="0.34100000000000003 0.11 0.92000000000000004 1"/>
+        <geom name="025_mug//unnamed_geom_62" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_061" rgba="0.877 0.26000000000000001 0.66000000000000003 1"/>
+        <geom name="025_mug//unnamed_geom_63" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_062" rgba="0.81699999999999995 0.56000000000000005 0.53000000000000003 1"/>
+        <geom name="025_mug//unnamed_geom_64" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_063" rgba="0.24199999999999999 0.089999999999999997 0.90000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_65" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_064" rgba="0.90000000000000002 0.63 0.34000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_66" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_065" rgba="0.34899999999999998 0.72999999999999998 0.90000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_67" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_066" rgba="0.88700000000000001 0.78000000000000003 0.64000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_68" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_067" rgba="0.084000000000000005 0.16 0.90000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_69" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_068" rgba="0.60599999999999998 0.01 0.10000000000000001 1"/>
+        <geom name="025_mug//unnamed_geom_70" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_069" rgba="0.66400000000000003 0.01 0.16 1"/>
+        <geom name="025_mug//unnamed_geom_71" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_070" rgba="0.54900000000000004 0.68999999999999995 0.65000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_72" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_071" rgba="0.224 0.70999999999999996 0.23999999999999999 1"/>
+        <geom name="025_mug//unnamed_geom_73" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_072" rgba="0.32500000000000001 0.75 0.65000000000000002 1"/>
+        <geom name="025_mug//unnamed_geom_74" class="025_mug/collision_025_mug" mesh="025_mug/coacd_part_073" rgba="0.84899999999999998 0.66000000000000003 0.56999999999999995 1"/>
+      </body>
+    </body>
+    <body name="writing_pens/">
+      <freejoint name="writing_pens/"/>
+      <body name="writing_pens//unnamed_body_0" childclass="writing_pens/writing_pens" pos="0 0 0">
+        <geom name="writing_pens//unnamed_geom_0" class="writing_pens/visual_writing_pens" mesh="writing_pens/textured"/>
+        <geom name="writing_pens//unnamed_geom_1" class="writing_pens/collision_writing_pens" mesh="writing_pens/coacd_part_000"/>
+      </body>
+    </body>
+    <body name="011_banana/">
+      <freejoint name="011_banana/"/>
+      <body name="011_banana//unnamed_body_0" childclass="011_banana/011_banana" pos="0 0 0">
+        <geom name="011_banana//unnamed_geom_0" class="011_banana/visual_011_banana" mesh="011_banana/textured"/>
+        <geom name="011_banana//unnamed_geom_1" class="011_banana/collision_011_banana" mesh="011_banana/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="011_banana//unnamed_geom_2" class="011_banana/collision_011_banana" mesh="011_banana/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="011_banana//unnamed_geom_3" class="011_banana/collision_011_banana" mesh="011_banana/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="011_banana//unnamed_geom_4" class="011_banana/collision_011_banana" mesh="011_banana/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+      </body>
+    </body>
+    <body name="029_plate/">
+      <freejoint name="029_plate/"/>
+      <body name="029_plate//unnamed_body_0" childclass="029_plate/029_plate" pos="0 0 0">
+        <geom name="029_plate//unnamed_geom_0" class="029_plate/visual_029_plate" mesh="029_plate/textured"/>
+        <geom name="029_plate//unnamed_geom_1" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="029_plate//unnamed_geom_2" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="029_plate//unnamed_geom_3" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="029_plate//unnamed_geom_4" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="029_plate//unnamed_geom_5" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="029_plate//unnamed_geom_6" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="029_plate//unnamed_geom_7" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="029_plate//unnamed_geom_8" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="029_plate//unnamed_geom_9" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="029_plate//unnamed_geom_10" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="029_plate//unnamed_geom_11" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="029_plate//unnamed_geom_12" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="029_plate//unnamed_geom_13" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="029_plate//unnamed_geom_14" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+        <geom name="029_plate//unnamed_geom_15" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_014" rgba="0.034000000000000002 0.91000000000000003 0.26000000000000001 1"/>
+        <geom name="029_plate//unnamed_geom_16" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_015" rgba="0.66300000000000003 0.31 0.52000000000000002 1"/>
+        <geom name="029_plate//unnamed_geom_17" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_016" rgba="0.54700000000000004 0.17999999999999999 0.96999999999999997 1"/>
+        <geom name="029_plate//unnamed_geom_18" class="029_plate/collision_029_plate" mesh="029_plate/coacd_part_017" rgba="0.77500000000000002 0.93999999999999995 0.89000000000000001 1"/>
+      </body>
+    </body>
+    <body name="024_bowl/">
+      <freejoint name="024_bowl/"/>
+      <body name="024_bowl//unnamed_body_0" childclass="024_bowl/024_bowl" pos="0 0 0">
+        <site name="024_bowl/containment_box" type="box" group="6" pos="-0.017000000000000001 -0.044999999999999998 0.035000000000000003" size="0.02 0.02 0.01" rgba="1 1 1 1"/>
+        <geom name="024_bowl//unnamed_geom_0" class="024_bowl/visual_024_bowl" mesh="024_bowl/textured"/>
+        <geom name="024_bowl//unnamed_geom_1" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="024_bowl//unnamed_geom_2" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="024_bowl//unnamed_geom_3" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="024_bowl//unnamed_geom_4" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="024_bowl//unnamed_geom_5" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_6" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="024_bowl//unnamed_geom_7" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_8" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="024_bowl//unnamed_geom_9" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_10" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="024_bowl//unnamed_geom_11" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="024_bowl//unnamed_geom_12" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="024_bowl//unnamed_geom_13" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="024_bowl//unnamed_geom_14" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+        <geom name="024_bowl//unnamed_geom_15" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_014" rgba="0.034000000000000002 0.91000000000000003 0.26000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_16" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_015" rgba="0.66300000000000003 0.31 0.52000000000000002 1"/>
+        <geom name="024_bowl//unnamed_geom_17" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_016" rgba="0.54700000000000004 0.17999999999999999 0.96999999999999997 1"/>
+        <geom name="024_bowl//unnamed_geom_18" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_017" rgba="0.77500000000000002 0.93999999999999995 0.89000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_19" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_018" rgba="0.59799999999999998 0.92000000000000004 0.089999999999999997 1"/>
+        <geom name="024_bowl//unnamed_geom_20" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_019" rgba="0.19600000000000001 0.050000000000000003 0.33000000000000002 1"/>
+        <geom name="024_bowl//unnamed_geom_21" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_020" rgba="0.38900000000000001 0.27000000000000002 0.82999999999999996 1"/>
+        <geom name="024_bowl//unnamed_geom_22" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_021" rgba="0.35699999999999998 0.28000000000000003 0.54000000000000004 1"/>
+        <geom name="024_bowl//unnamed_geom_23" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_022" rgba="0.14099999999999999 0.80000000000000004 0.070000000000000007 1"/>
+        <geom name="024_bowl//unnamed_geom_24" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_023" rgba="0.98699999999999999 0.77000000000000002 0.20000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_25" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_024" rgba="0.0060000000000000001 0.81999999999999995 0.70999999999999996 1"/>
+        <geom name="024_bowl//unnamed_geom_26" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_025" rgba="0.72899999999999998 0.77000000000000002 0.070000000000000007 1"/>
+        <geom name="024_bowl//unnamed_geom_27" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_026" rgba="0.35799999999999998 0.12 0.85999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_28" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_027" rgba="0.623 0.33000000000000002 0.059999999999999998 1"/>
+        <geom name="024_bowl//unnamed_geom_29" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_028" rgba="0.311 0.33000000000000002 0.72999999999999998 1"/>
+        <geom name="024_bowl//unnamed_geom_30" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_029" rgba="0.63800000000000001 0.89000000000000001 0.46999999999999997 1"/>
+        <geom name="024_bowl//unnamed_geom_31" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_030" rgba="0.12 0.70999999999999996 0.76000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_32" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_031" rgba="0.56100000000000005 0.77000000000000002 0.48999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_33" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_032" rgba="0.52300000000000002 0.42999999999999999 0.029999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_34" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_033" rgba="0.108 0.029999999999999999 0.64000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_35" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_034" rgba="0.314 0.51000000000000001 0.91000000000000003 1"/>
+        <geom name="024_bowl//unnamed_geom_36" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_035" rgba="0.249 0.40999999999999998 0.76000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_37" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_036" rgba="0.22900000000000001 0.080000000000000002 0.28999999999999998 1"/>
+        <geom name="024_bowl//unnamed_geom_38" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_037" rgba="0.161 0.93000000000000005 0.81000000000000005 1"/>
+        <geom name="024_bowl//unnamed_geom_39" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_038" rgba="0.63300000000000001 0.87 0.80000000000000004 1"/>
+        <geom name="024_bowl//unnamed_geom_40" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_039" rgba="0.187 0.89000000000000001 0.54000000000000004 1"/>
+        <geom name="024_bowl//unnamed_geom_41" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_040" rgba="0.80700000000000005 0.90000000000000002 0.32000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_42" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_041" rgba="0.11 0.23000000000000001 0.42999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_43" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_042" rgba="0.81799999999999995 0.85999999999999999 0.01 1"/>
+        <geom name="024_bowl//unnamed_geom_44" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_043" rgba="0.51100000000000001 0.41999999999999998 0.22 1"/>
+        <geom name="024_bowl//unnamed_geom_45" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_044" rgba="0.12 0.34000000000000002 0.93999999999999995 1"/>
+        <geom name="024_bowl//unnamed_geom_46" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_045" rgba="0.32300000000000001 0.52000000000000002 0.69999999999999996 1"/>
+        <geom name="024_bowl//unnamed_geom_47" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_046" rgba="0.36399999999999999 0.96999999999999997 0.95999999999999996 1"/>
+        <geom name="024_bowl//unnamed_geom_48" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_047" rgba="0.252 0.5 0.29999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_49" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_048" rgba="0.28499999999999998 0.040000000000000001 0.60999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_50" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_049" rgba="0.503 0.050000000000000003 0.28000000000000003 1"/>
+        <geom name="024_bowl//unnamed_geom_51" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_050" rgba="0.90800000000000003 0.23999999999999999 0.14000000000000001 1"/>
+        <geom name="024_bowl//unnamed_geom_52" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_051" rgba="0.48899999999999999 0.98999999999999999 0.23999999999999999 1"/>
+        <geom name="024_bowl//unnamed_geom_53" class="024_bowl/collision_024_bowl" mesh="024_bowl/coacd_part_052" rgba="0.67200000000000004 0.76000000000000001 0.23999999999999999 1"/>
+      </body>
+    </body>
+    <body name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/">
+      <freejoint name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/"/>
+      <body name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_body_0" childclass="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" pos="0 0 0">
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_0" type="box" contype="0" conaffinity="0" group="6" size="0.04666 0.04666 0.025000000000000001" pos="0 0 0.02666"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_1" type="box" contype="0" conaffinity="0" group="6" size="0.10000000000000001 0.10000000000000001 0.016660000000000001" pos="0 0 0.25"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_2" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/visual_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/model"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_3" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_4" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_5" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_6" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_7" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_8" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_9" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_10" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_11" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_12" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_13" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_14" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_15" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_16" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_17" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_014" rgba="0.034000000000000002 0.91000000000000003 0.26000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_18" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_015" rgba="0.66300000000000003 0.31 0.52000000000000002 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_19" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_016" rgba="0.54700000000000004 0.17999999999999999 0.96999999999999997 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_20" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_017" rgba="0.77500000000000002 0.93999999999999995 0.89000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_21" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_018" rgba="0.59799999999999998 0.92000000000000004 0.089999999999999997 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_22" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_019" rgba="0.19600000000000001 0.050000000000000003 0.33000000000000002 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_23" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_020" rgba="0.38900000000000001 0.27000000000000002 0.82999999999999996 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_24" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_021" rgba="0.35699999999999998 0.28000000000000003 0.54000000000000004 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_25" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_022" rgba="0.14099999999999999 0.80000000000000004 0.070000000000000007 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_26" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_023" rgba="0.98699999999999999 0.77000000000000002 0.20000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_27" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_024" rgba="0.0060000000000000001 0.81999999999999995 0.70999999999999996 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_28" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_025" rgba="0.72899999999999998 0.77000000000000002 0.070000000000000007 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_29" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_026" rgba="0.35799999999999998 0.12 0.85999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_30" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_027" rgba="0.623 0.33000000000000002 0.059999999999999998 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_31" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_028" rgba="0.311 0.33000000000000002 0.72999999999999998 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_32" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_029" rgba="0.63800000000000001 0.89000000000000001 0.46999999999999997 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_33" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_030" rgba="0.12 0.70999999999999996 0.76000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_34" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_031" rgba="0.56100000000000005 0.77000000000000002 0.48999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_35" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_032" rgba="0.52300000000000002 0.42999999999999999 0.029999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_36" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_033" rgba="0.108 0.029999999999999999 0.64000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_37" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_034" rgba="0.314 0.51000000000000001 0.91000000000000003 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_38" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_035" rgba="0.249 0.40999999999999998 0.76000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_39" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_036" rgba="0.22900000000000001 0.080000000000000002 0.28999999999999998 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_40" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_037" rgba="0.161 0.93000000000000005 0.81000000000000005 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_41" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_038" rgba="0.63300000000000001 0.87 0.80000000000000004 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_42" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_039" rgba="0.187 0.89000000000000001 0.54000000000000004 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_43" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_040" rgba="0.80700000000000005 0.90000000000000002 0.32000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_44" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_041" rgba="0.11 0.23000000000000001 0.42999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_45" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_042" rgba="0.81799999999999995 0.85999999999999999 0.01 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_46" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_043" rgba="0.51100000000000001 0.41999999999999998 0.22 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_47" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_044" rgba="0.12 0.34000000000000002 0.93999999999999995 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_48" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_045" rgba="0.32300000000000001 0.52000000000000002 0.69999999999999996 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_49" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_046" rgba="0.36399999999999999 0.96999999999999997 0.95999999999999996 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_50" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_047" rgba="0.252 0.5 0.29999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_51" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_048" rgba="0.28499999999999998 0.040000000000000001 0.60999999999999999 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_52" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_049" rgba="0.503 0.050000000000000003 0.28000000000000003 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_53" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_050" rgba="0.90800000000000003 0.23999999999999999 0.14000000000000001 1"/>
+        <geom name="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028//unnamed_geom_54" class="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/collision_BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028" mesh="BIA_Cordon_Bleu_White_Porcelain_Utensil_Holder_900028/coacd_part_051" rgba="0.48899999999999999 0.98999999999999999 0.23999999999999999 1"/>
+      </body>
+    </body>
+  </worldbody>
+  <contact>
+    <exclude name="//unnamed_contact_0" body1="left\base_link" body2="left\shoulder_link"/>
+    <exclude name="//unnamed_contact_1" body1="right\base_link" body2="right\shoulder_link"/>
+  </contact>
+  <equality>
+    <joint name="//unnamed_equality_0" class="/" joint1="left\left_finger" joint2="left\right_finger" polycoef="0 1 0 0 0"/>
+    <joint name="//unnamed_equality_1" class="/" joint1="right\left_finger" joint2="right\right_finger" polycoef="0 1 0 0 0"/>
+  </equality>
+  <actuator>
+    <position name="left\waist" class="waist" joint="left\waist"/>
+    <position name="left\shoulder" class="shoulder" joint="left\shoulder"/>
+    <position name="left\elbow" class="elbow" joint="left\elbow"/>
+    <position name="left\forearm_roll" class="forearm_roll" joint="left\forearm_roll"/>
+    <position name="left\wrist_angle" class="wrist_angle" joint="left\wrist_angle"/>
+    <position name="left\wrist_rotate" class="wrist_rotate" joint="left\wrist_rotate"/>
+    <position name="left\gripper" class="finger" joint="left\left_finger"/>
+    <position name="right\waist" class="waist" joint="right\waist"/>
+    <position name="right\shoulder" class="shoulder" joint="right\shoulder"/>
+    <position name="right\elbow" class="elbow" joint="right\elbow"/>
+    <position name="right\forearm_roll" class="forearm_roll" joint="right\forearm_roll"/>
+    <position name="right\wrist_angle" class="wrist_angle" joint="right\wrist_angle"/>
+    <position name="right\wrist_rotate" class="wrist_rotate" joint="right\wrist_rotate"/>
+    <position name="right\gripper" class="finger" joint="right\left_finger"/>
+  </actuator>
+  <keyframe>
+    <key name="neutral_pose" qpos="0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 0.289587 -0.189742 0.0313626 0.950817 0.000319709 -0.00190436 0.309747 -0.0458613 -0.201848 0.0295697 0.90805 0.0119438 0.0127558 -0.418496 -0.236815 -0.118643 0.0316388 0.656524 0.000155244 0.000308338 -0.754305 0.289697 0.132012 0.0341931 0.701805 -0.000515002 -0.000184662 -0.712369 0.0277639 0.19601 0.0325212 0.245788 -0.000799142 0.000377821 -0.969323 -0.224205 0.100928 0.0303494 0.762018 0.00379467 0.00534326 -0.647522" ctrl="0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995 0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995"/>
+  </keyframe>
+</mujoco>

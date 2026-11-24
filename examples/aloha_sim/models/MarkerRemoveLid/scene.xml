@@ -1,0 +1,433 @@
+<mujoco model="google_64k scene">
+  <compiler angle="radian" meshdir="../assets" texturedir="../assets"/>
+  <option impratio="10" cone="elliptic" noslip_iterations="0">
+    <flag multiccd="enable"/>
+  </option>
+  <statistic meansize="0.050000000000000003" extent="0.59999999999999998" center="0 -0.10000000000000001 0.20000000000000001"/>
+  <visual>
+    <global offwidth="848" offheight="480"/>
+    <headlight ambient="0.59999999999999998 0.59999999999999998 0.59999999999999998" diffuse="0.59999999999999998 0.59999999999999998 0.59999999999999998" specular="0 0 0" active="1"/>
+  </visual>
+  <default>
+    <default class="/">
+      <default class="frame">
+        <geom type="mesh" group="1" material="extrusion_material"/>
+      </default>
+      <default class="vx300s">
+        <joint axis="0 1 0" actuatorfrcrange="-35 35"/>
+        <site group="4"/>
+        <default class="waist">
+          <joint axis="0 0 1" range="-3.1415799999999998 3.1415799999999998" damping="5.7599999999999998"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="43"/>
+        </default>
+        <default class="shoulder">
+          <joint range="-1.85005 1.25664" actuatorfrcrange="-144 144" armature="0.39500000000000002" damping="20" frictionloss="2"/>
+          <position ctrlrange="-1.85005 1.25664" kp="265"/>
+        </default>
+        <default class="elbow">
+          <joint range="-1.76278 1.6056999999999999" actuatorfrcrange="-59 59" armature="0.38300000000000001" damping="18.489999999999998" frictionloss="1.1499999999999999"/>
+          <position ctrlrange="-1.76278 1.6056999999999999" kp="227"/>
+        </default>
+        <default class="forearm_roll">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" actuatorfrcrange="-22 22" armature="0.14000000000000001" damping="6.7800000000000002"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="78"/>
+        </default>
+        <default class="wrist_angle">
+          <joint range="-1.8674999999999999 2.2340200000000001" armature="0.0080000000000000002" damping="6.2800000000000002"/>
+          <position ctrlrange="-1.8674999999999999 2.2340200000000001" kp="37"/>
+        </default>
+        <default class="wrist_rotate">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" damping="1.2"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="10.4"/>
+        </default>
+        <default class="finger">
+          <joint type="slide" armature="0.24299999999999999" damping="40"/>
+          <position ctrlrange="0.002 0.036999999999999998" kp="2000" kv="124"/>
+          <default class="left_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+          <default class="right_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+        </default>
+        <default class="visual">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="arm_material" density="0"/>
+        </default>
+        <default class="collision">
+          <geom type="mesh" group="3"/>
+          <default class="finger_collision">
+            <geom condim="4" friction="1 0.0050000000000000001 0.0001" solref="0.01 1" solimp="2 1 0.01"/>
+          </default>
+          <default class="sphere_collision">
+            <geom type="sphere" size="0.00059999999999999995" rgba="1 0 0 1"/>
+          </default>
+        </default>
+      </default>
+    </default>
+    <default class="marker/">
+      <default class="marker/marker">
+        <default class="marker/visual_marker">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="marker/marker_texture" density="200"/>
+        </default>
+        <default class="marker/collision_marker">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+        <default class="marker/collision_marker_high_friction">
+          <geom type="mesh" condim="6" group="4" friction="0.5 0.01 0.01" density="0" solref="0.0040000000000000001 1" solimp="0.98999999999999999 0.98999999999999999 0.01"/>
+        </default>
+      </default>
+    </default>
+    <default class="cap/">
+      <default class="cap/cap">
+        <default class="cap/visual_cap">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="cap/cap_texture" density="200"/>
+        </default>
+        <default class="cap/collision_cap_external">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+        <default class="cap/collision_cap_high_friction">
+          <geom type="mesh" condim="6" group="4" friction="0.5 0.01 0.01" density="0" solref="0.0040000000000000001 1" solimp="0.98999999999999999 0.98999999999999999 0.01"/>
+        </default>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="aloha_6_raw_skybox_1024x768_flipped" class="/" type="skybox" file="aloha_6_raw_skybox_1024x768_flipped-bd31f9f14363b07147a3fd7068df2e3405a28a0a.png" gridsize="3 4" gridlayout=".U..LFRB.D.."/>
+    <material name="black" class="/" rgba="0 0 0 1"/>
+    <texture name="table_top_rgb" class="/" type="2d" file="table_top_BaseColor-1585b10ffbfec59f62047fa30aa1fce3556eca9c.png"/>
+    <texture name="table_top_orm" class="/" type="2d" file="table_top_ORM-57b467a0022d2a212e2b1534e2bf557ede032628.png"/>
+    <texture name="table_top_normal" class="/" type="2d" file="table_top_Normal-2bbf40eb8f9b56ab226118148a5351fc3582083a.png"/>
+    <material name="table_top_material" class="/">
+      <layer texture="table_top_rgb" role="rgb"/>
+      <layer texture="table_top_orm" role="orm"/>
+      <layer texture="table_top_normal" role="normal"/>
+    </material>
+    <texture name="extrusion_rgb" class="/" type="2d" file="extrusions_BaseColor-ec640658b998cd324871d520eac8084807edd24f.png"/>
+    <texture name="extrusion_orm" class="/" type="2d" file="extrusions_ORM-2bd9ff3622b22e8008b77d509e892309a47eb548.png"/>
+    <texture name="extrusion_normal" class="/" type="2d" file="extrusions_Normal-5301ede9fb276e07ac1990b3f1c7459315cb7214.png"/>
+    <material name="extrusion_material" class="/">
+      <layer texture="extrusion_rgb" role="rgb"/>
+      <layer texture="extrusion_orm" role="orm"/>
+      <layer texture="extrusion_normal" role="normal"/>
+    </material>
+    <mesh name="cell_extrusions" class="/" file="cell_extrusions-8bf5c46dea23b42f39aa9cdef466278cd850f533.obj"/>
+    <mesh name="overhead_mount" class="/" file="overhead_mount-4655c489f7559abe6b2156002e171a0dfc5e5397.obj"/>
+    <mesh name="wormseye_mount" class="/" file="wormseye_mount-64325a673a8924f05232af40e9cace4d02766dd4.obj"/>
+    <mesh name="tablelegs" class="/" file="tablelegs-d0aaf6399ee429de60273fe61f29a7a7fcd20440.obj"/>
+    <mesh name="table_mesh_mapped" class="/" file="table_mesh_mapped-6c055adb309111efb32fb9fc0417883865cf9bf2.obj"/>
+    <texture name="arm_rgb" class="/" type="2d" file="Arm_material_BaseColor-10f49ecf80d41b43d7f59dd74ab7cdfd50513cc0.png"/>
+    <texture name="arm_orm" class="/" type="2d" file="Arm_material_ORM-5c912f3253053ad6f3da15ad6df43c15eac6868e.png"/>
+    <texture name="arm_normal" class="/" type="2d" file="Arm_material_Normal-9ecc07a1fa8c5e6fd0fdb9075d4d370dba7fb9e7.png"/>
+    <material name="arm_material" class="/">
+      <layer texture="arm_rgb" role="rgb"/>
+      <layer texture="arm_orm" role="orm"/>
+      <layer texture="arm_normal" role="normal"/>
+    </material>
+    <mesh name="vx300s_1_base" class="/" file="vx300s_1_base-b22bdb5ebce1cd0f24150745bfa18925df0b0da2.obj"/>
+    <mesh name="vx300s_2_shoulder" class="/" file="vx300s_2_shoulder-716094251bd290046342a234b684402b91a8131d.obj"/>
+    <mesh name="vx300s_3_upper_arm" class="/" file="vx300s_3_upper_arm-d03be6c3961caeb347b3c07797042b912cba8427.obj"/>
+    <mesh name="vx300s_4_upper_forearm" class="/" file="vx300s_4_upper_forearm-806ba514d68ef71f7eaaf7416faf8c35be9663ff.obj"/>
+    <mesh name="vx300s_5_lower_forearm" class="/" file="vx300s_5_lower_forearm-c82e1d0e67175305a7dc4a781d96785152c4e5fd.obj"/>
+    <mesh name="vx300s_6_wrist" class="/" file="vx300s_6_wrist-13c0bd6fdd13e224fcbb610c2ebc17f6497d383f.obj"/>
+    <mesh name="vx300s_7_gripper_prop_bar" class="/" file="vx300s_7_gripper_prop_bar-845484fbb9046b9a937dab1db68e894a0d5be188.obj"/>
+    <mesh name="vx300s_8_custom_finger_left" class="/" file="vx300s_8_custom_finger_left-c16cf4d6a74180770b5c767065593af36af88ad1.obj"/>
+    <mesh name="vx300s_8_custom_finger_right" class="/" file="vx300s_8_custom_finger_right-a9aae8dd4000df33c3d46e89e19dfef7f4d6376e.obj"/>
+    <mesh name="d405_solid" class="/" file="d405_solid-450946d01a73f6f2e11205134a5bf2a1433f31b3.obj"/>
+    <texture name="marker/marker_texture" class="marker/" type="2d" file="marker_4k_BaseColor-674faa95ba1c8421183b8c378f9ce122e335c6a6.png"/>
+    <material name="marker/marker_texture" class="marker/" texture="marker/marker_texture"/>
+    <mesh name="marker/marker" class="marker/" file="marker-cbd6013f63d41d19b6288929fda17e5ad2557fdf.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_001" class="marker/" file="marker_collision_001-5b527be841647a04ab5a71c92b6d07dcf7730175.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_002" class="marker/" file="marker_collision_002-4019656cc2dac5a0e284406b5856ac568cac959c.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_003" class="marker/" file="marker_collision_003-20fe4798d0a33d3dd0980b24af880415cd27cd9e.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_004" class="marker/" file="marker_collision_004-61799dfb7324b81e372f10f1422ca9493a4f1b94.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_005" class="marker/" file="marker_collision_005-c6b09da04099a92782374422c0626f149555b444.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_006" class="marker/" file="marker_collision_006-86e736a0d7e2c046ea0ab0e33314838b4599a7e3.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_007" class="marker/" file="marker_collision_007-89b0731e2ddef69eae2b5d34add3e813f83f42e7.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_008" class="marker/" file="marker_collision_008-c772a9ca3f059e42102b0dff228a23b33ac354d9.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_009" class="marker/" file="marker_collision_009-e594a36df8b20f8c9d4c0f362c255c69cab646d1.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_010" class="marker/" file="marker_collision_010-be7878dc00a2b55ef5cee07e5fc20297cabd0aca.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_011" class="marker/" file="marker_collision_011-9e5019708000ed35d514b85a889520c1a0d3e57f.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_012" class="marker/" file="marker_collision_012-b17a706f8b5dacae54b175d6055bdfa922d95e5a.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_013" class="marker/" file="marker_collision_013-589474c5c33fa456cf858c95992317f998359c58.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_014" class="marker/" file="marker_collision_014-6f02f07854f86e1125cc50582b3772407c27e569.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_015" class="marker/" file="marker_collision_015-677e0b298a6bc70528938891b6e7e0d9a4deb782.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_016" class="marker/" file="marker_collision_016-2ab94780c9e8b0eeb4ad6f70a90009faba303522.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_001" class="marker/" file="marker_collision_high_friction_001-d931ecf6e34d94c8135ea0df62cbd679dbeeb4c8.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_002" class="marker/" file="marker_collision_high_friction_002-c7451a15881f070034a8a5724854d4218d65c632.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_003" class="marker/" file="marker_collision_high_friction_003-44956eb981755cb56878ac75ae3cda3b347933ba.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_004" class="marker/" file="marker_collision_high_friction_004-ed500acafb3d34e5009c3f9347a078f2b8f10e96.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_005" class="marker/" file="marker_collision_high_friction_005-ff0f08f7b9b279d4d7b78578d10ef0a0f70db575.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_006" class="marker/" file="marker_collision_high_friction_006-06c9b9d8f668aed39f387e25820569cf678e18ae.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_007" class="marker/" file="marker_collision_high_friction_007-62a9e96157698191201cc7e83b20209ca271c5d4.obj" scale="1 1 1"/>
+    <mesh name="marker/marker_collision_high_friction_008" class="marker/" file="marker_collision_high_friction_008-9272d73db6963a0176cad9b6749a079fe0134d36.obj" scale="1 1 1"/>
+    <texture name="cap/cap_texture" class="cap/" type="2d" file="marker_4k_BaseColor-674faa95ba1c8421183b8c378f9ce122e335c6a6.png"/>
+    <material name="cap/cap_texture" class="cap/" texture="cap/cap_texture"/>
+    <mesh name="cap/cap" class="cap/" file="cap-9d1ac07b9b99d5fb99985bf0417774e6c95cecae.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_001" class="cap/" file="cap_collision_001-671bbcac95df937c10e106c81ba1a612c5fe1334.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_002" class="cap/" file="cap_collision_002-01dc24bdd2abe98ed90d162ebcfe77f48ea07f3b.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_003" class="cap/" file="cap_collision_003-fa6ed15baf8daae58fb213193e48e5b8c509a28c.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_004" class="cap/" file="cap_collision_004-b2e908d5e364d9439d84ab88ee38c863278386e8.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_005" class="cap/" file="cap_collision_005-9f962c7fae99bd05686310cd0d94c4a57cfb546c.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_006" class="cap/" file="cap_collision_006-3d28c111a6e67ba7a562c579e7f7bc30c85e7f07.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_007" class="cap/" file="cap_collision_007-98d0fa52a6e6b66bbe1eaf01c526e902d6132204.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_008" class="cap/" file="cap_collision_008-e2cd7aaec6da5cf5671523e4b9a815ba665836d5.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_009" class="cap/" file="cap_collision_009-65c9d6d28e336799fc84eb2517ddaefc19131cfd.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_001" class="cap/" file="cap_collision_high_friction_001-b27f57779801b00366b445f314fbacec023acd26.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_002" class="cap/" file="cap_collision_high_friction_002-5f0fb528932c184ad9b0ac6df09a927c9dc9e062.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_003" class="cap/" file="cap_collision_high_friction_003-03a5ff539422fcb1090432bb79bf36c98f94a4f1.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_004" class="cap/" file="cap_collision_high_friction_004-b2973d81677711f62eb491f161c32362399cac3e.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_005" class="cap/" file="cap_collision_high_friction_005-431899b147f52e6e6e22e9f442ae9e1878a9ac2f.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_006" class="cap/" file="cap_collision_high_friction_006-be3ee719406d0635c2ca5469eacff0fcb190161a.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_007" class="cap/" file="cap_collision_high_friction_007-3f85a37aa24f322e85d63d9dbe25ed53147b81ab.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_008" class="cap/" file="cap_collision_high_friction_008-5b2285050361e0f8abf5fb71f9380b44f845a033.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_009" class="cap/" file="cap_collision_high_friction_009-9b27f65ed94a1a35ef49eccae07a91364c1be149.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_010" class="cap/" file="cap_collision_high_friction_010-26fd84e87c5e0cc3c60f907f7f60b38983ac3768.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_011" class="cap/" file="cap_collision_high_friction_011-0bf7c7e74e3c355e9b5476c9ce127d667849dab5.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_012" class="cap/" file="cap_collision_high_friction_012-86bd4e4d49b55fee7c46bccc7a77853d916305e5.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_013" class="cap/" file="cap_collision_high_friction_013-07dcb30d6fb2147cea655bd24d3ff3fedcb055d9.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_014" class="cap/" file="cap_collision_high_friction_014-b86b0a9ec8c7b3b76c6b7cfb67e1746d6e36ba2b.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_015" class="cap/" file="cap_collision_high_friction_015-a2e54e2ddbfdb1a06e9ece7db0cff6ce4b9378dc.obj" scale="1 1 1"/>
+    <mesh name="cap/cap_collision_high_friction_016" class="cap/" file="cap_collision_high_friction_016-7e726b3c2532a88a7718ceb4951a68f50ac02b60.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="table" pos="0 0 -0.72099999999999997">
+      <site name="worldref" class="/"/>
+      <geom name="//unnamed_geom_0" class="visual" material="table_top_material" quat="1 0 0 1" mesh="table_mesh_mapped"/>
+      <geom name="//unnamed_geom_1" class="frame" quat="1 0 0 1" mesh="tablelegs"/>
+      <geom name="table" class="collision" type="box" size="0.60999999999999999 0.38100000000000001 0.10000000000000001" pos="0 0 0.65090000000000003"/>
+    </body>
+    <camera name="overhead_cam" class="/" resolution="1280 720" pos="0 -0.30379400000000001 1.0252399999999999" quat="0.97633199999999998 0.216277 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <camera name="worms_eye_cam" class="/" resolution="1280 720" pos="0 -0.37716699999999997 0.061605499999999994" quat="0.67265900000000001 0.73995299999999997 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <geom name="//unnamed_geom_3" class="visual" material="extrusion_material" pos="0 -0.40200000000000002 0.041999999999999996" quat="1 1 0 0" mesh="cell_extrusions"/>
+    <geom name="//unnamed_geom_4" class="frame" pos="0 -0.30379400000000001 1.0252399999999999" quat="0 0 0.97629600000000005 0.21643999999999999" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_5" class="frame" pos="0 -0.37716699999999997 0.031605500000000002" quat="0 0 -0.67236700000000005 -0.74021800000000004" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_6" class="frame" pos="0 -0.35099999999999998 1.03" quat="0 0 1 1" mesh="overhead_mount"/>
+    <geom name="//unnamed_geom_7" class="frame" pos="0 -0.39100000000000001 -0.01" quat="0 0 0 1" mesh="wormseye_mount"/>
+    <camera name="teleoperator_pov" class="/" pos="0 -1.3540000000000001 0.68500000000000005" xyaxes="1 0 0 0 0.20000000000000001 0.80000000000000004"/>
+    <camera name="collaborator_pov" class="/" pos="0 1.5 0.80000000000000004" xyaxes="-1 0 0 0 -0.20000000000000001 0.80000000000000004"/>
+    <body name="left\base_link" childclass="vx300s" pos="-0.46899999999999997 -0.019 0.02">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_8" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_9" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="left\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="left\waist" class="waist"/>
+        <geom name="//unnamed_geom_10" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_11" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="left\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="left\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_12" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_13" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="left\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="left\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_14" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_15" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="left\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="left\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_16" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_17" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="left\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="left\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_18" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_19" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="left\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="left\wrist_rotate" class="wrist_rotate"/>
+                  <site name="left\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="left\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_20" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_21" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_22" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_23" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_left" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="left\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="left\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_24" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_25" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_26" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_27" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_28" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="left\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="left\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_29" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_30" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_31" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_32" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_33" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="right\base_link" childclass="vx300s" pos="0.46899999999999997 -0.019 0.02" quat="0 0 0 1">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_34" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_35" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="right\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="right\waist" class="waist"/>
+        <geom name="//unnamed_geom_36" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_37" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="right\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="right\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_38" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_39" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="right\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="right\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_40" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_41" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="right\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="right\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_42" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_43" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="right\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="right\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_44" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_45" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="right\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="right\wrist_rotate" class="wrist_rotate"/>
+                  <site name="right\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="right\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_46" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_47" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_48" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_49" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_right" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="right\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="right\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_50" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_51" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_52" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_53" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_54" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="right\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="right\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_55" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_56" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_57" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_58" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_59" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="marker/">
+      <freejoint name="marker/"/>
+      <body name="marker//unnamed_body_0" childclass="marker/marker" pos="0 0 0.01">
+        <geom name="marker//unnamed_geom_0" class="marker/visual_marker" euler="0 90 90" mesh="marker/marker"/>
+        <geom name="marker//unnamed_geom_1" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_001"/>
+        <geom name="marker//unnamed_geom_2" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_002"/>
+        <geom name="marker//unnamed_geom_3" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_003"/>
+        <geom name="marker//unnamed_geom_4" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_004"/>
+        <geom name="marker//unnamed_geom_5" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_005"/>
+        <geom name="marker//unnamed_geom_6" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_006"/>
+        <geom name="marker//unnamed_geom_7" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_007"/>
+        <geom name="marker//unnamed_geom_8" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_008"/>
+        <geom name="marker//unnamed_geom_9" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_009"/>
+        <geom name="marker//unnamed_geom_10" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_010"/>
+        <geom name="marker//unnamed_geom_11" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_011"/>
+        <geom name="marker//unnamed_geom_12" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_012"/>
+        <geom name="marker//unnamed_geom_13" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_013"/>
+        <geom name="marker//unnamed_geom_14" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_014"/>
+        <geom name="marker//unnamed_geom_15" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_015"/>
+        <geom name="marker//unnamed_geom_16" class="marker/collision_marker" euler="0 90 90" mesh="marker/marker_collision_016"/>
+        <geom name="marker//unnamed_geom_17" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_001"/>
+        <geom name="marker//unnamed_geom_18" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_002"/>
+        <geom name="marker//unnamed_geom_19" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_003"/>
+        <geom name="marker//unnamed_geom_20" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_004"/>
+        <geom name="marker//unnamed_geom_21" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_005"/>
+        <geom name="marker//unnamed_geom_22" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_006"/>
+        <geom name="marker//unnamed_geom_23" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_007"/>
+        <geom name="marker//unnamed_geom_24" class="marker/collision_marker_high_friction" euler="0 90 90" mesh="marker/marker_collision_high_friction_008"/>
+      </body>
+    </body>
+    <body name="cap/">
+      <freejoint name="cap/"/>
+      <body name="cap//unnamed_body_0" childclass="cap/cap" pos="0 0 0.01">
+        <geom name="cap//unnamed_geom_0" class="cap/visual_cap" euler="0 90 90" mesh="cap/cap"/>
+        <geom name="cap//unnamed_geom_1" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_001"/>
+        <geom name="cap//unnamed_geom_2" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_002"/>
+        <geom name="cap//unnamed_geom_3" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_003"/>
+        <geom name="cap//unnamed_geom_4" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_004"/>
+        <geom name="cap//unnamed_geom_5" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_005"/>
+        <geom name="cap//unnamed_geom_6" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_006"/>
+        <geom name="cap//unnamed_geom_7" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_007"/>
+        <geom name="cap//unnamed_geom_8" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_008"/>
+        <geom name="cap//unnamed_geom_9" class="cap/collision_cap_external" euler="0 90 90" mesh="cap/cap_collision_009"/>
+        <geom name="cap//unnamed_geom_10" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_001"/>
+        <geom name="cap//unnamed_geom_11" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_002"/>
+        <geom name="cap//unnamed_geom_12" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_003"/>
+        <geom name="cap//unnamed_geom_13" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_004"/>
+        <geom name="cap//unnamed_geom_14" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_005"/>
+        <geom name="cap//unnamed_geom_15" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_006"/>
+        <geom name="cap//unnamed_geom_16" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_007"/>
+        <geom name="cap//unnamed_geom_17" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_008"/>
+        <geom name="cap//unnamed_geom_18" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_009"/>
+        <geom name="cap//unnamed_geom_19" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_010"/>
+        <geom name="cap//unnamed_geom_20" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_011"/>
+        <geom name="cap//unnamed_geom_21" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_012"/>
+        <geom name="cap//unnamed_geom_22" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_013"/>
+        <geom name="cap//unnamed_geom_23" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_014"/>
+        <geom name="cap//unnamed_geom_24" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_015"/>
+        <geom name="cap//unnamed_geom_25" class="cap/collision_cap_high_friction" euler="0 90 90" mesh="cap/cap_collision_high_friction_016"/>
+      </body>
+    </body>
+  </worldbody>
+  <contact>
+    <exclude name="//unnamed_contact_0" body1="left\base_link" body2="left\shoulder_link"/>
+    <exclude name="//unnamed_contact_1" body1="right\base_link" body2="right\shoulder_link"/>
+  </contact>
+  <equality>
+    <joint name="//unnamed_equality_0" class="/" joint1="left\left_finger" joint2="left\right_finger" polycoef="0 1 0 0 0"/>
+    <joint name="//unnamed_equality_1" class="/" joint1="right\left_finger" joint2="right\right_finger" polycoef="0 1 0 0 0"/>
+  </equality>
+  <actuator>
+    <position name="left\waist" class="waist" joint="left\waist"/>
+    <position name="left\shoulder" class="shoulder" joint="left\shoulder"/>
+    <position name="left\elbow" class="elbow" joint="left\elbow"/>
+    <position name="left\forearm_roll" class="forearm_roll" joint="left\forearm_roll"/>
+    <position name="left\wrist_angle" class="wrist_angle" joint="left\wrist_angle"/>
+    <position name="left\wrist_rotate" class="wrist_rotate" joint="left\wrist_rotate"/>
+    <position name="left\gripper" class="finger" joint="left\left_finger"/>
+    <position name="right\waist" class="waist" joint="right\waist"/>
+    <position name="right\shoulder" class="shoulder" joint="right\shoulder"/>
+    <position name="right\elbow" class="elbow" joint="right\elbow"/>
+    <position name="right\forearm_roll" class="forearm_roll" joint="right\forearm_roll"/>
+    <position name="right\wrist_angle" class="wrist_angle" joint="right\wrist_angle"/>
+    <position name="right\wrist_rotate" class="wrist_rotate" joint="right\wrist_rotate"/>
+    <position name="right\gripper" class="finger" joint="right\left_finger"/>
+  </actuator>
+  <keyframe>
+    <key name="neutral_pose" qpos="0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 -0.000989484 0.220273 0.0346765 0.655197 0.0163492 0.446536 0.609143 -0.000955105 0.220282 0.034688 0.655622 0.0150298 0.446677 0.608616" ctrl="0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995 0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995"/>
+  </keyframe>
+</mujoco>

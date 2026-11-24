@@ -6,6 +6,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 captures/
+.DS_Store
+
+# Operation videos are published as release assets, never committed (they are
+# written to the git-ignored <cwd>/.pi/robotics/runtime*/reels/).
+*.mp4
+*.mov
 
 # VLABench downloaded assets (huge; fetch via scripts/download_assets.py)
 examples/vlabench/obj/

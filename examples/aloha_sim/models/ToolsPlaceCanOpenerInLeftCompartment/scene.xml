@@ -1,0 +1,660 @@
+<mujoco model="google_64k scene">
+  <compiler angle="radian" meshdir="../assets" texturedir="../assets"/>
+  <option impratio="10" cone="elliptic" noslip_iterations="0">
+    <flag multiccd="enable"/>
+  </option>
+  <statistic meansize="0.050000000000000003" extent="0.59999999999999998" center="0 -0.10000000000000001 0.20000000000000001"/>
+  <visual>
+    <global offwidth="848" offheight="480"/>
+    <headlight ambient="0.59999999999999998 0.59999999999999998 0.59999999999999998" diffuse="0.59999999999999998 0.59999999999999998 0.59999999999999998" specular="0 0 0" active="1"/>
+  </visual>
+  <default>
+    <default class="/">
+      <default class="frame">
+        <geom type="mesh" group="1" material="extrusion_material"/>
+      </default>
+      <default class="vx300s">
+        <joint axis="0 1 0" actuatorfrcrange="-35 35"/>
+        <site group="4"/>
+        <default class="waist">
+          <joint axis="0 0 1" range="-3.1415799999999998 3.1415799999999998" damping="5.7599999999999998"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="43"/>
+        </default>
+        <default class="shoulder">
+          <joint range="-1.85005 1.25664" actuatorfrcrange="-144 144" armature="0.39500000000000002" damping="20" frictionloss="2"/>
+          <position ctrlrange="-1.85005 1.25664" kp="265"/>
+        </default>
+        <default class="elbow">
+          <joint range="-1.76278 1.6056999999999999" actuatorfrcrange="-59 59" armature="0.38300000000000001" damping="18.489999999999998" frictionloss="1.1499999999999999"/>
+          <position ctrlrange="-1.76278 1.6056999999999999" kp="227"/>
+        </default>
+        <default class="forearm_roll">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" actuatorfrcrange="-22 22" armature="0.14000000000000001" damping="6.7800000000000002"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="78"/>
+        </default>
+        <default class="wrist_angle">
+          <joint range="-1.8674999999999999 2.2340200000000001" armature="0.0080000000000000002" damping="6.2800000000000002"/>
+          <position ctrlrange="-1.8674999999999999 2.2340200000000001" kp="37"/>
+        </default>
+        <default class="wrist_rotate">
+          <joint axis="1 0 0" range="-3.1415799999999998 3.1415799999999998" damping="1.2"/>
+          <position ctrlrange="-3.1415799999999998 3.1415799999999998" kp="10.4"/>
+        </default>
+        <default class="finger">
+          <joint type="slide" armature="0.24299999999999999" damping="40"/>
+          <position ctrlrange="0.002 0.036999999999999998" kp="2000" kv="124"/>
+          <default class="left_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+          <default class="right_finger">
+            <joint axis="0 0 -1" range="0 0.041000000000000002"/>
+          </default>
+        </default>
+        <default class="visual">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="arm_material" density="0"/>
+        </default>
+        <default class="collision">
+          <geom type="mesh" group="3"/>
+          <default class="finger_collision">
+            <geom condim="4" friction="1 0.0050000000000000001 0.0001" solref="0.01 1" solimp="2 1 0.01"/>
+          </default>
+          <default class="sphere_collision">
+            <geom type="sphere" size="0.00059999999999999995" rgba="1 0 0 1"/>
+          </default>
+        </default>
+      </default>
+    </default>
+    <default class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/">
+      <default class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14">
+        <default class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/visual_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/texture" density="200"/>
+        </default>
+        <default class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="Craftsman_Grip_Screwdriver_Phillips_Cushion/">
+      <default class="Craftsman_Grip_Screwdriver_Phillips_Cushion/Craftsman_Grip_Screwdriver_Phillips_Cushion">
+        <default class="Craftsman_Grip_Screwdriver_Phillips_Cushion/visual_Craftsman_Grip_Screwdriver_Phillips_Cushion">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Craftsman_Grip_Screwdriver_Phillips_Cushion/texture" density="200"/>
+        </default>
+        <default class="Craftsman_Grip_Screwdriver_Phillips_Cushion/collision_Craftsman_Grip_Screwdriver_Phillips_Cushion">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="Magnifying_Glassassrt/">
+      <default class="Magnifying_Glassassrt/Magnifying_Glassassrt">
+        <default class="Magnifying_Glassassrt/visual_Magnifying_Glassassrt">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Magnifying_Glassassrt/texture" density="200"/>
+        </default>
+        <default class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="Granimals_20_Wooden_ABC_Blocks_Wagon/">
+      <default class="Granimals_20_Wooden_ABC_Blocks_Wagon/Granimals_20_Wooden_ABC_Blocks_Wagon">
+        <default class="Granimals_20_Wooden_ABC_Blocks_Wagon/visual_Granimals_20_Wooden_ABC_Blocks_Wagon">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Granimals_20_Wooden_ABC_Blocks_Wagon/texture" density="200"/>
+        </default>
+        <default class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/">
+      <default class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/Kingston_DT4000MR_G2_Management_Ready_USB_64GB">
+        <default class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/visual_Kingston_DT4000MR_G2_Management_Ready_USB_64GB">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/texture" density="200"/>
+        </default>
+        <default class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/collision_Kingston_DT4000MR_G2_Management_Ready_USB_64GB">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+    <default class="Diamond_Visions_Scissors_Red/">
+      <default class="Diamond_Visions_Scissors_Red/Diamond_Visions_Scissors_Red">
+        <default class="Diamond_Visions_Scissors_Red/visual_Diamond_Visions_Scissors_Red">
+          <geom type="mesh" contype="0" conaffinity="0" group="2" material="Diamond_Visions_Scissors_Red/texture" density="200"/>
+        </default>
+        <default class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red">
+          <geom type="mesh" condim="6" group="3" friction="1 0.01 0.01" mass="0" density="0" solref="0.0040000000000000001 1"/>
+        </default>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="aloha_6_raw_skybox_1024x768_flipped" class="/" type="skybox" file="aloha_6_raw_skybox_1024x768_flipped-bd31f9f14363b07147a3fd7068df2e3405a28a0a.png" gridsize="3 4" gridlayout=".U..LFRB.D.."/>
+    <material name="black" class="/" rgba="0 0 0 1"/>
+    <texture name="table_top_rgb" class="/" type="2d" file="table_top_BaseColor-1585b10ffbfec59f62047fa30aa1fce3556eca9c.png"/>
+    <texture name="table_top_orm" class="/" type="2d" file="table_top_ORM-57b467a0022d2a212e2b1534e2bf557ede032628.png"/>
+    <texture name="table_top_normal" class="/" type="2d" file="table_top_Normal-2bbf40eb8f9b56ab226118148a5351fc3582083a.png"/>
+    <material name="table_top_material" class="/">
+      <layer texture="table_top_rgb" role="rgb"/>
+      <layer texture="table_top_orm" role="orm"/>
+      <layer texture="table_top_normal" role="normal"/>
+    </material>
+    <texture name="extrusion_rgb" class="/" type="2d" file="extrusions_BaseColor-ec640658b998cd324871d520eac8084807edd24f.png"/>
+    <texture name="extrusion_orm" class="/" type="2d" file="extrusions_ORM-2bd9ff3622b22e8008b77d509e892309a47eb548.png"/>
+    <texture name="extrusion_normal" class="/" type="2d" file="extrusions_Normal-5301ede9fb276e07ac1990b3f1c7459315cb7214.png"/>
+    <material name="extrusion_material" class="/">
+      <layer texture="extrusion_rgb" role="rgb"/>
+      <layer texture="extrusion_orm" role="orm"/>
+      <layer texture="extrusion_normal" role="normal"/>
+    </material>
+    <mesh name="cell_extrusions" class="/" file="cell_extrusions-8bf5c46dea23b42f39aa9cdef466278cd850f533.obj"/>
+    <mesh name="overhead_mount" class="/" file="overhead_mount-4655c489f7559abe6b2156002e171a0dfc5e5397.obj"/>
+    <mesh name="wormseye_mount" class="/" file="wormseye_mount-64325a673a8924f05232af40e9cace4d02766dd4.obj"/>
+    <mesh name="tablelegs" class="/" file="tablelegs-d0aaf6399ee429de60273fe61f29a7a7fcd20440.obj"/>
+    <mesh name="table_mesh_mapped" class="/" file="table_mesh_mapped-6c055adb309111efb32fb9fc0417883865cf9bf2.obj"/>
+    <texture name="arm_rgb" class="/" type="2d" file="Arm_material_BaseColor-10f49ecf80d41b43d7f59dd74ab7cdfd50513cc0.png"/>
+    <texture name="arm_orm" class="/" type="2d" file="Arm_material_ORM-5c912f3253053ad6f3da15ad6df43c15eac6868e.png"/>
+    <texture name="arm_normal" class="/" type="2d" file="Arm_material_Normal-9ecc07a1fa8c5e6fd0fdb9075d4d370dba7fb9e7.png"/>
+    <material name="arm_material" class="/">
+      <layer texture="arm_rgb" role="rgb"/>
+      <layer texture="arm_orm" role="orm"/>
+      <layer texture="arm_normal" role="normal"/>
+    </material>
+    <mesh name="vx300s_1_base" class="/" file="vx300s_1_base-b22bdb5ebce1cd0f24150745bfa18925df0b0da2.obj"/>
+    <mesh name="vx300s_2_shoulder" class="/" file="vx300s_2_shoulder-716094251bd290046342a234b684402b91a8131d.obj"/>
+    <mesh name="vx300s_3_upper_arm" class="/" file="vx300s_3_upper_arm-d03be6c3961caeb347b3c07797042b912cba8427.obj"/>
+    <mesh name="vx300s_4_upper_forearm" class="/" file="vx300s_4_upper_forearm-806ba514d68ef71f7eaaf7416faf8c35be9663ff.obj"/>
+    <mesh name="vx300s_5_lower_forearm" class="/" file="vx300s_5_lower_forearm-c82e1d0e67175305a7dc4a781d96785152c4e5fd.obj"/>
+    <mesh name="vx300s_6_wrist" class="/" file="vx300s_6_wrist-13c0bd6fdd13e224fcbb610c2ebc17f6497d383f.obj"/>
+    <mesh name="vx300s_7_gripper_prop_bar" class="/" file="vx300s_7_gripper_prop_bar-845484fbb9046b9a937dab1db68e894a0d5be188.obj"/>
+    <mesh name="vx300s_8_custom_finger_left" class="/" file="vx300s_8_custom_finger_left-c16cf4d6a74180770b5c767065593af36af88ad1.obj"/>
+    <mesh name="vx300s_8_custom_finger_right" class="/" file="vx300s_8_custom_finger_right-a9aae8dd4000df33c3d46e89e19dfef7f4d6376e.obj"/>
+    <mesh name="d405_solid" class="/" file="d405_solid-450946d01a73f6f2e11205134a5bf2a1433f31b3.obj"/>
+    <texture name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/texture" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" type="2d" file="texture-736f4e7b37358d526e5aaf3e156282e6de9cd193.png"/>
+    <material name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/texture" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" texture="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/texture"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/model" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="model-54153aaed5af7001cb155ead52cef64e9ad1cd0b.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_000" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_000-ba87263c5db2d9f3a47f09a6c001b418293ffd05.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_001" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_001-3305e4b2b5ae43131c2f67a8467703ec7995e04b.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_002" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_002-3730cd199dd85464fe48faf52b9ea54a38b528b7.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_003" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_003-7106c5db312517a67fc1da4da790b26c46df2659.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_004" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_004-33a3570a4ee12897079b4a79e3652dc96ab0cae0.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_005" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_005-d2003bfa754168ea76b3df35b1dc3a16358fa121.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_006" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_006-f0373d3eafb79edfe4a3fee5ea97d5c033336b5f.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_007" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_007-a4eef0e518c50b0758645289adf1d46691605670.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_008" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_008-974105b07639f98e0d5fcbb49d883378fc65e544.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_009" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_009-6801d4e6ccf42c4ba8f0e142b8d0511f2dbd3075.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_010" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_010-7097549fe1f67312436b2df4c76ae7479775d915.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_011" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_011-3f41bfed659d249e6c889b39989e21c980f3ed63.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_012" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_012-ad58e750cecd402e3ecadb2877a801d75d893750.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_013" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_013-5915f5decde264970b148194d1803bf285659388.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_014" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_014-36bd6a1b70c06531251099d0e9514672b35efaf1.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_015" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_015-f916ecb8c984578e3f1389ae1d4da83ab513350d.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_016" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_016-fe7fa2a96d727d0dae0a7f18eb4a22ec59c7ceac.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_017" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_017-9c40b8d17baf0890e56b3f6adb5808301205db19.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_018" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_018-19b6a1a6e10f37cef4ff76869495093700650dac.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_019" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_019-93ed1e521e4783134fd3608db4cc40fcf7c3a935.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_020" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_020-4aa431ae9b209891470cb4156b2d012759342ffa.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_021" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_021-d721291190ca2cdbc3209c180d9ee51c16ef6f5c.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_022" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_022-5f0335b45408d247bffa7fd6cba83da8373bf7dc.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_023" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_023-76293761ee44186bbe6862a871f6ba0990dc6933.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_024" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_024-f6e08eec1b9dfc4d451ab28378adae12b93a2b96.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_025" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_025-6ee43ff650e5e0f6bb762cb89e5c08e79ab79c86.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_026" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_026-23aa63ff0ff65559e422809f5f608738b9a5fcd2.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_027" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_027-a6b57e500b72b75a9929b066b2811d9b1ae2ce0e.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_028" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_028-562b7dbd901536b4089b7fed29833032a388ee23.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_029" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_029-a2fde3b2002080493faf28a03daadac0f56e2439.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_030" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_030-eec8ebf0f6c2f6ce2c665c778ffb115df521c792.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_031" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_031-af0f5677a593a3a02d2835a347bce62d8c0d7d13.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_032" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_032-dbb10ff21f7f754e264fd305c892c96a92d9d560.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_033" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_033-187ecf2f0dc844b2bc65e8b9a256d3339ac95879.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_034" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_034-8a71f07c63519e64bd79cfae1964ccad4e604f7b.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_035" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_035-a59e0508cbad1af59548c4b4eeb808b62310be41.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_036" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_036-04394db528c80a2a379b7e4b2f88541c488ba567.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_037" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_037-0f2e0677c1edb5966423ababe2081c6d719cede5.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_038" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_038-99980c908ec4a71771a8b072d2d5b1d00660d04c.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_039" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_039-094101bd30bf51d46bfafa2fd4dc5fe6912afe57.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_040" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_040-d8a054eb85820d1798700b219463e2703ca6364e.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_041" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_041-ff6ee997a91aa77e8fad1b6322b3c1471a041e8e.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_042" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_042-2a4e23d155f2a5ca2ec2b0ae7482c27647855c1e.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_043" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_043-fbe228cf84c648c1cf55dd5f8ca9e5b93edfc8fe.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_044" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_044-b5407ef758da94fb331bf253bcdf5336825cd80f.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_045" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_045-c2657d1b484895856dcf754db5cbddb37b7f7f48.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_046" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_046-4f61cffc93137f0d62c7171e1c6b18c022a6043e.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_047" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_047-553ceb11e993807adc3ca468a1d48831e143fea2.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_048" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_048-997d0af5e952aab5509f569fbcd66c34d17f9d8b.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_049" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_049-b5b8a9b5f5435b0287abd54623401ab8fe2f6526.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_050" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_050-19375646e365fa12f52c24e1cb4b52a6b0cb4d0d.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_051" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_051-1ed2006fef50328ce163708fe80e929df0b2c82c.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_052" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_052-ea1203068baa1f887e3a45707e5fa5cd223dea1f.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_053" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_053-f1ed0486b87da1c2d54a5ee8b2b8b310fb19be7a.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_054" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_054-e6bd2e69f9e8c582b29c766094c5a39c4869ab3c.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_055" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_055-20f7996af3650759edb45d332ab313526537c7db.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_056" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_056-23fc52e05639527c8a5b5cb9332823ea64e51d01.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_057" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_057-4741e6fa3dcab7824584c4ee46dfc77c97f21c90.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_058" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_058-edc535b359a189bca1a5a89a726f44ef94da3f88.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_059" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_059-804fed34921bace28fa090dd6ed37b8f51f6a487.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_060" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_060-e8350214334456997260c81676e66e880c0650e2.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_061" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_061-ac1c2982131caf927a494d78717523c52b4dbfcf.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_062" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_062-47832769eb4aba1a204ab5feef39487f0f4dbfe8.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_063" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_063-8143f2bf40c03b6ad2089724dbdaaf8e4ce198e4.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_064" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_064-e710a8ea7f67b470d53dffbbfc5c19e57cca90e6.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_065" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_065-0c089d7861226e263488a81a4fad8fb83cbd46c7.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_066" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_066-ea98ada557b2866933fe1db6bf995eb634fd1fb7.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_067" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_067-434104531d3cee0a64ca58ef37eedbfc9f1ed140.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_068" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_068-1bae5e6152657687600f722521140f120ef482c7.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_069" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_069-815c2ffeccb53eafb13d839e6fbf0a471ae46523.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_070" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_070-b87bac3294a17268e9f852d7a4984c9dafa5e73d.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_071" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_071-5b8e8c2d83486a62a6f02e5fd6a34d2df0a79123.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_072" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_072-a1f2489336948a6ddabc0ea5f240b61f9aacf155.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_073" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_073-bbb82d7e263574d9ca04244d4d9c723885cddba4.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_074" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_074-0951ed60c879897cb34dd6c9c8255b2c2a4fe3e3.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_075" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_075-1541a89615c94376cf51ddf990e76d6a45e64580.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_076" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_076-5117d5f2f4c0c0315705430bd2dee3509a0223db.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_077" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_077-43d6606d700be172b14881be650f11baf6e6a3c8.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_078" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_078-d4b87cb396706e4fa0bfe0df582b0cd56c41f283.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_079" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_079-0469b47e12248a5bf2db147b72c77cccfa6740d5.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_080" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_080-0b0d607ae4baf1edfb7976a1a9dd65f31a184a90.obj" scale="0.5 0.5 0.5"/>
+    <mesh name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_081" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/" file="coacd_part_081-ea98ada557b2866933fe1db6bf995eb634fd1fb7.obj" scale="0.5 0.5 0.5"/>
+    <texture name="Craftsman_Grip_Screwdriver_Phillips_Cushion/texture" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/" type="2d" file="texture-1c6ec7354465dd3c1d9d6e467131d09b9f23b255.png"/>
+    <material name="Craftsman_Grip_Screwdriver_Phillips_Cushion/texture" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/" texture="Craftsman_Grip_Screwdriver_Phillips_Cushion/texture"/>
+    <mesh name="Craftsman_Grip_Screwdriver_Phillips_Cushion/model" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/" file="model-8aa8472333d9db280f83bed9b97be8d552ec6ff9.obj"/>
+    <mesh name="Craftsman_Grip_Screwdriver_Phillips_Cushion/coacd_part_000" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/" file="coacd_part_000-b314c95bf55b87e40a544f5dce4d6a8bea8b6fee.obj"/>
+    <mesh name="Craftsman_Grip_Screwdriver_Phillips_Cushion/coacd_part_001" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/" file="coacd_part_001-86aedc89a4b258962197d5c621aa2eef1344817e.obj"/>
+    <texture name="Magnifying_Glassassrt/texture" class="Magnifying_Glassassrt/" type="2d" file="texture-e558c987d8312a755cb38d022901762c930d546b.png"/>
+    <material name="Magnifying_Glassassrt/texture" class="Magnifying_Glassassrt/" texture="Magnifying_Glassassrt/texture"/>
+    <mesh name="Magnifying_Glassassrt/model" class="Magnifying_Glassassrt/" file="model-33fc955ff7192d03764cd4529e6b85da12764d81.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_000" class="Magnifying_Glassassrt/" file="coacd_part_000-bafff254101569f3c2cfb9b470fc12bab7aab447.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_001" class="Magnifying_Glassassrt/" file="coacd_part_001-6518f40bebcd0c6923ca1a667e6f55828af922b4.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_002" class="Magnifying_Glassassrt/" file="coacd_part_002-28861411e4e615836896492f6a6c732dee317441.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_003" class="Magnifying_Glassassrt/" file="coacd_part_003-1f3374d5c967d95ac8eceeaad4edeaca8c477bec.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_004" class="Magnifying_Glassassrt/" file="coacd_part_004-4899fd63e3e42779b6ccd34f2f303352d246736e.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_005" class="Magnifying_Glassassrt/" file="coacd_part_005-728fdefa1cd0819e396801618315ac84bcc95fde.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_006" class="Magnifying_Glassassrt/" file="coacd_part_006-f1bd9bc3e45099fc872103346f78da72b107615e.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_007" class="Magnifying_Glassassrt/" file="coacd_part_007-015c3733d20475d2533f6c3a3fbd9391be0dea0c.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_008" class="Magnifying_Glassassrt/" file="coacd_part_008-3647482cb88f18f935276461fda2f1d40cc2b335.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_009" class="Magnifying_Glassassrt/" file="coacd_part_009-c31ea411504818f23edc676b007b3f6850517fd1.obj"/>
+    <mesh name="Magnifying_Glassassrt/coacd_part_010" class="Magnifying_Glassassrt/" file="coacd_part_010-502bdd0931589404259e7e3835c1fc2bd1d70b61.obj"/>
+    <texture name="Granimals_20_Wooden_ABC_Blocks_Wagon/texture" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" type="2d" file="texture-32aa229fb672e920e94e87db722bff8497997596.png"/>
+    <material name="Granimals_20_Wooden_ABC_Blocks_Wagon/texture" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" texture="Granimals_20_Wooden_ABC_Blocks_Wagon/texture"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/model" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="model-ebc87a48d54460f01a6e0260bd8ddccd6aaed694.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_000" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_000-2cde17df70c050661d92c2c40f77ee40ea55c96a.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_001" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_001-394a0dddd13c441ea0f3f6a42deb2adf452be672.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_002" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_002-549b1aaa919132613707737613df97fdf4ba49c9.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_003" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_003-4a69bd56f895b5f783b762b007a2b00b802e20bb.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_004" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_004-4a91e0d518d74791e86506f32e2e5fd8a00bde0e.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_005" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_005-e74166f69462cab07d834e6e9c34eb8aacf6f219.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_006" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_006-056405de597cac3d989097830d4d0bf89657725b.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_007" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_007-384d1fd64ced176979019448967034bdb732b191.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_008" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_008-0de5281cd864ad2769cf0c80e28cd545b3b34aeb.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_009" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_009-4c3352103d6deb288243477d1b2bfd6034c3c3f9.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_010" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_010-250d1d5ae2b537eb60a64471cb91b934f07c1a4e.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_011" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_011-704da651692026518e80d179c84dcb868f3cd3ec.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_012" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_012-8d08bd64a8c5ce9b15e18665ec8c06553affb850.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <mesh name="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_013" class="Granimals_20_Wooden_ABC_Blocks_Wagon/" file="coacd_part_013-a0357e8f89ea28fb8c6a62781f2b4e5d625c940c.obj" scale="0.80000000000000004 0.80000000000000004 0.80000000000000004"/>
+    <texture name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/texture" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/" type="2d" file="texture-d4e6428cf45302e7f56a5686df01450e98524245.png"/>
+    <material name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/texture" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/" texture="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/texture"/>
+    <mesh name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/model" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/" file="model-24951ec8c8bdc8070eb234c8de2b5cdc8b6e8b6d.obj" scale="0.90000000000000002 0.90000000000000002 0.90000000000000002"/>
+    <mesh name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/coacd_part_000" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/" file="coacd_part_000-69ddb2e549862514930e16e5f19affb9d878c8af.obj" scale="0.90000000000000002 0.90000000000000002 0.90000000000000002"/>
+    <texture name="Diamond_Visions_Scissors_Red/texture" class="Diamond_Visions_Scissors_Red/" type="2d" file="texture-1f0c298934c0253352c122faf074cee39cfa91e1.png"/>
+    <material name="Diamond_Visions_Scissors_Red/texture" class="Diamond_Visions_Scissors_Red/" texture="Diamond_Visions_Scissors_Red/texture"/>
+    <mesh name="Diamond_Visions_Scissors_Red/model" class="Diamond_Visions_Scissors_Red/" file="model-86bf7a377a0f7fa2c6adf087fa3c9e4e9c336d66.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_000" class="Diamond_Visions_Scissors_Red/" file="coacd_part_000-93362b7f89e0f3d2a0981943769d4935ebe89225.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_001" class="Diamond_Visions_Scissors_Red/" file="coacd_part_001-a3545cc2662223c5135d9c213b6f0f4a0b232c71.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_002" class="Diamond_Visions_Scissors_Red/" file="coacd_part_002-0c030803a9a6ba2efbc038f55c2c966581694741.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_003" class="Diamond_Visions_Scissors_Red/" file="coacd_part_003-ab9429aef957dbca21a48b5a383b2d7486ab63a4.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_004" class="Diamond_Visions_Scissors_Red/" file="coacd_part_004-085c894d097da8751a006541fc82f21f6483e1d0.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_005" class="Diamond_Visions_Scissors_Red/" file="coacd_part_005-6ecc6fc931738989804a89a2e1c95f68bf2f61ff.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_006" class="Diamond_Visions_Scissors_Red/" file="coacd_part_006-006db97ce553605053318363bf475bcdcad37f11.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_007" class="Diamond_Visions_Scissors_Red/" file="coacd_part_007-4a6f1b972c920c0c3ad228ea8f7fb51e093656bd.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_008" class="Diamond_Visions_Scissors_Red/" file="coacd_part_008-771f99b63a7ca8651c0abf58694767c7f7c66d5a.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_009" class="Diamond_Visions_Scissors_Red/" file="coacd_part_009-8e8eaa85de6d90104cf54a9d787930f5fa38c916.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_010" class="Diamond_Visions_Scissors_Red/" file="coacd_part_010-f88ba12206b2a3ee6f5c748a7970ef652b630e42.obj"/>
+    <mesh name="Diamond_Visions_Scissors_Red/coacd_part_011" class="Diamond_Visions_Scissors_Red/" file="coacd_part_011-94db48aac856b1a6adc966409dd8b866893b2359.obj"/>
+  </asset>
+  <worldbody>
+    <body name="table" pos="0 0 -0.72099999999999997">
+      <site name="worldref" class="/"/>
+      <geom name="//unnamed_geom_0" class="visual" material="table_top_material" quat="1 0 0 1" mesh="table_mesh_mapped"/>
+      <geom name="//unnamed_geom_1" class="frame" quat="1 0 0 1" mesh="tablelegs"/>
+      <geom name="table" class="collision" type="box" size="0.60999999999999999 0.38100000000000001 0.10000000000000001" pos="0 0 0.65090000000000003"/>
+    </body>
+    <camera name="overhead_cam" class="/" resolution="1280 720" pos="0 -0.30379400000000001 1.0252399999999999" quat="0.97633199999999998 0.216277 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <camera name="worms_eye_cam" class="/" resolution="1280 720" pos="0 -0.37716699999999997 0.061605499999999994" quat="0.67265900000000001 0.73995299999999997 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+    <geom name="//unnamed_geom_3" class="visual" material="extrusion_material" pos="0 -0.40200000000000002 0.041999999999999996" quat="1 1 0 0" mesh="cell_extrusions"/>
+    <geom name="//unnamed_geom_4" class="frame" pos="0 -0.30379400000000001 1.0252399999999999" quat="0 0 0.97629600000000005 0.21643999999999999" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_5" class="frame" pos="0 -0.37716699999999997 0.031605500000000002" quat="0 0 -0.67236700000000005 -0.74021800000000004" mesh="d405_solid"/>
+    <geom name="//unnamed_geom_6" class="frame" pos="0 -0.35099999999999998 1.03" quat="0 0 1 1" mesh="overhead_mount"/>
+    <geom name="//unnamed_geom_7" class="frame" pos="0 -0.39100000000000001 -0.01" quat="0 0 0 1" mesh="wormseye_mount"/>
+    <camera name="teleoperator_pov" class="/" pos="0 -1.3540000000000001 0.68500000000000005" xyaxes="1 0 0 0 0.20000000000000001 0.80000000000000004"/>
+    <camera name="collaborator_pov" class="/" pos="0 1.5 0.80000000000000004" xyaxes="-1 0 0 0 -0.20000000000000001 0.80000000000000004"/>
+    <body name="left\base_link" childclass="vx300s" pos="-0.46899999999999997 -0.019 0.02">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_8" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_9" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="left\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="left\waist" class="waist"/>
+        <geom name="//unnamed_geom_10" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_11" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="left\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="left\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_12" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_13" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="left\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="left\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_14" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_15" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="left\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="left\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_16" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_17" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="left\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="left\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_18" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_19" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="left\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="left\wrist_rotate" class="wrist_rotate"/>
+                  <site name="left\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="left\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_20" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_21" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_22" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_23" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_left" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="left\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="left\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_24" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_25" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_26" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_27" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_28" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="left\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="left\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_29" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_30" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_31" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_32" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_33" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="left\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="right\base_link" childclass="vx300s" pos="0.46899999999999997 -0.019 0.02" quat="0 0 0 1">
+      <inertial pos="-0.053477400000000001 -0.00056257500000000005 0.020596099999999999" quat="-0.0029232400000000001 0.71251699999999996 0.00480387 0.70163299999999995" mass="0.96903399999999995" diaginertia="0.0071633 0.0060245100000000003 0.00169819"/>
+      <geom name="//unnamed_geom_34" class="visual" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <geom name="//unnamed_geom_35" class="collision" quat="1 0 0 1" mesh="vx300s_1_base"/>
+      <body name="right\shoulder_link" pos="0 0 0.079000000000000001">
+        <inertial pos="0.00025923299999999999 -3.3552000000000001e-06 0.011612900000000001" quat="-0.47611900000000001 0.47608299999999998 0.52278999999999998 0.52282600000000001" mass="0.79861400000000005" diaginertia="0.00120156 0.00113744 0.00093880000000000005"/>
+        <joint name="right\waist" class="waist"/>
+        <geom name="//unnamed_geom_36" class="visual" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <geom name="//unnamed_geom_37" class="collision" pos="0 0 -0.0030000000000000001" quat="1 0 0 1" mesh="vx300s_2_shoulder"/>
+        <body name="right\upper_arm_link" pos="0 0 0.048050000000000002">
+          <inertial pos="0.020694899999999999 4.0000000000000001e-10 0.22645899999999999" quat="0 0.072845800000000002 0 0.99734299999999998" mass="0.79259199999999996" diaginertia="0.0091133800000000008 0.0089250000000000006 0.00075931700000000002"/>
+          <joint name="right\shoulder" class="shoulder"/>
+          <geom name="//unnamed_geom_38" class="visual" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <geom name="//unnamed_geom_39" class="collision" quat="1 0 0 1" mesh="vx300s_3_upper_arm"/>
+          <body name="right\upper_forearm_link" pos="0.059549999999999999 0 0.29999999999999999">
+            <inertial pos="0.105723 0 0" quat="-0.00062163099999999998 0.70472400000000002 0.010529200000000001 0.70940300000000001" mass="0.32222800000000001" diaginertia="0.00144107 0.0013422799999999999 0.00015204699999999999"/>
+            <joint name="right\elbow" class="elbow"/>
+            <geom name="//unnamed_geom_40" class="visual" mesh="vx300s_4_upper_forearm"/>
+            <geom name="//unnamed_geom_41" class="collision" mesh="vx300s_4_upper_forearm"/>
+            <body name="right\lower_forearm_link" pos="0.20000000000000001 0 0">
+              <inertial pos="0.051347700000000003 0.0068046199999999999 0" quat="-0.70260400000000001 -0.079672400000000004 -0.70260400000000001 0.079672400000000004" mass="0.414823" diaginertia="0.0005911 0.000546493 0.00015570699999999999"/>
+              <joint name="right\forearm_roll" class="forearm_roll"/>
+              <geom name="//unnamed_geom_42" class="visual" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <geom name="//unnamed_geom_43" class="collision" quat="0 1 0 0" mesh="vx300s_5_lower_forearm"/>
+              <body name="right\wrist_link" pos="0.10000000000000001 0 0">
+                <inertial pos="0.046743 -7.6652000000000007e-06 0.010565" quat="-0.00100191 0.54458600000000001 0.0026583000000000002 0.8387" mass="0.115395" diaginertia="5.4570700000000003e-05 4.6310100000000002e-05 4.3269200000000002e-05"/>
+                <joint name="right\wrist_angle" class="wrist_angle"/>
+                <geom name="//unnamed_geom_44" class="visual" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <geom name="//unnamed_geom_45" class="collision" quat="1 0 0 1" mesh="vx300s_6_wrist"/>
+                <body name="right\gripper_link" pos="0.069744 0 0">
+                  <inertial pos="0.039566200000000003 -2.5631100000000002e-07 0.0040064899999999997" quat="0.62033000000000005 0.61991600000000002 -0.33968199999999998 0.33986899999999998" mass="0.25165199999999999" diaginertia="0.00068954599999999997 0.00065031599999999996 0.000468142"/>
+                  <joint name="right\wrist_rotate" class="wrist_rotate"/>
+                  <site name="right\gripper" group="5" pos="0.14999999999999999 0 0"/>
+                  <body name="right\gripper_base" pos="0.035000000000000003 0 0" euler="0 1.5700000000000001 -1.5700000000000001">
+                    <inertial pos="0.00018215399999999999 -0.034158899999999999 -0.0106026" quat="0.43528600000000001 0.55707399999999996 -0.551539 0.442718" mass="0.42158000000000001" diaginertia="0.0011043800000000001 0.00079053700000000001 0.00046972700000000002"/>
+                    <geom name="//unnamed_geom_46" class="visual" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_47" class="collision" mesh="vx300s_7_gripper_prop_bar"/>
+                    <geom name="//unnamed_geom_48" class="visual" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <geom name="//unnamed_geom_49" class="collision" type="mesh" pos="0 -0.082474800000000001 -0.0095954999999999999" quat="0 0 -0.21643999999999999 -0.97629600000000005" mesh="d405_solid"/>
+                    <camera name="wrist_cam_right" resolution="1280 720" pos="-0.010999999999999999 -0.0814748 -0.0095954999999999999" euler="2.7052595535899999 0 0" mode="fixed" focal="0.0019300000000000001 0.0019300000000000001" sensorsize="0.0038960000000000002 0.00214"/>
+                    <body name="right\left_finger_link" pos="0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 -1 -1 1">
+                      <inertial pos="0.014347800000000001 -0.0284791 0.012289700000000001" quat="0.53548600000000002 0.45876600000000001 -0.450407 0.547651" mass="0.086293700000000001" diaginertia="5.8684799999999998e-05 4.4688699999999998e-05 1.8397e-05"/>
+                      <joint name="right\left_finger" class="left_finger"/>
+                      <geom name="//unnamed_geom_50" class="visual" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_51" class="finger_collision" type="mesh" pos="0.0141637 0.021172699999999999 0.059999999999999998" quat="1 1 1 -1" mesh="vx300s_8_custom_finger_left"/>
+                      <geom name="//unnamed_geom_52" class="sphere_collision" pos="0.012999999999999999 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_53" class="sphere_collision" pos="0.022200000000000001 -0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_54" class="sphere_collision" pos="0.018200000000000001 -0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\left_finger" pos="0.014999999999999999 -0.059999999999999998 0.02"/>
+                    </body>
+                    <body name="right\right_finger_link" pos="-0.019099999999999999 -0.0141637 0.021172699999999999" quat="1 1 1 1">
+                      <inertial pos="0.014371099999999999 0.0284792 0.012142099999999999" quat="0.46131699999999998 0.53761499999999995 -0.54547800000000002 0.44789400000000001" mass="0.0862932" diaginertia="5.86828e-05 4.4688699999999998e-05 1.8394899999999999e-05"/>
+                      <joint name="right\right_finger" class="right_finger"/>
+                      <geom name="//unnamed_geom_55" class="visual" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_56" class="finger_collision" type="mesh" pos="0.0141637 -0.021172699999999999 0.059706700000000001" quat="1 -1 -1 -1" mesh="vx300s_8_custom_finger_right"/>
+                      <geom name="//unnamed_geom_57" class="sphere_collision" pos="0.012999999999999999 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_58" class="sphere_collision" pos="0.022200000000000001 0.089200000000000002 0.026800000000000001"/>
+                      <geom name="//unnamed_geom_59" class="sphere_collision" pos="0.018200000000000001 0.084500000000000006 0.026599999999999999"/>
+                      <site name="right\right_finger" pos="0.014999999999999999 0.059999999999999998 0.02"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/">
+      <freejoint name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/"/>
+      <body name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_body_0" childclass="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" pos="0 0 0">
+        <site name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/left_containment" type="box" group="5" pos="-0.070000000000000007 0 0.080000000000000002" size="0.050000000000000003 0.14000000000000001 0.074999999999999997" rgba="1 1 1 1"/>
+        <site name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/right_containment" type="box" group="5" pos="0.074999999999999997 0 0.080000000000000002" size="0.050000000000000003 0.14000000000000001 0.074999999999999997" rgba="1 1 1 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_0" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/visual_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/model"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_1" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_2" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_3" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_4" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_5" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_6" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_7" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_8" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_9" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_10" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_11" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_12" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_13" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_14" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_15" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_014" rgba="0.034000000000000002 0.91000000000000003 0.26000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_16" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_015" rgba="0.66300000000000003 0.31 0.52000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_17" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_016" rgba="0.54700000000000004 0.17999999999999999 0.96999999999999997 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_18" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_017" rgba="0.77500000000000002 0.93999999999999995 0.89000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_19" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_018" rgba="0.59799999999999998 0.92000000000000004 0.089999999999999997 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_20" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_019" rgba="0.19600000000000001 0.050000000000000003 0.33000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_21" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_020" rgba="0.38900000000000001 0.27000000000000002 0.82999999999999996 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_22" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_021" rgba="0.35699999999999998 0.28000000000000003 0.54000000000000004 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_23" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_022" rgba="0.14099999999999999 0.80000000000000004 0.070000000000000007 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_24" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_023" rgba="0.98699999999999999 0.77000000000000002 0.20000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_25" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_024" rgba="0.0060000000000000001 0.81999999999999995 0.70999999999999996 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_26" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_025" rgba="0.72899999999999998 0.77000000000000002 0.070000000000000007 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_27" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_026" rgba="0.35799999999999998 0.12 0.85999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_28" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_027" rgba="0.623 0.33000000000000002 0.059999999999999998 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_29" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_028" rgba="0.311 0.33000000000000002 0.72999999999999998 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_30" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_029" rgba="0.63800000000000001 0.89000000000000001 0.46999999999999997 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_31" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_030" rgba="0.12 0.70999999999999996 0.76000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_32" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_031" rgba="0.56100000000000005 0.77000000000000002 0.48999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_33" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_032" rgba="0.52300000000000002 0.42999999999999999 0.029999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_34" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_033" rgba="0.108 0.029999999999999999 0.64000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_35" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_034" rgba="0.314 0.51000000000000001 0.91000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_36" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_035" rgba="0.249 0.40999999999999998 0.76000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_37" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_036" rgba="0.22900000000000001 0.080000000000000002 0.28999999999999998 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_38" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_037" rgba="0.161 0.93000000000000005 0.81000000000000005 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_39" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_038" rgba="0.63300000000000001 0.87 0.80000000000000004 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_40" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_039" rgba="0.187 0.89000000000000001 0.54000000000000004 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_41" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_040" rgba="0.80700000000000005 0.90000000000000002 0.32000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_42" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_041" rgba="0.11 0.23000000000000001 0.42999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_43" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_042" rgba="0.81799999999999995 0.85999999999999999 0.01 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_44" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_043" rgba="0.51100000000000001 0.41999999999999998 0.22 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_45" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_044" rgba="0.12 0.34000000000000002 0.93999999999999995 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_46" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_045" rgba="0.32300000000000001 0.52000000000000002 0.69999999999999996 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_47" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_046" rgba="0.36399999999999999 0.96999999999999997 0.95999999999999996 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_48" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_047" rgba="0.252 0.5 0.29999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_49" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_048" rgba="0.28499999999999998 0.040000000000000001 0.60999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_50" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_049" rgba="0.503 0.050000000000000003 0.28000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_51" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_050" rgba="0.90800000000000003 0.23999999999999999 0.14000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_52" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_051" rgba="0.48899999999999999 0.98999999999999999 0.23999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_53" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_052" rgba="0.67200000000000004 0.76000000000000001 0.23999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_54" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_053" rgba="0.72799999999999998 0.37 0.63 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_55" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_054" rgba="0.63400000000000001 0.54000000000000004 0.089999999999999997 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_56" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_055" rgba="0.83499999999999996 0.32000000000000001 0.19 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_57" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_056" rgba="0.041000000000000002 0.58999999999999997 0.68000000000000005 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_58" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_057" rgba="0.017000000000000001 0.51000000000000001 0.23000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_59" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_058" rgba="0.64500000000000002 0.17000000000000001 0.68999999999999995 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_60" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_059" rgba="0.38700000000000001 0.93999999999999995 0.14000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_61" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_060" rgba="0.34100000000000003 0.11 0.92000000000000004 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_62" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_061" rgba="0.877 0.26000000000000001 0.66000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_63" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_062" rgba="0.81699999999999995 0.56000000000000005 0.53000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_64" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_063" rgba="0.24199999999999999 0.089999999999999997 0.90000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_65" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_064" rgba="0.90000000000000002 0.63 0.34000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_66" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_065" rgba="0.34899999999999998 0.72999999999999998 0.90000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_67" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_066" rgba="0.88700000000000001 0.78000000000000003 0.64000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_68" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_067" rgba="0.084000000000000005 0.16 0.90000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_69" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_068" rgba="0.60599999999999998 0.01 0.10000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_70" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_069" rgba="0.66400000000000003 0.01 0.16 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_71" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_070" rgba="0.54900000000000004 0.68999999999999995 0.65000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_72" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_071" rgba="0.224 0.70999999999999996 0.23999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_73" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_072" rgba="0.32500000000000001 0.75 0.65000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_74" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_073" rgba="0.84899999999999998 0.66000000000000003 0.56999999999999995 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_75" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_074" rgba="0.094 0.37 0.27000000000000002 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_76" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_075" rgba="0.24399999999999999 0.96999999999999997 0.39000000000000001 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_77" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_076" rgba="0.89200000000000002 0.63 0.79000000000000004 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_78" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_077" rgba="0.503 0.57999999999999996 0.48999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_79" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_078" rgba="0.19500000000000001 0.71999999999999997 0.28000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_80" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_079" rgba="0.024 0.65000000000000002 0.17999999999999999 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_81" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_080" rgba="0.93999999999999995 0.94999999999999996 0.91000000000000003 1"/>
+        <geom name="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14//unnamed_geom_82" class="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/collision_Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14" mesh="Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14/coacd_part_081" rgba="0.37 0.02 0.93000000000000005 1"/>
+      </body>
+    </body>
+    <body name="Craftsman_Grip_Screwdriver_Phillips_Cushion/">
+      <freejoint name="Craftsman_Grip_Screwdriver_Phillips_Cushion/"/>
+      <body name="Craftsman_Grip_Screwdriver_Phillips_Cushion//unnamed_body_0" childclass="Craftsman_Grip_Screwdriver_Phillips_Cushion/Craftsman_Grip_Screwdriver_Phillips_Cushion" pos="0 0 0">
+        <site name="Craftsman_Grip_Screwdriver_Phillips_Cushion/tool_handle" group="5" pos="0.070000000000000007 0.0050000000000000001 0.02" quat="1 0 0 0" size="0.02 0.02 0.02"/>
+        <site name="Craftsman_Grip_Screwdriver_Phillips_Cushion/tool_end" group="5" pos="-0.050000000000000003 0.0050000000000000001 0.01" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <geom name="Craftsman_Grip_Screwdriver_Phillips_Cushion//unnamed_geom_0" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/visual_Craftsman_Grip_Screwdriver_Phillips_Cushion" mesh="Craftsman_Grip_Screwdriver_Phillips_Cushion/model"/>
+        <geom name="Craftsman_Grip_Screwdriver_Phillips_Cushion//unnamed_geom_1" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/collision_Craftsman_Grip_Screwdriver_Phillips_Cushion" mesh="Craftsman_Grip_Screwdriver_Phillips_Cushion/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="Craftsman_Grip_Screwdriver_Phillips_Cushion//unnamed_geom_2" class="Craftsman_Grip_Screwdriver_Phillips_Cushion/collision_Craftsman_Grip_Screwdriver_Phillips_Cushion" mesh="Craftsman_Grip_Screwdriver_Phillips_Cushion/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+      </body>
+    </body>
+    <body name="Magnifying_Glassassrt/">
+      <freejoint name="Magnifying_Glassassrt/"/>
+      <body name="Magnifying_Glassassrt//unnamed_body_0" childclass="Magnifying_Glassassrt/Magnifying_Glassassrt" pos="0 0 0.10000000000000001">
+        <site name="Magnifying_Glassassrt/tool_handle" group="5" pos="0.050000000000000003 0 0.01" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <site name="Magnifying_Glassassrt/tool_end" group="5" pos="-0.040000000000000001 0 0.01" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_0" class="Magnifying_Glassassrt/visual_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/model"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_1" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_2" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_3" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_4" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_5" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_6" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_7" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_8" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_9" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_10" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="Magnifying_Glassassrt//unnamed_geom_11" class="Magnifying_Glassassrt/collision_Magnifying_Glassassrt" mesh="Magnifying_Glassassrt/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+      </body>
+    </body>
+    <body name="Granimals_20_Wooden_ABC_Blocks_Wagon/">
+      <freejoint name="Granimals_20_Wooden_ABC_Blocks_Wagon/"/>
+      <body name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_body_0" childclass="Granimals_20_Wooden_ABC_Blocks_Wagon/Granimals_20_Wooden_ABC_Blocks_Wagon" pos="0 0 0.10000000000000001">
+        <site name="Granimals_20_Wooden_ABC_Blocks_Wagon/tool_handle" group="5" pos="0.050000000000000003 0 0.014999999999999999" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <site name="Granimals_20_Wooden_ABC_Blocks_Wagon/tool_end" group="5" pos="-0.050000000000000003 0 0.014999999999999999" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_0" class="Granimals_20_Wooden_ABC_Blocks_Wagon/visual_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/model"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_1" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_2" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_3" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_4" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_5" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_6" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_7" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_8" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_9" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_10" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_11" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_12" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_13" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_012" rgba="0.30499999999999999 0.10000000000000001 0.68000000000000005 1"/>
+        <geom name="Granimals_20_Wooden_ABC_Blocks_Wagon//unnamed_geom_14" class="Granimals_20_Wooden_ABC_Blocks_Wagon/collision_Granimals_20_Wooden_ABC_Blocks_Wagon" mesh="Granimals_20_Wooden_ABC_Blocks_Wagon/coacd_part_013" rgba="0.44 0.12 0.5 1"/>
+      </body>
+    </body>
+    <body name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/">
+      <freejoint name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/"/>
+      <body name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB//unnamed_body_0" childclass="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/Kingston_DT4000MR_G2_Management_Ready_USB_64GB" pos="0 0 0.10000000000000001">
+        <site name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/tool_handle" group="5" pos="0 0 0.0070000000000000001" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <geom name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB//unnamed_geom_0" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/visual_Kingston_DT4000MR_G2_Management_Ready_USB_64GB" mesh="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/model"/>
+        <geom name="Kingston_DT4000MR_G2_Management_Ready_USB_64GB//unnamed_geom_1" class="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/collision_Kingston_DT4000MR_G2_Management_Ready_USB_64GB" mesh="Kingston_DT4000MR_G2_Management_Ready_USB_64GB/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+      </body>
+    </body>
+    <body name="Diamond_Visions_Scissors_Red/">
+      <freejoint name="Diamond_Visions_Scissors_Red/"/>
+      <body name="Diamond_Visions_Scissors_Red//unnamed_body_0" childclass="Diamond_Visions_Scissors_Red/Diamond_Visions_Scissors_Red" pos="0 0 0.10000000000000001">
+        <site name="Diamond_Visions_Scissors_Red/tool_handle" group="5" pos="0.02 0.050000000000000003 0.0050000000000000001" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <site name="Diamond_Visions_Scissors_Red/tool_end" group="5" pos="0 -0.059999999999999998 0.0050000000000000001" quat="1 0 0 0" size="0.01 0.01 0.01"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_0" class="Diamond_Visions_Scissors_Red/visual_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/model"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_1" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_000" rgba="0.375 0.94999999999999996 0.72999999999999998 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_2" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_001" rgba="0.59899999999999998 0.16 0.16 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_3" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_002" rgba="0.058000000000000003 0.87 0.59999999999999998 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_4" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_003" rgba="0.70799999999999996 0.02 0.96999999999999997 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_5" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_004" rgba="0.83199999999999996 0.20999999999999999 0.17999999999999999 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_6" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_005" rgba="0.183 0.29999999999999999 0.52000000000000002 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_7" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_006" rgba="0.432 0.28999999999999998 0.60999999999999999 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_8" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_007" rgba="0.13900000000000001 0.28999999999999998 0.37 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_9" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_008" rgba="0.45600000000000002 0.79000000000000004 0.20000000000000001 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_10" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_009" rgba="0.51400000000000001 0.58999999999999997 0.050000000000000003 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_11" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_010" rgba="0.60799999999999998 0.17000000000000001 0.070000000000000007 1"/>
+        <geom name="Diamond_Visions_Scissors_Red//unnamed_geom_12" class="Diamond_Visions_Scissors_Red/collision_Diamond_Visions_Scissors_Red" mesh="Diamond_Visions_Scissors_Red/coacd_part_011" rgba="0.94899999999999995 0.96999999999999997 0.81000000000000005 1"/>
+      </body>
+    </body>
+  </worldbody>
+  <contact>
+    <exclude name="//unnamed_contact_0" body1="left\base_link" body2="left\shoulder_link"/>
+    <exclude name="//unnamed_contact_1" body1="right\base_link" body2="right\shoulder_link"/>
+  </contact>
+  <equality>
+    <joint name="//unnamed_equality_0" class="/" joint1="left\left_finger" joint2="left\right_finger" polycoef="0 1 0 0 0"/>
+    <joint name="//unnamed_equality_1" class="/" joint1="right\left_finger" joint2="right\right_finger" polycoef="0 1 0 0 0"/>
+  </equality>
+  <actuator>
+    <position name="left\waist" class="waist" joint="left\waist"/>
+    <position name="left\shoulder" class="shoulder" joint="left\shoulder"/>
+    <position name="left\elbow" class="elbow" joint="left\elbow"/>
+    <position name="left\forearm_roll" class="forearm_roll" joint="left\forearm_roll"/>
+    <position name="left\wrist_angle" class="wrist_angle" joint="left\wrist_angle"/>
+    <position name="left\wrist_rotate" class="wrist_rotate" joint="left\wrist_rotate"/>
+    <position name="left\gripper" class="finger" joint="left\left_finger"/>
+    <position name="right\waist" class="waist" joint="right\waist"/>
+    <position name="right\shoulder" class="shoulder" joint="right\shoulder"/>
+    <position name="right\elbow" class="elbow" joint="right\elbow"/>
+    <position name="right\forearm_roll" class="forearm_roll" joint="right\forearm_roll"/>
+    <position name="right\wrist_angle" class="wrist_angle" joint="right\wrist_angle"/>
+    <position name="right\wrist_rotate" class="wrist_rotate" joint="right\wrist_rotate"/>
+    <position name="right\gripper" class="finger" joint="right\left_finger"/>
+  </actuator>
+  <keyframe>
+    <key name="neutral_pose" qpos="0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 0 -0.959 1.182 0 -0.274 0 0.0082 0.0082 0.0361159 -0.188597 0.0306611 0.999968 -0.00157624 0.00780502 0.000124392 -0.211 -0.114332 0.0341483 0.218153 0.0351722 0.0091591 -0.975238 0.213662 -0.126191 -0.0698669 0.96741 0.000400142 0.00555194 -0.253154 -0.0125399 0.150687 -0.0689882 0.00594613 -0.00633208 -0.00673394 -0.99994 -0.271495 0.15174 -0.0696493 0.549007 0.00092738 0.00518705 -0.835801 0.248824 0.1798 -0.0674403 0.197705 -0.0185305 -0.0107039 0.980028" ctrl="0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995 0 -0.95999999999999996 1.1599999999999999 0 -0.29999999999999999 0 0.0083999999999999995"/>
+  </keyframe>
+</mujoco>
