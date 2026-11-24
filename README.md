@@ -16,6 +16,43 @@ built directly on [`google-deepmind/mujoco`](https://github.com/google-deepmind/
   <em>pi agent ─▶ robotics tool ─▶ control API ─▶ MuJoCo daemon ─▶ Studio web viewer ─▶ browser tab</em>
 </p>
 
+## Showcase
+
+### Removing a marker cap: the agent fails three times, then finds the trick
+
+<!--
+  Placeholder link. Replace `src` with the uploaded video URL (a GitHub Release
+  asset works well, e.g. https://github.com/<owner>/<repo>/releases/download/<tag>/<file>.mp4).
+-->
+<p align="center">
+  <video src="https://github.com/zwpaper/pi-robotics/releases/download/demos/marker_remove_lid.mp4"
+         controls muted playsinline width="760"></video>
+</p>
+
+A bimanual ALOHA 2 (`examples/aloha_sim`) has to pull the cap off a marker that
+is standing on the table. The cap is a tight friction fit, so this is a
+**grip-and-pull** problem, not a reach problem — and an LLM agent driving the
+`robotics` tool (`look` → `move_ee` / `nudge` → `contains`) needs **four
+attempts** to solve it.
+
+| # | what it tried | result |
+|---|---|---|
+| 1 | low-tension **axial pull** | the pull never beats the cap–body friction; the cap just slides in the fingers |
+| 2 | lifted the marker **mid-air**, both arms pulling in **opposing** directions | nothing to brace against — the marker squirts out of the opposite gripper |
+| 3 | **table-level pull + twist** | right idea, but no recovery once the fingers slip: the cap rotates on the spot and stays on |
+| 4 | **high-tension opposing pull + peel + slip recovery** | grip hard, brace the marker on the table, **peel** sideways, and **re-seat the cap instead of pulling harder** when it slips — the cap pops off |
+
+The video is the **full session, failed attempts included**: one QuickTime chapter
+per attempt, with the MuJoCo 3D panel plus all six ALOHA cameras arranged in a
+grid, rendered from the recorded state timeline. See the
+[full write-up](examples/aloha_sim/videos/marker_remove_lid.md).
+
+More demos: [TidyBot++ water-the-plant / fill-a-cup](examples/tidybot2/README.md),
+[VLABench mahjong selection](examples/vlabench/README.md).
+
+> Videos are **not committed** to this repository — `reel` writes them to
+> `<cwd>/.pi/robotics/runtime*/reels/`, which is git-ignored.
+
 ## What you get
 
 - **`robotics` tool** — start/stop a simulation, switch or load scenes, drive
@@ -53,6 +90,8 @@ The MuJoCo skills are the same files the Antigravity plugin bundles, taken from
 - Python 3.11+ with `mujoco>=4.0.1` (ships `mujoco.studio` and
   `mujoco_studio_wasm`)
 - `git` (only to fetch the optional MuJoCo Menagerie robot models on first use)
+- [`git-lfs`](https://git-lfs.com) — only for the example scenes' meshes and
+  textures; the core tool works without it
 - optional: `uv` (faster env setup)
 
 ## Setup
@@ -63,7 +102,12 @@ From the project root:
 # 1. install the pi extension + skills (auto-discovered from .pi/)
 #    nothing to do for local use — pi loads .pi/extensions and .pi/skills.
 
-# 2. create the Python environment with MuJoCo Studio
+# 2. (example scenes only) pull the meshes/textures stored in Git LFS
+#    a plain `git clone` already does this when git-lfs is on PATH
+# git lfs install
+# git lfs pull
+
+# 3. create the Python environment with MuJoCo Studio
 uv venv .venv
 uv pip install --python .venv/bin/python -r python/requirements.txt
 ```
@@ -272,11 +316,18 @@ pi-robotics/
 │   ├── robotics_daemon.py           # daemon entry point
 │   ├── requirements.txt
 │   └── pi_robotics/                 # daemon, scenes, menagerie fetch, control server
-├── examples/scenes/                 # example MJCF
-├── examples/tidybot2/               # TidyBot++ MuJoCo models + water_plant / fill_cup scenes
+├── examples/
+│   ├── scenes/                      # example MJCF (peg_and_hole.xml)
+│   ├── tidybot2/                    # TidyBot++ models + water_plant / fill_cup scenes
+│   ├── aloha_sim/                   # ALOHA 2 task scenes (+ exporter) and demo write-ups
+│   └── vlabench/                    # VLABench Franka scenes (mahjong assets vendored)
 └── scripts/test-extension.mjs       # headless extension smoke test
 ```
 
+Example-scene meshes and textures are stored in **Git LFS**
+(`.gitattributes` → `examples/**/*.{obj,stl,mtl,msh,png,jpg,jpeg}`), so a fresh
+clone gets them automatically when `git-lfs` is installed; the `aloha_sim` and
+`vlabench` models are committed this way because their assets are tens of MB.
 Fetched Menagerie models live in `<cwd>/.pi/robotics/models/` (git-ignored).
 
 ## License

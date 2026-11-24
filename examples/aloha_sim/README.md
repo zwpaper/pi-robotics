@@ -9,6 +9,10 @@ takes its composed `mjcf_model`, and writes it out with all meshes/textures
 (dm_control's `export_with_assets`), deduplicating the shared assets into one
 directory so the scenes load offline with plain `mujoco`.
 
+The exported scenes are committed under `models/` — the meshes and textures are
+stored in **Git LFS**, so a fresh clone gets them automatically when `git-lfs`
+is installed (`git lfs install && git lfs pull` otherwise).
+
 ## Tasks
 
 | task | objects |
@@ -21,10 +25,18 @@ Every scene is a bimanual ALOHA 2: 14 actuators (left/right × waist, shoulder,
 elbow, forearm_roll, wrist_angle, wrist_rotate, gripper) and 6 cameras
 (`overhead_cam`, `worms_eye_cam`, `wrist_cam_left`, `wrist_cam_right`, …).
 
+## Demos
+
+- [`videos/marker_remove_lid.md`](videos/marker_remove_lid.md) — the agent fails
+  three times on `MarkerRemoveLid`, then finds the trick (high-tension opposing
+  pull + peel + slip recovery) and pulls the cap off. Full operation video, one
+  QuickTime chapter per attempt. (The video file itself is not committed: reels
+  live in the git-ignored `<cwd>/.pi/robotics/runtime*/reels/`.)
+
 ## Regenerate the scenes
 
-The scenes are built from the upstream assets by the exporter (no meshes are
-vendorized here — the output is ~70 MB):
+The scenes under `models/` are **checked in** (via Git LFS); this exporter
+reproduces them from the upstream package if you want to refresh or extend them:
 
 ```bash
 git clone https://github.com/google-deepmind/aloha_sim /tmp/aloha_sim
@@ -32,7 +44,7 @@ uv pip install --python .venv/bin/python "dm-control>=1.0.31" dm-env immutabledi
 PYTHONPATH=/tmp/aloha_sim MUJOCO_GL=disable \
   .venv/bin/python examples/aloha_sim/export_scenes.py \
   --aloha-sim /tmp/aloha_sim \
-  --out .pi/robotics/models/aloha_sim
+  --out examples/aloha_sim/models
 ```
 
 Then load one (the daemon must **start with** the scene — hot-swapping from a
@@ -41,7 +53,7 @@ different model can abort the sim loop on this model's very high contact count):
 ```bash
 # stop any running daemon first
 python python/robotics_daemon.py \
-  --model "$PWD/.pi/robotics/models/aloha_sim/MarkerRemoveLid/scene.xml" \
+  --model "$PWD/examples/aloha_sim/models/MarkerRemoveLid/scene.xml" \
   --runtime-dir .pi/robotics/runtime --session-file .pi/robotics/session.json
 # or, from an agent session, /robotics start <scene> once added to the scene list
 ```
