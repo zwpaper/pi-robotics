@@ -50,8 +50,7 @@ grid, rendered from the recorded state timeline. See the
 More demos: [TidyBot++ water-the-plant / fill-a-cup](examples/tidybot2/README.md),
 [VLABench mahjong selection](examples/vlabench/README.md).
 
-> Videos are **not committed** to this repository — `reel` writes them to
-> `<cwd>/.pi/robotics/runtime*/reels/`, which is git-ignored.
+https://github.com/user-attachments/assets/8f9a91fe-3751-4b96-bca0-a3ed46a3efa1
 
 ## What you get
 
