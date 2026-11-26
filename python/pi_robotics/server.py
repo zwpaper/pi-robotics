@@ -90,6 +90,8 @@ def make_handler(outer: Any) -> type[http.server.BaseHTTPRequestHandler]:
                 )
             elif path == "/cameras":
                 self._send(200, {"cameras": outer.list_cameras()})
+            elif path == "/workspace":
+                self._send(200, outer.workspace_status())
             elif path == "/camera":
                 query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 page = outer.camera_page(query)

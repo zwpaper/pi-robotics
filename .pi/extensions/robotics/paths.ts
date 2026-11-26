@@ -27,6 +27,8 @@ export interface RoboticsPaths {
   sessionFile: string;
   /** Daemon log file. */
   logFile: string;
+  /** Visible Live Python Studio workspace (scaffold + hot-reload plugins). */
+  workspaceDir: string;
 }
 
 /** Walks up from ``start`` looking for the repository marker file. */
@@ -54,6 +56,9 @@ export function resolvePaths(cwd: string): RoboticsPaths {
     runtimeDir: join(stateDir, "runtime"),
     sessionFile: join(stateDir, "session.json"),
     logFile: join(stateDir, "daemon.log"),
+    // A visible, committable directory (not .pi/): the agent/user edit these
+    // Python files and Studio hot-reloads them while the daemon runs.
+    workspaceDir: process.env.PI_ROBOTICS_WORKSPACE_DIR || join(cwd, "studio_workspace"),
   };
 }
 

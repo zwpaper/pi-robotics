@@ -304,11 +304,13 @@ class ControlServer:
         sim_plugin: Any,
         vision: Any = None,
         render_lock: threading.Lock | None = None,
+        workspace: Any = None,
     ) -> None:
         self._state = state
         self._handle = handle
         self._vision = vision
         self._sim_plugin = sim_plugin
+        self._workspace = workspace
         self._server: http.server.ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
         self._render_lock = render_lock or threading.Lock()
@@ -336,6 +338,21 @@ class ControlServer:
         if self._server is not None:
             self._server.shutdown()
             self._server.server_close()
+
+    # -- live workspace ------------------------------------------------------
+    def workspace_status(self) -> dict[str, Any]:
+        """Status of the live Python Studio workspace (empty when none)."""
+        if self._workspace is None:
+            return {
+                "dir": "",
+                "active": False,
+                "files": {},
+                "plugins": [],
+                "hot_reload": "",
+                "scene_xml": "",
+                "errors": {},
+            }
+        return self._workspace.status()
 
     # -- camera streaming ----------------------------------------------------
     def list_cameras(self) -> list[str]:
@@ -563,9 +580,51 @@ class ControlServer:
             return self._contains(body)
         if cmd == "audit":
             return self._audit(body)
+        if cmd == "bake":
+            return self._bake(body)
+        if cmd == "scaffold_workspace":
+            return self._scaffold_workspace(body)
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
+
+    # -- workspace commands --------------------------------------------------
+    def _bake(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Freezes the live scene to ``<workspace>/scene.xml`` and shows it."""
+        if self._workspace is None or self._workspace.dir is None:
+            return {
+                "ok": False,
+                "error": "no live workspace; start the daemon with --workspace-dir",
+            }
+        name = str(body.get("name") or "scene.xml")
+        target = self._workspace.dir / name
+        try:
+            result = self._workspace.bake(self._handle.model, target)
+        except Exception as exc:  # noqa: BLE001 - report to the agent
+            return {"ok": False, "error": str(exc)}
+        # Show the baked file from now on (the workspace plugin declines paths).
+        self._sim_plugin.reload_scene(model_path=str(target))
+        return result
+
+    def _scaffold_workspace(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Writes the starter workspace files (no-op when non-empty)."""
+        from pi_robotics import workspace as workspace_mod
+
+        raw = body.get("dir")
+        if raw:
+            target = pathlib.Path(raw).expanduser().resolve()
+        elif self._workspace is not None and self._workspace.dir is not None:
+            target = self._workspace.dir
+        else:
+            return {"ok": False, "error": "no workspace directory given"}
+        written = workspace_mod.scaffold_workspace(target)
+        return {
+            "ok": True,
+            "dir": str(target),
+            "written": written,
+            # Loading needs a restart: Studio registers plugins up front.
+            "restart_required": bool(written),
+        }
 
     def _camera_and_size(
         self, body: dict[str, Any]

@@ -242,6 +242,31 @@ Write scenes as MJCF XML in the project (for example `scenes/my_scene.xml`) and
 edits are reviewable and hot-reloadable. For programmatic scene construction use
 `mujoco.MjSpec` per the `mujoco-spec-editing` skill.
 
+## Live Python Studio workspace (interactive authoring)
+
+When the user wants to *tune* a scene interactively, or a human should drive
+parameters from the browser, use the **workspace** rather than editing XML:
+
+1. `scaffold_workspace { dir }` — writes `messages.py`, `sim_plugin.py`,
+   `viewer_plugin.py` into `<cwd>/studio_workspace` (override with `dir` or
+   `PI_ROBOTICS_WORKSPACE_DIR`), then (re)starts the daemon so Studio registers
+   them. The browser 3D viewer gains a **Dear ImGui panel** (sliders, a Drop
+   button, a Bake button) that drives the scene in `sim_plugin.py`.
+2. Edit the three files and save — MuJoCo Studio's own hot reload swaps the
+   plugin class in place and rebuilds the scene, camera included. No restart.
+3. `workspace` — status: directory, files, loaded plugin classes, hot-reload
+   spec, import errors.
+4. `bake` — freeze the current scene into `<workspace>/scene.xml` and switch to
+   that file (uses the plugin's live `MjSpec`; `mj_saveLastXML` for built-ins).
+
+The `sim_plugin.py` builds the scene with `mujoco.MjSpec` and owns
+`LoadModelEvent(path="")`; `viewer_plugin.py` builds the canvas inside the
+browser viewer. While a workspace owns the scene, built-in `scene` switching is
+refused (bake + `load`, or start without the workspace, instead). Load the
+`mujoco-studio` and `mujoco-gui` skills before editing these files: they cover
+`SimPlugin`/`ViewerPlugin`, `@messages.handler`, snapshot-vs-event messaging,
+and Dear ImGui widget rules.
+
 ## Safety
 
 The daemon binds loopback only and has no authentication or encryption. Do not

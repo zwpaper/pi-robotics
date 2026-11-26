@@ -69,6 +69,10 @@ https://github.com/user-attachments/assets/8f9a91fe-3751-4b96-bca0-a3ed46a3efa1
 - **Hello Robot Stretch** — load the real MuJoCo Menagerie Stretch
   (`scene stretch`, fetched on first use) and run **`pick`** to grasp and lift the
   tabletop object.
+- **Live Python Studio workspace** — `scaffold_workspace` writes editable
+  `messages.py` / `sim_plugin.py` / `viewer_plugin.py`; MuJoCo Studio hot-reloads
+  them on save and shows a **Dear ImGui panel in the browser viewer** so a human
+  and the agent drive the same scene. `bake` freezes it to `scene.xml`.
 
 ## How it maps to the two upstream projects
 
@@ -77,7 +81,7 @@ https://github.com/user-attachments/assets/8f9a91fe-3751-4b96-bca0-a3ed46a3efa1
 | Agent surface | Antigravity skills + sidecar | pi `robotics` tool + pi skills |
 | Live 3D viewer | `mujoco_studio` sidecar (Node) + `studiod.py` | MuJoCo Studio web viewer in the browser |
 | Physics | `mujoco` (Python) | `mujoco` (Python) |
-| Scene authoring | `sim_plugin.py` / `scene.xml` | `python/pi_robotics/scenes.py` + `load` |
+| Scene authoring | `sim_plugin.py` / `scene.xml` | `python/pi_robotics/scenes.py` + `load` + the Live Python Studio workspace |
 | Real hardware | SO-101 / YAM / FR3 skills | out of scope (sim first) |
 
 The MuJoCo skills are the same files the Antigravity plugin bundles, taken from
@@ -147,6 +151,8 @@ In a pi session in this project:
 /robotics camera              # play the robot camera as live video in the browser
 /robotics cameras             # list the model's cameras
 /robotics capture             # save a frame
+/robotics workspace           # status of the live Python Studio workspace
+/robotics bake                # freeze the current scene to scene.xml
 /robotics status
 /robotics stop
 ```
@@ -324,6 +330,54 @@ The daemon renders each frame offscreen with `mujoco.Renderer` **from the
 published state snapshot**, so it never reads live `MjData` while the sim thread
 is stepping. Offscreen rendering needs `imageio` + `pillow` (installed by
 `setup`) and a working GL context.
+
+### Live Python Studio workspace (interactive authoring + hot-reload)
+
+Every simulation above is *driven* by the agent. A **workspace** is the other
+half: a small directory of Python files that build the scene and expose a
+**Dear ImGui control panel rendered inside the browser 3D viewer** — sliders and
+buttons a human can drag while the agent still drives the same simulation
+through the control API.
+
+```jsonc
+{ "action": "scaffold_workspace" }                       // write + start it
+{ "action": "workspace" }                                // status
+{ "action": "bake" }                                     // freeze to scene.xml
+```
+
+The scaffold writes three files into `<cwd>/studio_workspace`
+(override with `{ "dir": "..." }`, or the `PI_ROBOTICS_WORKSPACE_DIR` env var):
+
+```text
+studio_workspace/
+├── messages.py       # shared Snapshot / Event classes (sim <-> UI)
+├── sim_plugin.py     # plugin.SimPlugin: builds the scene with mujoco.MjSpec
+└── viewer_plugin.py  # plugin.ViewerPlugin: the Dear ImGui panel
+```
+
+MuJoCo Studio loads these as plugins and **watches them**: save any of the three
+and the running simulation is rebuilt in place — the same in-place class swap
+Studio uses for its own plugins, with the camera where it was. The panel appears
+in the viewer tab already open in your browser (no extra window or port).
+
+- **Panel → sim** — a slider change sends a `SceneConfig` snapshot; the sim
+  plugin rebuilds its `MjSpec` and calls `handle.reload()`.
+- **Bake** — the panel's *Bake to scene.xml* button (or the `bake` action) writes
+  `spec.to_xml()` to `<workspace>/scene.xml` and shows that file from then on.
+  The daemon-level `bake` also works for the built-in Python scenes, serializing
+  the compiled model with `mj_saveLastXML`.
+- **Hot-reload** — enabled for the workspace plugin classes plus the shown model
+  file, so editing `scene.xml` or a loaded MJCF also reloads live.
+
+While a workspace owns the scene, built-in `scene` switching is refused (the
+workspace built the model first); `bake` + `load`, or starting without the
+workspace, switch models instead. `workspace` reports the directory, files,
+loaded plugin classes, and any import errors.
+
+```bash
+/robotics workspace     # status of the live workspace
+/robotics bake          # freeze the current scene to scene.xml
+```
 
 ### Viewing the 3D panel
 

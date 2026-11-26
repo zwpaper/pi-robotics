@@ -10,6 +10,10 @@ The daemon is meant to be spawned by the pi-robotics extension
 ``python/pi_robotics/control.py``.
 
 Never edits files in the workspace: runtime state lives under ``--runtime-dir``.
+
+The one exception is the explicit ``--scaffold`` mode (and the ``scaffold_workspace``
+control command), which writes the starter Live Python Studio workspace files at
+the user's request; the daemon never writes them on its own.
 """
 
 from __future__ import annotations
@@ -40,6 +44,7 @@ from mujoco.studio import (
 )
 
 from pi_robotics import menagerie, scenes
+from pi_robotics import workspace as workspace_mod
 from pi_robotics.control import ControlServer, SharedState
 from pi_robotics.vision import VisionServo
 
@@ -63,10 +68,16 @@ STRETCH_PICK_PROGRAM: list[tuple[float, dict[str, float]]] = [
 class RoboticsSimPlugin(plugin.SimPlugin):
     """Sim-thread plugin: builds scenes, applies control commands, publishes state."""
 
-    def __init__(self, state: SharedState, models_root: pathlib.Path) -> None:
+    def __init__(
+        self,
+        state: SharedState,
+        models_root: pathlib.Path,
+        workspace_owned: bool = False,
+    ) -> None:
         super().__init__()
         self._state = state
         self._models_root = models_root
+        self._workspace_owned = workspace_owned
         self._scene_name = state.scene_name
         self._scene_params = dict(state.scene_params)
         self._commands: queue.Queue[dict[str, Any]] = queue.Queue()
@@ -99,7 +110,7 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         scene_name: str | None = None,
         params: dict[str, Any] | None = None,
         model_path: str | None = None,
-    ) -> None:
+    ) -> bool:
         if scene_name is not None:
             self._scene_name = scene_name
         if params is not None:
@@ -109,19 +120,36 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         self._state.model_path = model_path or ""
         if model_path:
             self.handle.dispatch(messages.LoadModelEvent(path=model_path))
-        elif menagerie.is_menagerie_scene(self._scene_name):
+            return True
+        if menagerie.is_menagerie_scene(self._scene_name):
             # Built-in Menagerie robot scene (e.g. Hello Robot Stretch): fetch on
             # first use, then load its scene.xml.
             try:
                 directory = menagerie.ensure_model(self._models_root, self._scene_name)
-                self.handle.dispatch(
-                    messages.LoadModelEvent(path=str(directory / "scene.xml"))
-                )
             except Exception as exc:  # noqa: BLE001
                 self._state.record_error("scene", str(exc))
-        else:
-            # A sentinel path signals "build the Python scene" to on_load_model.
-            self.handle.dispatch(messages.LoadModelEvent(path=""))
+                return False
+            self.handle.dispatch(
+                messages.LoadModelEvent(path=str(directory / "scene.xml"))
+            )
+            return True
+        if (
+            self._workspace_owned
+            and scene_name is not None
+            and scene_name != workspace_mod.WORKSPACE_SCENE
+        ):
+            # A live workspace owns ``LoadModelEvent(path="")``; refuse to build
+            # a built-in Python scene over it (the workspace plugin built first).
+            self._state.record_error(
+                "scene",
+                "a live workspace owns the scene; bake it and 'load' the file, "
+                "or start the daemon without --workspace-dir for built-in scenes",
+            )
+            return False
+        # A sentinel path signals "build the Python scene" to on_load_model. In a
+        # workspace the workspace plugin consumes it first and builds its scene.
+        self.handle.dispatch(messages.LoadModelEvent(path=""))
+        return True
 
     @messages.handler
     def on_load_model(self, event: messages.LoadModelEvent) -> bool:
@@ -391,12 +419,34 @@ def run(args: argparse.Namespace) -> int:
         except Exception as exc:  # noqa: BLE001
             print(f"[pi-robotics] model fetch failed: {exc}", file=sys.stderr)
 
-    sim_plugin = RoboticsSimPlugin(state, models_root)
+    # A live Python Studio workspace (optional): load its plugin modules before
+    # the built-in sim plugin so they get first refusal on the scene, and let
+    # Studio's own hot reload watch their files for saves.
+    workspace = workspace_mod.Workspace()
+    if args.workspace_dir:
+        workspace = workspace_mod.load_workspace_plugins(
+            pathlib.Path(args.workspace_dir).expanduser().resolve()
+        )
+        for component, error in workspace.errors.items():
+            print(
+                f"[pi-robotics] workspace {component} failed to load:\n{error}",
+                file=sys.stderr,
+            )
+
+    workspace_owned = workspace.has_sim_plugin
+    if workspace_owned and not model_path and not args.scene:
+        # Let the workspace build the initial scene.
+        state.scene_name = workspace_mod.WORKSPACE_SCENE
+
+    sim_plugin = RoboticsSimPlugin(
+        state, models_root, workspace_owned=workspace_owned
+    )
     render_lock = threading.Lock()
 
     plugins: list[Any] = [
         AppInitPlugin(compact=args.compact),
         PortCapturePlugin(state),
+        *workspace.plugins,
         sim_plugin,
         step_control.StepControl(),
         sim_history.SimHistory(),
@@ -409,6 +459,8 @@ def run(args: argparse.Namespace) -> int:
         gfx="web",
         http_port=args.http_port,
         open_browser=False,
+        # Reload a saved model file, plus the workspace plugin modules in place.
+        hot_reload=workspace.hot_reload_spec(),
     )
 
     exit_code = 0
@@ -434,7 +486,12 @@ def run(args: argparse.Namespace) -> int:
             print("[pi-robotics] viewer did not bind a port", file=sys.stderr)
 
         control = ControlServer(
-            state, handle, sim_plugin, vision=vision, render_lock=render_lock
+            state,
+            handle,
+            sim_plugin,
+            vision=vision,
+            render_lock=render_lock,
+            workspace=workspace,
         )
         control.start(args.control_port)
         state.control_port = control.port
@@ -447,6 +504,7 @@ def run(args: argparse.Namespace) -> int:
             "runtime_dir": str(runtime_dir),
             "scene": state.scene_name,
             "model_path": state.model_path,
+            "workspace_dir": str(workspace.dir) if workspace.dir is not None else "",
             "started_at": time.time(),
         }
         _write_session_file(session_file, payload)
@@ -488,6 +546,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--control-port", type=int, default=0, help="Control port (0=auto).")
     parser.add_argument("--runtime-dir", default=".pi/robotics/runtime")
     parser.add_argument("--session-file", default="")
+    parser.add_argument(
+        "--workspace-dir",
+        default="",
+        help="Live Python Studio workspace (scaffold + hot-reload plugins).",
+    )
+    parser.add_argument(
+        "--scaffold",
+        action="store_true",
+        help="Write the starter workspace files and exit.",
+    )
     parser.add_argument("--compact", action="store_true", default=True)
     parser.add_argument("--no-ui", action="store_true", default=False)
     return parser
@@ -495,6 +563,19 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.scaffold:
+        target = (
+            pathlib.Path(args.workspace_dir).expanduser().resolve()
+            if args.workspace_dir
+            else workspace_mod.default_workspace_dir(pathlib.Path.cwd())
+        )
+        written = workspace_mod.scaffold_workspace(target)
+        print(
+            "PI_ROBOTICS_SCAFFOLD "
+            + json.dumps({"dir": str(target), "written": written}),
+            flush=True,
+        )
+        return 0
     return run(args)
 
 

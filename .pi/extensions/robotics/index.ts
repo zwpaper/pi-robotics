@@ -62,6 +62,9 @@ const ACTIONS = [
   "chapter",
   "contains",
   "audit",
+  "workspace",
+  "scaffold_workspace",
+  "bake",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -225,6 +228,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
       "Run robotics 'audit' after authoring or loading a scene to catch penetration, instability, mass/inertia problems, joint-limit hits, actuator saturation, and energy blow-up; fix the structured findings and re-audit.",
       "Use robotics 'move_ee' for IK end-effector moves; it clamps joint limits and stops before a new collision (reported as blocked:true with the {geom1,geom2} pairs), unless allow_collision is set.",
+      "For interactive scene authoring, run robotics 'scaffold_workspace' to write a Live Python Studio workspace (messages.py / sim_plugin.py / viewer_plugin.py) and start it: the browser 3D viewer then shows a Dear ImGui panel whose sliders/buttons drive the scene, and saving any of the three files hot-reloads it. Use 'workspace' for its status and 'bake' to freeze the current scene into <workspace>/scene.xml. A live workspace owns the scene, so built-in 'scene' switching is refused while it runs.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
     ],
     parameters: Type.Object({
@@ -241,6 +245,12 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       params: Type.Optional(SCENE_PARAMS),
       path: Type.Optional(
         Type.String({ description: "Model file path relative to the project (for action 'load')." }),
+      ),
+      dir: Type.Optional(
+        Type.String({
+          description:
+            "Workspace directory (for action 'scaffold_workspace'; default <cwd>/studio_workspace).",
+        }),
       ),
       values: Type.Optional(
         Type.Array(Type.Number(), { description: "Actuator controls, qpos, or qvel vector." }),
@@ -376,6 +386,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
             "Vision:     vision_pick {object,camera,site,gripper} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site|body,posture} · clear",
             "Audit:      audit {scene|path,seconds}  (initial penetration, settle, mass/inertia, limits, saturation, energy)",
+            "Workspace:  scaffold_workspace {dir} (write + hot-reload a Live Python Studio workspace) · workspace (status) · bake (freeze the scene to scene.xml)",
             "Reel:       record_start {fps,cameras} → chapter {title} per attempt → reel {height} (record_stop/reel_clear)",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
@@ -416,6 +427,60 @@ fi`,
         return ok(
           `Installed mujoco into ${venv}.\nInterpreter: ${check.path} (${check.version ?? "?"})`,
           { action, python: check.path },
+        );
+      }
+
+      if (action === "scaffold_workspace") {
+        // Write the starter workspace files, then (re)start the daemon so Studio
+        // registers the workspace plugins and the panel goes live in the browser.
+        const py = await findPython(paths.root, (cmd, args, opts) =>
+          pi.exec(cmd, args, opts as never),
+        );
+        if (!py.ok) {
+          return fail(
+            "No Python with mujoco.studio found. Run action 'setup' first.\n" + py.error,
+            { action },
+          );
+        }
+        const dir = params.dir ? resolve(ctx.cwd, params.dir) : paths.workspaceDir;
+        const scaffolded = await pi.exec(
+          py.path,
+          [paths.daemonScript, "--scaffold", "--workspace-dir", dir],
+          { timeout: 120000 } as never,
+        );
+        if (scaffolded.code !== 0) {
+          return fail(
+            `scaffold failed (exit ${scaffolded.code}):\n${scaffolded.stderr || scaffolded.stdout}`,
+            { action },
+          );
+        }
+        let written: string[] = [];
+        const line = scaffolded.stdout
+          .split("\n")
+          .find((l) => l.startsWith("PI_ROBOTICS_SCAFFOLD"));
+        if (line) {
+          try {
+            written = JSON.parse(line.replace("PI_ROBOTICS_SCAFFOLD", "").trim()).written ?? [];
+          } catch {
+            /* keep empty */
+          }
+        }
+        await stopDaemon(paths);
+        const session = await startDaemon(
+          await startOptions(ctx, paths, { workspaceDir: dir }),
+        );
+        setStatus(ctx, paths);
+        const opened = await openInBrowser(session.viewer_url);
+        return ok(
+          [
+            written.length
+              ? `Scaffolded ${written.join(", ")} in ${dir}.`
+              : `Workspace ${dir} already had files; nothing overwritten.`,
+            `Live workspace running: scene=${session.scene}`,
+            `viewer=${session.viewer_url}` + (opened ? " (opened in your browser)" : ""),
+            "The panel in the 3D viewer drives the scene; edit messages.py / sim_plugin.py / viewer_plugin.py and save to hot-reload it.",
+          ].join("\n"),
+          { action, dir, written, session, browserOpened: opened },
         );
       }
 
@@ -871,6 +936,28 @@ fi`,
             { action, ...(res.body as object) },
           );
         }
+        case "workspace": {
+          // Status of the live Python Studio workspace (dir, files, plugins,
+          // hot-reload spec, import errors).
+          const res = await controlGet(port, "/workspace");
+          return ok(json(res.body), { action, ...(res.body as object) });
+        }
+        case "bake": {
+          // Freeze the current scene into <workspace>/scene.xml and show it.
+          const res = await controlPost(port, "/command", { cmd: "bake" }, 120000);
+          const body = res.body as {
+            ok?: boolean;
+            path?: string;
+            source?: string;
+            bytes?: number;
+            error?: string;
+          };
+          if (!body?.ok) return fail(`bake failed: ${body?.error ?? "unknown"}`, { action });
+          return ok(
+            `Baked the current scene to ${body.path} (source: ${body.source}, ${body.bytes} bytes) and switched to it.`,
+            { action, ...body },
+          );
+        }
         case "chapter": {
           // Marks a new attempt in the recorded reel (a QuickTime chapter).
           const res = await controlPost(port, "/command", { cmd: "chapter", title: params.title });
@@ -939,7 +1026,7 @@ fi`,
 
   pi.registerCommand("robotics", {
     description:
-      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | audit [scene] | pick [object] | vision_pick [object] [camera] | camera [name] | cameras | capture | setup)",
+      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | audit [scene] | pick [object] | vision_pick [object] [camera] | camera [name] | cameras | capture | workspace | bake | setup)",
     handler: async (args, ctx) => {
       const paths = resolvePaths(ctx.cwd);
       const [sub, ...rest] = (args ?? "").trim().split(/\s+/).filter(Boolean);
@@ -1115,6 +1202,41 @@ fi`,
         }
         if (sub === "setup") {
           ctx.ui.notify("Run the robotics tool action 'setup' to install mujoco.", "info");
+          return;
+        }
+        if (sub === "workspace") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify(
+              `robotics: no live workspace. Scaffold one with the tool action 'scaffold_workspace' (default ${paths.workspaceDir}).`,
+              "info",
+            );
+            return;
+          }
+          const res = await controlGet(port, "/workspace");
+          const body = res.body as {
+            active?: boolean;
+            dir?: string;
+            plugins?: string[];
+            hot_reload?: string;
+            errors?: Record<string, string>;
+          };
+          ctx.ui.notify(
+            body?.active
+              ? `robotics workspace ${body.dir} \u2014 plugins: ${(body.plugins ?? []).join(", ")}; hot-reload: ${body.hot_reload}`
+              : `robotics: no live workspace (dir ${body?.dir || paths.workspaceDir}).`,
+            Object.keys(body?.errors ?? {}).length ? "error" : "info",
+          );
+          return;
+        }
+        if (sub === "bake") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
+            return;
+          }
+          await controlPost(port, "/command", { cmd: "bake" }, 120000);
+          ctx.ui.notify(`robotics: baked the scene to scene.xml in the workspace`, "info");
           return;
         }
         const { running, session } = daemonStatus(paths);

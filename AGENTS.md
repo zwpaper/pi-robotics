@@ -24,6 +24,9 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
     null-space posture bias, collision checks, and `plan_path`.
   - `audit.py` — headless physics audit (penetration, settle, mass/inertia,
     limits, saturation, energy) returning a structured report.
+  - `workspace.py` — the Live Python Studio workspace: scaffold templates
+    (`messages.py` / `sim_plugin.py` / `viewer_plugin.py`), plugin loading, the
+    `--hot_reload` spec, and `bake` (MjSpec → `scene.xml`).
   - `reel.py` — state recorder + multi-view video composition.
   - `vision.py` — camera -> detect -> control grasp servo.
 - `python/tests/` — fast unit tests (no daemon, no GL) for the modules above.
@@ -35,7 +38,10 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
 ## Conventions
 
 - The extension never edits project files. All runtime state lives under
-  `<cwd>/.pi/robotics/` (git-ignored).
+  `<cwd>/.pi/robotics/` (git-ignored). The Live Python Studio workspace is the
+  one deliberate exception: it is user/agent-authored source, so it defaults to
+  the visible `<cwd>/studio_workspace`, and is only written when the user asks
+  (`scaffold_workspace` / `robotics_daemon.py --scaffold`).
 - Control and viewer ports are loopback only. Never bind them to a public
   interface, and never add authentication bypasses.
 - Keep the `robotics` tool a single action-based tool; the action set is the
@@ -64,7 +70,8 @@ node scripts/test-extension.mjs         # loads the extension and exercises the 
 The Python unit tests are pure: they compile MJCF and exercise `scenes`,
 `ik` (site + body + tendon mapping + limits/collision/planning), `geometry`,
 `motion`, `vision` (EE/gripper resolution), `audit` (penetration/settle/limits),
-`control` (`/state` fields + CORS), and `reel` with no viewer.
+`workspace` (scaffold/load/bake), `control` (`/state` fields + CORS), and `reel`
+with no viewer.
 Install the dev dependencies once with
 `uv pip install --python .venv/bin/python -r python/requirements-dev.txt` (or
 `pip install -r python/requirements-dev.txt`). `pytest.ini` puts `python/` on

@@ -15,9 +15,15 @@ export interface StartOptions {
   paths: RoboticsPaths;
   scene?: string;
   model?: string;
+  workspaceDir?: string;
   httpPort?: number;
   controlPort?: number;
   compact?: boolean;
+}
+
+/** The live workspace directory: `<cwd>/studio_workspace` by default. */
+function workspaceDir(options: StartOptions): string | undefined {
+  return options.workspaceDir ?? options.paths.workspaceDir;
 }
 
 // A first-time Menagerie fetch (e.g. Stretch, ~75 MB) happens before the daemon
@@ -56,9 +62,13 @@ export async function startDaemon(options: StartOptions): Promise<SessionInfo> {
   ];
   if (options.model) {
     args.push("--model", options.model);
-  } else {
-    args.push("--scene", options.scene ?? "box_drop");
+  } else if (options.scene) {
+    // Omit --scene when unspecified so the daemon can let a live workspace own
+    // the initial scene; the daemon applies its own default otherwise.
+    args.push("--scene", options.scene);
   }
+  const workspace = workspaceDir(options);
+  if (workspace) args.push("--workspace-dir", workspace);
   if (options.httpPort) args.push("--http-port", String(options.httpPort));
   if (options.controlPort) args.push("--control-port", String(options.controlPort));
   if (options.compact === false) args.push("--no-ui");
