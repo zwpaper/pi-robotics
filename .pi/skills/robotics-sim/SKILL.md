@@ -74,9 +74,9 @@ another machine, port-forward (e.g. `ssh -L 8080:127.0.0.1:8080 <agent-host>`)
 and open `http://localhost:8080/`.
 
 Commands: `/robotics start [scene]`, `/robotics open`, `/robotics scenes`,
-`/robotics scene <name>`, `/robotics pick [object]`, `/robotics vision [object]`,
-`/robotics camera [name]`, `/robotics cameras`, `/robotics capture`,
-`/robotics stop`, `/robotics status`.
+`/robotics scene <name>`, `/robotics audit [scene]`, `/robotics pick [object]`,
+`/robotics vision [object]`, `/robotics camera [name]`, `/robotics cameras`,
+`/robotics capture`, `/robotics stop`, `/robotics status`.
 
 ## Hello Robot Stretch and `pick`
 
@@ -210,6 +210,30 @@ workspace so the video shows the gripper and object. The raw stream URL is
 `/stream.mjpg?camera=<name>&width=&height=&fps=` and plays in any `<img>`. Frames
 are rendered offscreen from the published state snapshot; `capture` saves a
 single frame to PNG.
+
+## Physics audit (`audit`)
+
+Before trusting a scene (or when one explodes, sinks, jitters, or refuses to
+settle), run `audit`. It compiles a model and runs a headless battery of checks
+— initial and resting penetration, drop/settle stability, mass/inertia sanity,
+joint-limit hits, actuator saturation, and energy blow-up — returning a
+structured report (`summary`, `model`, `sim`, `findings`). It needs no viewer
+and never touches the live sim.
+
+```jsonc
+{ "action": "audit" }                            // loaded model
+{ "action": "audit", "scene": "cartpole" }      // built-in / Menagerie scene
+{ "action": "audit", "path": "scenes/my.xml" }  // a file
+```
+
+Fix the model, `load` it again, and re-audit until `summary.errors == 0`.
+Load the **`mujoco-audit`** skill for how to interpret each finding.
+
+`move_ee` uses the same contact machinery: it plans joint-limit-clamped IK
+waypoints (optional `posture` null-space bias, `site`/`body` end-effector) and
+**stops before a new collision**, returning `blocked: true` and the offending
+`{geom1, geom2}` pairs. Use `allow_collision: true` only when a contact is
+intended.
 
 ## Authoring scenes
 

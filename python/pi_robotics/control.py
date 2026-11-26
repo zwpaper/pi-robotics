@@ -15,7 +15,7 @@ import numpy as np
 import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
-from pi_robotics import geometry, ik, motion
+from pi_robotics import audit, geometry, ik, motion, vision
 from pi_robotics.reel import Recorder, compose_video
 from pi_robotics.rendering import (
     CAMERA_PAGE,
@@ -462,6 +462,8 @@ class ControlServer:
             return {"ok": True, "name": name, "path": str(directory)}
         if path == "/capture":
             return self._capture(body)
+        if path == "/audit":
+            return self._audit(body)
         if path == "/shutdown":
             self._handle._is_running = False  # noqa: SLF001
             return {"ok": True}
@@ -559,6 +561,8 @@ class ControlServer:
             return {"ok": True, "chapter": count}
         if cmd == "contains":
             return self._contains(body)
+        if cmd == "audit":
+            return self._audit(body)
         # Everything else is a data mutation applied on the sim thread.
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
@@ -683,11 +687,12 @@ class ControlServer:
         }
 
     def _move_ee(self, body: dict[str, Any]) -> dict[str, Any]:
-        """IK-moves a site to a target world pose along a straight EE path.
+        """Plans a collision-checked IK path to a world pose and drives it.
 
-        The site is walked toward the target in ``steps`` waypoints (each solved
-        by IK and held briefly), so the end-effector follows a predictable path
-        instead of a joint-space swing that can sweep props off the table.
+        Uses :func:`ik.plan_path`: joint-limit-clamped IK waypoints with an
+        optional null-space posture, each collision-checked on a scratch
+        ``MjData``. Driving stops before the first waypoint that would create a
+        new contact, so the arm does not sweep through a table or itself.
         """
         model = self._handle.model
         if model is None:
@@ -695,47 +700,76 @@ class ControlServer:
         pos = body.get("pos")
         if not pos or len(pos) != 3:
             return {"ok": False, "error": "'pos' [x,y,z] required"}
-        site = str(body.get("site") or "pinch_site")
-        site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, site)
-        if site_id < 0:
-            return {"ok": False, "error": f"unknown site '{site}'"}
-        quat = body.get("quat")
         steps = max(1, min(int(body.get("steps", 6)), 40))
         total = max(0.2, min(float(body.get("settle", 1.5)), 6.0))
         target = np.asarray(pos, dtype=float)
-
-        last_error: dict[str, Any] = {}
-        for step in range(1, steps + 1):
-            snapshot = self._state.snapshot()
-            qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
-            # Current site position from a forward pass over the snapshot.
-            probe = mujoco.MjData(model)
-            if qpos.size == model.nq:
-                probe.qpos[:] = qpos
-            mujoco.mj_forward(model, probe)
-            start = probe.site_xpos[site_id].copy()
-            waypoint = start + (target - start) * (step / steps)
+        quat = body.get("quat")
+        # End-effector: explicit site/body, else auto-resolve (site first, then
+        # gripper body — Stretch ships no site).
+        name = body.get("site") or body.get("body")
+        kind = "site" if body.get("site") else ("body" if body.get("body") else None)
+        if not name:
             try:
-                solution = ik.solve(model, qpos, site, waypoint, quat)
-            except Exception as exc:  # noqa: BLE001
+                kind, name = vision.resolve_ee(model)
+            except ValueError as exc:
                 return {"ok": False, "error": str(exc)}
+        posture = body.get("posture")
+        allow_collision = bool(body.get("allow_collision", False))
+        ignore_geoms = [int(g) for g in (body.get("ignore_geoms") or [])]
+
+        snapshot = self._state.snapshot()
+        qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
+        try:
+            plan = ik.plan_path(
+                model,
+                qpos,
+                str(name),
+                target,
+                quat,
+                steps=steps,
+                kind=kind,
+                posture=posture,
+                collision=not allow_collision,
+                ignore_geoms=ignore_geoms,
+            )
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": str(exc)}
+
+        per_step = total / max(1, len(plan["path"]))
+        driven = 0
+        last_error: dict[str, Any] = {}
+        collision: list[dict[str, Any]] = []
+        for entry in plan["path"]:
+            if entry["collisions"]:
+                collision = entry["collisions"]
+                break
             current = motion.current_actuators(model, snapshot.get("ctrl"))
-            current.update(motion.solution_to_actuators(model, solution))
+            current.update(
+                motion.solution_to_actuators(model, {"joints": entry["joints"]})
+            )
             self._sim_plugin.set_servo(current)
-            last_error = solution["error"]
-            self._sleep(total / steps)
+            last_error = entry["error"]
+            driven += 1
+            self._sleep(per_step)
+
         frame = self._frame(body)
-        return {
+        result: dict[str, Any] = {
             "ok": frame.get("ok", False),
             "error": frame.get("error"),
-            "site": site,
+            "site": str(name),
             "target": [round(float(v), 4) for v in target],
             "ik_error": last_error,
-            "steps": steps,
+            "steps": driven,
+            "planned": plan["steps"],
+            "blocked": plan["blocked"],
             "png_base64": frame.get("png_base64"),
             "panel_base64": frame.get("panel_base64"),
             "recorded": frame.get("recorded"),
         }
+        if collision:
+            result["collision"] = collision
+            result["error"] = result["error"] or "motion blocked by collision"
+        return result
 
     def _sleep(self, seconds: float) -> None:
         time.sleep(max(0.0, seconds))
@@ -902,6 +936,46 @@ class ControlServer:
             str(body.get("object") or ""),
             str(body.get("container") or body.get("region") or ""),
         )
+
+    def _audit(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Runs the headless physics audit on a model (default: the loaded one).
+
+        `scene` audits a built-in or Menagerie scene without loading it; `path`
+        audits an MJCF/URDF/MJB file. Both compile a throwaway model, so the live
+        simulation is untouched.
+        """
+        seconds = float(body.get("seconds", audit.DEFAULT_SECONDS))
+        settle = bool(body.get("settle", True))
+        path = body.get("path")
+        scene = body.get("scene")
+        source = "loaded"
+        try:
+            if path:
+                resolved = str(pathlib.Path(path).expanduser().resolve())
+                model = mujoco.MjModel.from_xml_path(resolved)
+                source = resolved
+            elif scene:
+                from pi_robotics import menagerie, scenes
+
+                if menagerie.is_menagerie_scene(scene):
+                    directory = self._sim_plugin.ensure_scene_model(str(scene))
+                    xml_file = menagerie.SCENE_FILES.get(
+                        str(scene), menagerie.DEFAULT_SCENE_FILE
+                    )
+                    model = mujoco.MjModel.from_xml_path(str(directory / xml_file))
+                else:
+                    xml = scenes.build_scene(str(scene), body.get("params") or {})
+                    model = mujoco.MjModel.from_xml_string(xml)
+                source = f"scene:{scene}"
+            else:
+                model = self._handle.model
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": str(exc)}
+        if model is None:
+            return {"ok": False, "error": "no model loaded"}
+        report = audit.audit_model(model, seconds=seconds, settle=settle)
+        report["source"] = source
+        return report
 
     def _capture(self, body: dict[str, Any]) -> dict[str, Any]:
         model = self._handle.model

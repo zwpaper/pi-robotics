@@ -167,6 +167,8 @@ Or via the tool (the agent does this automatically):
 { "action": "scene", "scene": "stretch" }     // load Hello Robot Stretch
 { "action": "pick", "object": "object" }     // scripted grasp + lift
 { "action": "vision_pick", "object": "object" } // camera->detect->control grasp
+{ "action": "move_ee", "pos": [0.3, 0.0, 0.6], "posture": { "joint1": 0.2 } } // IK move, collision-checked
+{ "action": "audit", "scene": "cartpole" }  // headless physics audit
 { "action": "stream", "camera": "camera_rgb" } // live robot-camera video
 { "action": "fetch", "scene": "stretch" }    // pre-download a Menagerie model
 ```
@@ -272,6 +274,37 @@ reports the resolved `end_effector` (site or body) and `gripper`, `target`
 other `vision_pick` parameters. It is robust to the object being moved, as long
 as it stays on the tabletop plane and in the camera's view.
 
+### Physics audit (`audit`)
+
+`audit` compiles a model and runs a **headless** battery of checks — no GL, no
+viewer, and it never touches the live sim, so it works while the panel is
+running. It returns a structured report (`summary`, `model`, `sim`, `findings`)
+the agent can fix iteratively:
+
+- **initial penetration** at spawn and **resting** penetration after settling,
+- **drop / settle stability** (NaN/Inf, residual velocity, energy growth),
+- **mass / inertia sanity** (zero/negative mass, zero inertia, extreme ratio),
+- **joint-limit hits**, **actuator force/control saturation**, and **energy
+  blow-up**.
+
+```jsonc
+{ "action": "audit" }                          // the loaded model
+{ "action": "audit", "scene": "cartpole" }     // a built-in/Menagerie scene
+{ "action": "audit", "path": "scenes/my.xml" } // an MJCF/URDF/MJB file
+```
+
+`scene`/`path` compile a throwaway model, so candidates can be audited without
+loading them. See the bundled **`mujoco-audit`** skill for how to interpret and
+fix each finding.
+
+### Collision-aware `move_ee`
+
+`move_ee` plans a path of joint-limit-clamped IK waypoints (with an optional
+null-space `posture` bias) and **stops before any new contact**, so it will not
+drive an arm through a table or into itself. It returns `blocked: true` and the
+`{geom1, geom2}` pairs it hit. Pass `allow_collision: true` to override, or
+`site`/`body` to choose the end-effector (auto-detected otherwise).
+
 ### Playing the robot camera as live video
 
 `cameras` lists the current model's cameras; `stream { camera, width, height,
@@ -356,7 +389,7 @@ pi-robotics/
 │       ├── rendering.py             # offscreen render / camera stream page
 │       ├── geometry.py              # body AABBs + `contains` check
 │       ├── motion.py                # nudge / move_ee actuator math
-│       ├── ik.py · reel.py · vision.py · scenes.py · menagerie.py
+│       ├── ik.py · motion.py · audit.py · reel.py · vision.py · scenes.py · menagerie.py
 ├── examples/
 │   ├── scenes/                      # example MJCF (peg_and_hole.xml)
 │   ├── tidybot2/                    # TidyBot++ models + water_plant / fill_cup scenes

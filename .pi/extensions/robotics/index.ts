@@ -61,6 +61,7 @@ const ACTIONS = [
   "record_stop",
   "chapter",
   "contains",
+  "audit",
   "pick",
   "vision_pick",
   "vision_stop",
@@ -222,6 +223,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "robotics 'vision_pick' runs a camera->detect->control closed loop: it localizes the object from the robot camera and servos the arm onto it, then grasps. Prefer it over the fixed 'pick' when the object is placed by the user.",
       "To grasp by looking at the camera yourself (LLM in the loop): call robotics 'look' to get a robot-camera image, then robotics 'nudge' {extend,lift,wrist,grip,settle} to move a little and get a fresh image, and repeat until the gripper is over the object; then nudge {grip:-0.005} to close and nudge {lift:0.3} to raise. 'clear' releases the manual hold.",
       "Drive the sim with robotics 'ctrl', 'qpos', 'pause', 'step', 'reset', and read it with 'state'; the numbers come from the running physics engine.",
+      "Run robotics 'audit' after authoring or loading a scene to catch penetration, instability, mass/inertia problems, joint-limit hits, actuator saturation, and energy blow-up; fix the structured findings and re-audit.",
+      "Use robotics 'move_ee' for IK end-effector moves; it clamps joint limits and stops before a new collision (reported as blocked:true with the {geom1,geom2} pairs), unless allow_collision is set.",
       "If robotics reports no Python environment, run action 'setup' once to install mujoco>=4.0.1 into the project venv.",
     ],
     parameters: Type.Object({
@@ -303,7 +306,30 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         }),
       ),
       site: Type.Optional(
-        Type.String({ description: "site to control for 'move_ee' (default 'pinch_site')." }),
+        Type.String({
+          description:
+            "end-effector site for 'move_ee' (omit to auto-detect a site, then a gripper body).",
+        }),
+      ),
+      body: Type.Optional(
+        Type.String({ description: "end-effector body for 'move_ee' (alternative to `site`)." }),
+      ),
+      posture: Type.Optional(
+        Type.Record(Type.String(), Type.Number(), {
+          description:
+            "{joint_name: angle} null-space posture bias for 'move_ee' (keeps redundant joints near a preferred pose).",
+        }),
+      ),
+      allow_collision: Type.Optional(
+        Type.Boolean({
+          description:
+            "allow 'move_ee' to proceed through contacts (default false: stop before a new collision).",
+        }),
+      ),
+      seconds: Type.Optional(
+        Type.Number({
+          description: "settle time (s) to simulate for the 'audit' action (default 2.0).",
+        }),
       ),
       gripper: Type.Optional(
         Type.String({
@@ -348,7 +374,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Stepping:   step {n} · reset",
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
-            "Vision:     vision_pick {object,camera} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site} · clear",
+            "Vision:     vision_pick {object,camera,site,gripper} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site|body,posture} · clear",
+            "Audit:      audit {scene|path,seconds}  (initial penetration, settle, mass/inertia, limits, saturation, energy)",
             "Reel:       record_start {fps,cameras} → chapter {title} per attempt → reel {height} (record_stop/reel_clear)",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
@@ -733,7 +760,12 @@ fi`,
               cmd: "move_ee",
               pos: params.pos,
               quat: params.quat,
-              site: params.site ?? "pinch_site",
+              ...(params.site ? { site: params.site } : {}),
+              ...(params.body ? { body: params.body } : {}),
+              ...(params.posture ? { posture: params.posture } : {}),
+              ...(params.allow_collision !== undefined
+                ? { allow_collision: params.allow_collision }
+                : {}),
               steps: params.steps ?? 6,
               settle: params.settle ?? 1.5,
               camera: params.camera ?? "camera_rgb",
@@ -749,15 +781,30 @@ fi`,
             panel_base64?: string;
             ik_error?: unknown;
             recorded?: number;
+            blocked?: boolean;
+            planned?: number;
+            site?: string;
+            collision?: Array<{ geom1: string; geom2: string; dist: number }>;
             error?: string;
           };
           if (!body?.ok || !body.png_base64) {
             return fail(`move_ee failed: ${body?.error ?? "no frame"}`, { action });
           }
+          const ee = body.site ?? params.site ?? params.body ?? "end-effector";
+          const blocked = body.blocked
+            ? ` BLOCKED at ${body.collision?.map((c) => `${c.geom1}/${c.geom2}`).join(", ")}`
+            : "";
           const text =
-            `Moved ${params.site ?? "pinch_site"} to ${json(params.pos)} ` +
-            `(ik_error ${json(body.ik_error)}; reel recorded ${body.recorded ?? 0} steps)`;
-          const details = { action, ik_error: body.ik_error, recorded: body.recorded };
+            `Moved ${ee} to ${json(params.pos)} ` +
+            `(ik_error ${json(body.ik_error)}; ${body.planned ?? "?"} planned, ${body.blocked ? "stopped early" : "full"} path${blocked}; ` +
+            `reel recorded ${body.recorded ?? 0} steps)`;
+          const details = {
+            action,
+            ik_error: body.ik_error,
+            recorded: body.recorded,
+            blocked: body.blocked ?? false,
+            collision: body.collision,
+          };
           if (params.panel && body.panel_base64) {
             return {
               content: [
@@ -793,6 +840,36 @@ fi`,
             container: params.container,
           });
           return ok(json(res.body), { action, ...(res.body as object) });
+        }
+        case "audit": {
+          // Headless physics audit: penetration, settle, mass/inertia, limits,
+          // saturation, energy. Defaults to the loaded model; `scene`/`path`
+          // audits another model without loading it.
+          const res = await controlPost(
+            port,
+            "/command",
+            {
+              cmd: "audit",
+              ...(params.scene ? { scene: params.scene } : {}),
+              ...(params.path ? { path: params.path } : {}),
+              ...(params.seconds !== undefined ? { seconds: params.seconds } : {}),
+            },
+            900000,
+          );
+          const report = res.body as {
+            ok?: boolean;
+            source?: string;
+            summary?: { status?: string; errors?: number; warnings?: number };
+            error?: string;
+          };
+          if (report?.error) return fail(`audit failed: ${report.error}`, { action });
+          const status = report?.summary?.status ?? "unknown";
+          return ok(
+            `Physics audit (${report?.source ?? "loaded"}): ${status} — ` +
+              `${report?.summary?.errors ?? 0} error(s), ${report?.summary?.warnings ?? 0} warning(s).\n\n` +
+              json(res.body),
+            { action, ...(res.body as object) },
+          );
         }
         case "chapter": {
           // Marks a new attempt in the recorded reel (a QuickTime chapter).
@@ -862,7 +939,7 @@ fi`,
 
   pi.registerCommand("robotics", {
     description:
-      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | pick [object] | vision_pick [object] [camera] | camera [name] | cameras | capture | setup)",
+      "Control the MuJoCo simulation (start [scene] | stop | open | status | scenes | scene <name> | audit [scene] | pick [object] | vision_pick [object] [camera] | camera [name] | cameras | capture | setup)",
     handler: async (args, ctx) => {
       const paths = resolvePaths(ctx.cwd);
       const [sub, ...rest] = (args ?? "").trim().split(/\s+/).filter(Boolean);
@@ -919,6 +996,36 @@ fi`,
           await controlPost(port, "/scene", { name: rest[0], params: {} }, 900000);
           setStatus(ctx, paths);
           ctx.ui.notify(`robotics: switched to scene '${rest[0]}'`, "info");
+          return;
+        }
+        if (sub === "audit") {
+          const port = runningControlPort(paths);
+          if (port === null) {
+            ctx.ui.notify("robotics: not running \u2014 try /robotics start", "warning");
+            return;
+          }
+          const body: Record<string, unknown> = { cmd: "audit" };
+          if (rest[0]) body.scene = rest[0];
+          const res = await controlPost(port, "/command", body, 900000);
+          const report = res.body as {
+            source?: string;
+            summary?: { status?: string; errors?: number; warnings?: number };
+            error?: string;
+          };
+          if (report?.error) {
+            ctx.ui.notify(`robotics audit failed: ${report.error}`, "error");
+            return;
+          }
+          const level = report?.summary?.errors
+            ? "error"
+            : report?.summary?.warnings
+              ? "warning"
+              : "info";
+          ctx.ui.notify(
+            `robotics audit (${report?.source ?? "loaded"}): ${report?.summary?.status ?? "?"} \u2014 ` +
+              `${report?.summary?.errors ?? 0} error(s), ${report?.summary?.warnings ?? 0} warning(s)`,
+            level,
+          );
           return;
         }
         if (sub === "pick") {

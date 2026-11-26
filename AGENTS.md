@@ -20,12 +20,16 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
   - `rendering.py` — offscreen render helpers (panel/camera, PNG/JPEG, stream page).
   - `geometry.py` — body world AABBs and the VLABench `contains` check.
   - `motion.py` — actuator-target math for `nudge` / `move_ee`.
-  - `ik.py` — damped-least-squares inverse kinematics.
+  - `ik.py` — damped-least-squares IK: site/body targets, joint-limit clamping,
+    null-space posture bias, collision checks, and `plan_path`.
+  - `audit.py` — headless physics audit (penetration, settle, mass/inertia,
+    limits, saturation, energy) returning a structured report.
   - `reel.py` — state recorder + multi-view video composition.
   - `vision.py` — camera -> detect -> control grasp servo.
 - `python/tests/` — fast unit tests (no daemon, no GL) for the modules above.
 - `python/robotics_daemon.py` — daemon entry point.
 - `.pi/skills/mujoco/` — upstream MuJoCo agent skills (Apache-2.0).
+- `.pi/skills/mujoco-audit/` — the physics-audit workflow skill.
 - `.pi/skills/robotics-sim/` — the live-simulation workflow skill.
 
 ## Conventions
@@ -58,8 +62,9 @@ node scripts/test-extension.mjs         # loads the extension and exercises the 
 `mujoco.studio` (or a project `.venv` discovered automatically).
 
 The Python unit tests are pure: they compile MJCF and exercise `scenes`,
-`ik` (site + body + tendon mapping), `geometry`, `motion`, `vision` (EE/gripper
-resolution), `control` (`/state` fields + CORS), and `reel` with no viewer.
+`ik` (site + body + tendon mapping + limits/collision/planning), `geometry`,
+`motion`, `vision` (EE/gripper resolution), `audit` (penetration/settle/limits),
+`control` (`/state` fields + CORS), and `reel` with no viewer.
 Install the dev dependencies once with
 `uv pip install --python .venv/bin/python -r python/requirements-dev.txt` (or
 `pip install -r python/requirements-dev.txt`). `pytest.ini` puts `python/` on
