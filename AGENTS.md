@@ -11,11 +11,19 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
   - `daemon.ts` — spawns/supervises the Python daemon.
   - `client.ts` — loopback control HTTP client.
   - `paths.ts` — interpreter discovery, runtime paths, session file.
-- `python/pi_robotics/` — daemon, scenes, control server.
+- `python/pi_robotics/` — daemon, scenes, control server, and focused helpers.
   - `daemon.py` — launches `mujoco.studio.launch_web` and the sim plugin.
   - `scenes.py` — parametric MJCF scenes.
   - `menagerie.py` — fetches Menagerie robot models (e.g. Stretch) on demand.
-  - `control.py` — loopback control API + shared state.
+  - `control.py` — `ControlServer`: command orchestration + `/state` publisher.
+  - `server.py` — loopback HTTP request handler + CORS allowlist.
+  - `rendering.py` — offscreen render helpers (panel/camera, PNG/JPEG, stream page).
+  - `geometry.py` — body world AABBs and the VLABench `contains` check.
+  - `motion.py` — actuator-target math for `nudge` / `move_ee`.
+  - `ik.py` — damped-least-squares inverse kinematics.
+  - `reel.py` — state recorder + multi-view video composition.
+  - `vision.py` — camera -> detect -> control grasp servo.
+- `python/tests/` — fast unit tests (no daemon, no GL) for the modules above.
 - `python/robotics_daemon.py` — daemon entry point.
 - `.pi/skills/mujoco/` — upstream MuJoCo agent skills (Apache-2.0).
 - `.pi/skills/robotics-sim/` — the live-simulation workflow skill.
@@ -43,10 +51,19 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
 ```bash
 npm run typecheck                       # tsc over the extension
 node scripts/test-extension.mjs         # loads the extension and exercises the tool
+.venv/bin/python -m pytest              # fast Python unit tests (no daemon, no GL)
 ```
 
 `test-extension.mjs` needs `PI_ROBOTICS_PYTHON` to point at a Python with
 `mujoco.studio` (or a project `.venv` discovered automatically).
+
+The Python unit tests are pure: they compile MJCF and exercise `scenes`,
+`ik` (site + body + tendon mapping), `geometry`, `motion`, `vision` (EE/gripper
+resolution), `control` (`/state` fields + CORS), and `reel` with no viewer.
+Install the dev dependencies once with
+`uv pip install --python .venv/bin/python -r python/requirements-dev.txt` (or
+`pip install -r python/requirements-dev.txt`). `pytest.ini` puts `python/` on
+`sys.path`, so run them from the repo root.
 
 ## Python environment
 

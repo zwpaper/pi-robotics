@@ -116,6 +116,22 @@ Or let the agent do it: call the `robotics` tool with `action: "setup"`.
 Interpreter discovery order: `$PI_ROBOTICS_PYTHON`, `./.venv`, `~/.venvs/pi-robotics`,
 then `python3`/`python`.
 
+## Tests
+
+Fast Python unit tests cover the model builders, IK, geometry/containment,
+actuator math, and reel composition — no daemon, viewer, or GL context:
+
+```bash
+uv pip install --python .venv/bin/python -r python/requirements-dev.txt  # once
+.venv/bin/python -m pytest                                              # ~0.2 s
+npm run typecheck                                                       # extension
+node scripts/test-extension.mjs                                         # live E2E smoke
+```
+
+`pytest.ini` puts `python/` on `sys.path`, so run the tests from the repo root.
+The `test-extension.mjs` / `test-vision-loop.mjs` scripts are the slower live
+end-to-end checks and need a working MuJoCo Studio Python.
+
 ## Usage
 
 In a pi session in this project:
@@ -140,7 +156,9 @@ Or via the tool (the agent does this automatically):
 ```jsonc
 { "action": "start", "scene": "arm3" }
 { "action": "ctrl", "name": "joint0", "value": 0.8 }
-{ "action": "state" }                       // time, qpos, qvel, ctrl, sites, ncon
+{ "action": "qpos", "values": [0.0, 0.5, -0.5] }  // set joint positions directly
+{ "action": "qvel", "values": [0.0, 0.0, 0.0] }     // set joint velocities directly
+{ "action": "state" }                       // time, qpos, qvel, ctrl, ncon, sites, bodies, body_quat, sensordata, contacts
 { "action": "step", "n": 50 }
 { "action": "scene", "name": "cartpole", "params": { "pole_length": 1.2 } }
 { "action": "load", "path": "scenes/my_scene.xml" }
@@ -152,6 +170,17 @@ Or via the tool (the agent does this automatically):
 { "action": "stream", "camera": "camera_rgb" } // live robot-camera video
 { "action": "fetch", "scene": "stretch" }    // pre-download a Menagerie model
 ```
+
+Menagerie scene names (fetched on first use into `<cwd>/.pi/robotics/models/`):
+`stretch`, `stretch3`, `panda`, `franka_fr3`, `ur5e`, `aloha`, `so101`, `go2`,
+`g1`. Switch to any of them with `scene { name: "panda" }`; `fetch { scene }`
+pre-downloads one without loading it.
+
+`state` is the physics debugger: besides `qpos`/`qvel`/`ctrl` it returns named
+`sensordata` (touch, jointpos, …), `bodies` + `body_quat` (world pose of every
+named body), the top `contacts` as `{geom1, geom2, normal, dist}` pairs (strongest
+first), and model metadata with `ctrlrange`, `joint_limits`, and sensor names —
+enough to see a slip happen directly in the numbers.
 
 ### Picking up an object with the Hello Robot Stretch
 
@@ -223,9 +252,12 @@ camera:
 2. **Detect / localize** — takes the target body's image centroid and
    back-projects it through the camera model onto the tabletop plane
    (`plane_z`, default 0.52 m), giving the object's world position.
-3. **Control** — measures the gripper fingertip by forward kinematics and drives
-   `arm_extend` (→ y) and `lift` (→ z) to move the fingertip onto the
-   camera-localized object; when aligned it closes the gripper and lifts.
+3. **Control** — uses MuJoCo inverse kinematics (`ik.py`) to drive a
+   configurable end-effector — a named **site** (Panda/UR5e/FR3 `attachment_site`)
+   or gripper **body** (Stretch ships no EE site, so it uses
+   `link_gripper_slider`) — onto the object in waypoints, closes the auto-detected
+   gripper actuator, then lifts with a second IK target. Fixed-tendon actuators
+   (Stretch's `arm_extend`) are mapped too, so no actuator names are hard-coded.
 
 ```jsonc
 // robotics { action: "vision_pick", object: "object", camera: "camera_rgb" }
@@ -234,9 +266,11 @@ camera:
 ```
 
 The loop runs in the daemon (fast, no LLM in the control path); the tool action
-reports `target` (camera-localized object), the per-iteration error, and the
-measured lift. `vision_stop` cancels it. It is robust to the object being moved,
-as long as it stays on the tabletop plane and in the camera's view.
+reports the resolved `end_effector` (site or body) and `gripper`, `target`
+(camera-localized object), the per-iteration error, and the measured lift.
+`vision_stop` cancels it. Override the defaults with `site`, `gripper`, or the
+other `vision_pick` parameters. It is robust to the object being moved, as long
+as it stays on the tabletop plane and in the camera's view.
 
 ### Playing the robot camera as live video
 
@@ -313,8 +347,16 @@ pi-robotics/
 │   └── skills/                      # mujoco-* + robotics-sim skills
 ├── python/
 │   ├── robotics_daemon.py           # daemon entry point
-│   ├── requirements.txt
-│   └── pi_robotics/                 # daemon, scenes, menagerie fetch, control server
+│   ├── requirements.txt             # runtime deps (mujoco, imageio, pillow)
+│   ├── requirements-dev.txt         # pytest (tests only)
+│   ├── tests/                       # fast unit tests (no daemon, no GL)
+│   └── pi_robotics/                 # daemon, scenes, control server + helpers
+│       ├── control.py               # ControlServer: commands + `/state`
+│       ├── server.py                # loopback HTTP handler + CORS allowlist
+│       ├── rendering.py             # offscreen render / camera stream page
+│       ├── geometry.py              # body AABBs + `contains` check
+│       ├── motion.py                # nudge / move_ee actuator math
+│       ├── ik.py · reel.py · vision.py · scenes.py · menagerie.py
 ├── examples/
 │   ├── scenes/                      # example MJCF (peg_and_hole.xml)
 │   ├── tidybot2/                    # TidyBot++ models + water_plant / fill_cup scenes

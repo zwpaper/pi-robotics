@@ -47,6 +47,8 @@ const ACTIONS = [
   "pause",
   "reset",
   "ctrl",
+  "qpos",
+  "qvel",
   "speed",
   "capture",
   "look",
@@ -76,7 +78,17 @@ const DEFAULT_SCENES = [
   "table_task",
 ];
 // Menagerie-backed scenes: fetched on first use into <cwd>/.pi/robotics/models/.
-const MENAGERIE_SCENES = ["stretch", "stretch3"];
+const MENAGERIE_SCENES = [
+  "stretch",
+  "stretch3",
+  "panda",
+  "franka_fr3",
+  "ur5e",
+  "aloha",
+  "so101",
+  "go2",
+  "g1",
+];
 
 interface ToolResult {
   content: Array<
@@ -204,7 +216,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       "Use the robotics tool when the user wants to simulate a robot, run MuJoCo, test a controller in simulation, or see a live 3D physics scene.",
       "Call robotics with action 'start' to boot the simulation; it opens the live 3D scene in the user's default browser automatically.",
       "robotics 'open_panel' reopens the browser view (e.g. after the tab was closed).",
-      "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty; Menagerie robots: stretch, stretch3) and 'load' for an XML/URDF/MJB file.",
+      "Use robotics action 'scene' to switch built-in scenes (arm3, box_drop, cartpole, falling_objects, table_task, empty; Menagerie robots: stretch, stretch3, panda, franka_fr3, ur5e, aloha, so101, go2, g1) and 'load' for an XML/URDF/MJB file.",
       "For Hello Robot Stretch: scene 'stretch' (fetched once from MuJoCo Menagerie into .pi/robotics/models/), then action 'pick' to grasp and lift the tabletop object.",
       "Use robotics action 'stream' to play the robot's camera as a live MJPEG video in the browser (the Stretch head RealSense is 'camera_rgb'); 'cameras' lists them.",
       "robotics 'vision_pick' runs a camera->detect->control closed loop: it localizes the object from the robot camera and servos the arm onto it, then grasps. Prefer it over the fixed 'pick' when the object is placed by the user.",
@@ -216,8 +228,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       action: Type.Union(
         ACTIONS.map((v) => Type.Literal(v)),
         {
-          description:
-            "What to do. help, setup, status, start, stop, open_panel, scenes, scene, load, state, step, pause, reset, ctrl, speed, capture, look, nudge, move_ee, clear, reel, reel_clear, record_start, record_stop, chapter, pick, vision_pick, vision_stop, cameras, stream.",
+          // Generated from ACTIONS so the schema and the handler cannot drift.
+          description: `What to do. ${ACTIONS.join(", ")}.`,
         },
       ),
       scene: Type.Optional(
@@ -228,7 +240,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
         Type.String({ description: "Model file path relative to the project (for action 'load')." }),
       ),
       values: Type.Optional(
-        Type.Array(Type.Number(), { description: "Actuator controls or qpos vector." }),
+        Type.Array(Type.Number(), { description: "Actuator controls, qpos, or qvel vector." }),
       ),
       name: Type.Optional(Type.String({ description: "Actuator name for a named 'ctrl'." })),
       object: Type.Optional(
@@ -293,6 +305,11 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       site: Type.Optional(
         Type.String({ description: "site to control for 'move_ee' (default 'pinch_site')." }),
       ),
+      gripper: Type.Optional(
+        Type.String({
+          description: "gripper actuator name for 'vision_pick' (default: auto-detect).",
+        }),
+      ),
       steps: Type.Optional(
         Type.Number({ description: "waypoints for 'move_ee' straight-line path (default 6)." }),
       ),
@@ -327,7 +344,7 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "",
             "Lifecycle:  start · stop · status · open_panel (alias: panel, opens browser) · setup",
             "Scenes:     scenes · scene {name,params} · load {path} · fetch {scene}",
-            "Control:    ctrl {values}|{name,value} · qpos {values} · pause {paused} · speed {value}",
+            "Control:    ctrl {values}|{name,value} · qpos {values} · qvel {values} · pause {paused} · speed {value}",
             "Stepping:   step {n} · reset",
             "Reading:    state (time, qpos, qvel, ctrl, sites, pick)",
             "Frames:     capture {width,height} · look {camera}  (returns an image you can see)",
@@ -534,6 +551,22 @@ fi`,
           });
           return ok(json(res.body), { action });
         }
+        case "qpos": {
+          if (!params.values) return fail("action 'qpos' needs values[].", { action });
+          const res = await controlPost(port, "/command", {
+            cmd: "qpos",
+            values: params.values,
+          });
+          return ok(json(res.body), { action });
+        }
+        case "qvel": {
+          if (!params.values) return fail("action 'qvel' needs values[].", { action });
+          const res = await controlPost(port, "/command", {
+            cmd: "qvel",
+            values: params.values,
+          });
+          return ok(json(res.body), { action });
+        }
         case "capture": {
           const res = await controlPost(port, "/capture", {
             width: params.width ?? 640,
@@ -570,6 +603,8 @@ fi`,
             object: params.object ?? "object",
             camera: params.camera ?? "camera_rgb",
             ...(params.plane_z !== undefined ? { plane_z: params.plane_z } : {}),
+            ...(params.site !== undefined ? { site: params.site } : {}),
+            ...(params.gripper !== undefined ? { gripper: params.gripper } : {}),
           });
           if (!(start.body as { ok?: boolean })?.ok) {
             return fail(`vision_pick failed to start: ${json(start.body)}`, { action });
@@ -723,6 +758,16 @@ fi`,
             `Moved ${params.site ?? "pinch_site"} to ${json(params.pos)} ` +
             `(ik_error ${json(body.ik_error)}; reel recorded ${body.recorded ?? 0} steps)`;
           const details = { action, ik_error: body.ik_error, recorded: body.recorded };
+          if (params.panel && body.panel_base64) {
+            return {
+              content: [
+                { type: "text", text },
+                { type: "image", data: body.png_base64, mimeType: "image/png" },
+                { type: "image", data: body.panel_base64, mimeType: "image/png" },
+              ],
+              details,
+            };
+          }
           return withFrame(text, body.png_base64, details);
         }
         case "record_start": {

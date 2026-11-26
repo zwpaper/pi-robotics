@@ -40,15 +40,19 @@ Only one daemon runs per project. It is discovered through
    user's default browser.
 2. **Author** — switch scenes with `scene { name, params }` (built-ins:
    `arm3`, `box_drop`, `cartpole`, `falling_objects`, `table_task`, `empty`;
-   Menagerie robots: `stretch`, `stretch3`) or load a file with `load { path }`.
+   Menagerie robots: `stretch`, `stretch3`, `panda`, `franka_fr3`, `ur5e`,
+   `aloha`, `so101`, `go2`, `g1`) or load a file with `load { path }`.
    To iterate on a scene, edit an MJCF file and `load` it again; the viewer
    hot-swaps the model.
 3. **Act** — `ctrl { name, value }` or `ctrl { values: [...] }` to drive
-   actuators, `qpos { values }` to set joints directly, `pause { paused }`,
-   `speed { value }`, `step { n }`, `reset`.
+   actuators, `qpos { values }` to set joints directly, `qvel { values }` to set
+   joint velocities, `pause { paused }`, `speed { value }`, `step { n }`,
+   `reset`.
 4. **Observe** — `state` returns `time`, `qpos`, `qvel`, `ctrl`, `ncon`, site
-   positions, and model metadata (joint/actuator names). `capture { width,
-   height }` saves an offscreen PNG.
+   positions, named `sensordata`, `bodies` + `body_quat`, the top `contacts`
+   (`{geom1, geom2, normal, dist}`, strongest first), and model metadata
+   (joint/actuator names, `ctrlrange`, `joint_limits`, sensor names).
+   `capture { width, height }` saves an offscreen PNG.
 5. **Vision grasp loop** — to grasp by looking, run the `look`/`nudge` loop in
    "Vision grasp loop" below (prefer a subagent — see that section). Every
    `look`/`nudge` is also recorded for the operation reel.
@@ -184,13 +188,17 @@ object has been moved. It runs in the daemon (no LLM in the control path):
 1. render the robot camera with MuJoCo's segmentation renderer;
 2. detect the target body's image centroid and back-project it onto the tabletop
    plane (`plane_z`, default 0.52 m) to get its world position;
-3. measure the gripper fingertip by forward kinematics and servo `arm_extend`
-   (y) and `lift` (z) until the fingertip reaches the object;
-4. close the gripper and lift.
+3. use inverse kinematics (`ik.py`) to drive a **configurable end-effector** — a
+   named site (`attachment_site`, `pinch_site`, …) or gripper body
+   (`link_gripper_slider`) — onto the object in waypoints; the gripper actuator
+   is auto-detected (override with `gripper`), and fixed-tendon actuators like
+   Stretch's `arm_extend` are mapped too;
+4. close the gripper and lift with a second IK target.
 
-It reports `target` (camera-localized object), `aligned`, `iterations`, and
-`lifted`. `vision_stop` cancels a running servo. It assumes the target is on the
-table plane and in the camera's field of view.
+It reports the resolved `end_effector` and `gripper`, `target`
+(camera-localized object), `aligned`, `iterations`, and `lifted`. `vision_stop`
+cancels a running servo. It assumes the target is on the table plane and in the
+camera's field of view.
 
 ## Robot camera stream
 

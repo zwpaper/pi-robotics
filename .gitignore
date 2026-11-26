@@ -8,6 +8,9 @@ __pycache__/
 captures/
 .DS_Store
 
+# MuJoCo writes this log file into whatever directory it runs from.
+MUJOCO_LOG.TXT
+
 # Operation videos are published as release assets, never committed (they are
 # written to the git-ignored <cwd>/.pi/robotics/runtime*/reels/).
 *.mp4

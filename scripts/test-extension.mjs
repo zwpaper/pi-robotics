@@ -67,6 +67,7 @@ await call("status");
 await call("start", { scene: "arm3" });
 await call("state");
 await call("ctrl", { name: "joint0", value: 0.8 });
+await call("qpos", { values: [0.1, 0.2, 0.3] });
 await call("step", { n: 20 });
 await call("capture", { width: 320, height: 240 });
 // Stretch: load the Menagerie robot and run the scripted pick.

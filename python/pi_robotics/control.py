@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import base64
 import http.server
-import io
-import json
 import pathlib
 import threading
 import time
@@ -17,18 +15,30 @@ import numpy as np
 import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
-from pi_robotics import ik
+from pi_robotics import geometry, ik, motion
 from pi_robotics.reel import Recorder, compose_video
+from pi_robotics.rendering import (
+    CAMERA_PAGE,
+    PANEL_CAMERA_OPTS,
+    PANEL_HEIGHT,
+    PANEL_WIDTH,
+    encode_jpeg,
+    encode_png,
+    render_array,
+    render_png,
+    render_png_from_state,
+    scratch_from_snapshot,
+)
+from pi_robotics.server import loopback_origin, make_handler
 
-# Free-camera defaults for the 3D-panel column of an operation reel.
-PANEL_WIDTH = 800
-PANEL_HEIGHT = 600
-PANEL_CAMERA_OPTS = {
-    "distance": 2.4,
-    "elevation": -22,
-    "azimuth": 130,
-    "lookat": [-0.1, -0.4, 0.6],
-}
+__all__ = [
+    "ControlServer",
+    "SharedState",
+    "PANEL_CAMERA_OPTS",
+    "PANEL_HEIGHT",
+    "PANEL_WIDTH",
+    "render_png_from_state",
+]
 
 
 class SharedState:
@@ -118,6 +128,24 @@ class SharedState:
                     name_of(mujoco.mjtObj.mjOBJ_KEY, i, "key")
                     for i in range(model.nkey)
                 ],
+                "sensors": [
+                    name_of(mujoco.mjtObj.mjOBJ_SENSOR, i, "sensor")
+                    for i in range(model.nsensor)
+                ],
+                "ctrlrange": {
+                    name_of(mujoco.mjtObj.mjOBJ_ACTUATOR, i, "actuator"): [
+                        round(float(model.actuator_ctrlrange[i][0]), 4),
+                        round(float(model.actuator_ctrlrange[i][1]), 4),
+                    ]
+                    for i in range(model.nu)
+                },
+                "joint_limits": {
+                    name_of(mujoco.mjtObj.mjOBJ_JOINT, i, "joint"): [
+                        round(float(model.jnt_range[i][0]), 4),
+                        round(float(model.jnt_range[i][1]), 4),
+                    ]
+                    for i in range(model.njnt)
+                },
             }
             self._state["step"] = 0
 
@@ -132,6 +160,9 @@ class SharedState:
             "ncon": int(data.ncon),
             "sites": self._site_positions(model, data),
             "bodies": self._body_positions(model, data),
+            "body_quat": self._body_quaternions(model, data),
+            "sensordata": self._sensor_values(model, data),
+            "contacts": self._contacts(model, data),
         }
         with self._lock:
             step = int(self._state.get("step") or 0) + 1
@@ -160,6 +191,72 @@ class SharedState:
             if name:
                 out[name] = [round(float(v), 4) for v in data.xpos[bid]]
         return out
+
+    def _body_quaternions(
+        self, model: mujoco.MjModel, data: mujoco.MjData
+    ) -> dict[str, list[float]]:
+        # Orientation (w,x,y,z) alongside `bodies`, so a gripper's roll/pitch is
+        # visible to the agent (e.g. to judge whether a grasp is level).
+        if model.nbody > 200:
+            return {}
+        out: dict[str, list[float]] = {}
+        for bid in range(model.nbody):
+            name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, bid)
+            if name:
+                out[name] = [round(float(v), 4) for v in data.xquat[bid]]
+        return out
+
+    def _sensor_values(
+        self, model: mujoco.MjModel, data: mujoco.MjData
+    ) -> dict[str, Any]:
+        # Named sensor readings (scalar or vector). Lets the agent read touch,
+        # rangefinder, jointpos sensors directly instead of re-deriving them.
+        out: dict[str, Any] = {}
+        for sid in range(model.nsensor):
+            name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_SENSOR, sid)
+            if not name:
+                continue
+            adr = int(model.sensor_adr[sid])
+            dim = int(model.sensor_dim[sid])
+            values = [
+                round(float(v), 6) for v in data.sensordata[adr : adr + dim]
+            ]
+            out[name] = values[0] if dim == 1 else values
+        return out
+
+    def _contacts(
+        self, model: mujoco.MjModel, data: mujoco.MjData, limit: int = 8
+    ) -> list[dict[str, Any]]:
+        # Strongest contact pairs first, so a grasp/slip is debuggable from the
+        # physics alone (which geoms touch, and how hard).
+        if data.ncon == 0:
+            return []
+        force = np.zeros(6)
+        rows: list[dict[str, Any]] = []
+        for i in range(data.ncon):
+            con = data.contact[i]
+            normal = 0.0
+            try:
+                mujoco.mj_contactForce(model, data, i, force)
+                normal = float(force[0])
+            except Exception:  # noqa: BLE001
+                pass
+            rows.append(
+                {
+                    "geom1": mujoco.mj_id2name(
+                        model, mujoco.mjtObj.mjOBJ_GEOM, con.geom1
+                    )
+                    or f"geom{con.geom1}",
+                    "geom2": mujoco.mj_id2name(
+                        model, mujoco.mjtObj.mjOBJ_GEOM, con.geom2
+                    )
+                    or f"geom{con.geom2}",
+                    "dist": round(float(con.dist), 5),
+                    "normal": round(normal, 4),
+                }
+            )
+        rows.sort(key=lambda row: abs(row["normal"]), reverse=True)
+        return rows[:limit]
 
     # -- getters (control thread) -------------------------------------------
     def snapshot(self) -> dict[str, Any]:
@@ -197,114 +294,6 @@ class SharedState:
             return self._scene_xml
 
 
-def _render_png(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    width: int,
-    height: int,
-    camera: str | None,
-    camera_opts: dict[str, Any] | None = None,
-) -> bytes:
-    """Offscreen render to PNG bytes (best effort; needs a GL context)."""
-    import imageio.v3 as iio  # optional dependency
-
-    opts = camera_opts or {}
-    renderer = mujoco.Renderer(model, height=height, width=width)
-    try:
-        cam = mujoco.MjvCamera()
-        if camera:
-            cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, camera)
-            if cam_id < 0:
-                raise ValueError(f"unknown camera '{camera}'")
-            cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
-            cam.fixedcamid = cam_id
-        else:
-            cam.type = mujoco.mjtCamera.mjCAMERA_FREE
-            if "distance" in opts:
-                cam.distance = float(opts["distance"])
-            if "elevation" in opts:
-                cam.elevation = float(opts["elevation"])
-            if "azimuth" in opts:
-                cam.azimuth = float(opts["azimuth"])
-            lookat = opts.get("lookat")
-            if lookat is not None:
-                cam.lookat[:] = np.asarray(lookat, dtype=float)[:3]
-        renderer.update_scene(data, camera=cam)
-        frame = renderer.render()
-    finally:
-        renderer.close()
-    return iio.imwrite("<bytes>", frame, extension=".png")
-
-
-def _scratch_from_snapshot(
-    model: mujoco.MjModel, snapshot: dict[str, Any]
-) -> mujoco.MjData:
-    """A scratch MjData seeded with the published state (for offscreen render)."""
-    scratch = mujoco.MjData(model)
-    qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
-    qvel = np.asarray(snapshot.get("qvel", []), dtype=float)
-    if qpos.size == model.nq:
-        scratch.qpos[:] = qpos
-    if qvel.size == model.nv:
-        scratch.qvel[:] = qvel
-    return scratch
-
-
-def render_png_from_state(
-    model: mujoco.MjModel,
-    snapshot: dict[str, Any],
-    width: int,
-    height: int,
-    camera: str | None,
-    camera_opts: dict[str, Any] | None = None,
-) -> bytes:
-    """Renders a camera frame from the published state snapshot (no live data)."""
-    scratch = mujoco.MjData(model)
-    qpos = np.asarray(snapshot.get("qpos", []), dtype=float)
-    qvel = np.asarray(snapshot.get("qvel", []), dtype=float)
-    if qpos.size == model.nq:
-        scratch.qpos[:] = qpos
-    if qvel.size == model.nv:
-        scratch.qvel[:] = qvel
-    mujoco.mj_forward(model, scratch)
-    return _render_png(model, scratch, width, height, camera, camera_opts)
-
-
-def _encode_jpeg(frame: np.ndarray, quality: int = 80) -> bytes:
-    """Encodes an HxWx3 uint8 RGB frame as JPEG (needs Pillow)."""
-    from PIL import Image  # optional dependency
-
-    buffer = io.BytesIO()
-    Image.fromarray(frame).save(buffer, format="JPEG", quality=quality)
-    return buffer.getvalue()
-
-
-CAMERA_PAGE = """<!doctype html>
-<html><head><meta charset="utf-8"><title>pi-robotics camera</title>
-<style>
- body{{margin:0;background:#111;color:#ddd;font:13px system-ui,sans-serif}}
- header{{padding:6px 10px;background:#1b1b1b;display:flex;gap:10px;align-items:center}}
- img{{display:block;width:100%;height:auto;max-width:100vw}}
- select{{background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;padding:3px 6px}}
-</style></head>
-<body>
-<header>
-  <strong>pi-robotics</strong>
-  <label>camera <select id="c">{options}</select></label>
-  <span id="s">connecting\u2026</span>
-</header>
-<img id="v" alt="robot camera" src="/stream.mjpg?camera={camera}&width={width}&height={height}&fps={fps}">
-<script>
- const sel=document.getElementById('c'), img=document.getElementById('v'), s=document.getElementById('s');
- function go(){{img.src='/stream.mjpg?camera='+encodeURIComponent(sel.value)+'&width={width}&height={height}&fps={fps}';}}
- sel.addEventListener('change', go);
- img.addEventListener('load', ()=>s.textContent='live');
- img.addEventListener('error', ()=>s.textContent='stream ended (sim running?)');
-</script>
-</body></html>
-"""
-
-
 class ControlServer:
     """Threaded loopback HTTP server exposing the agent control surface."""
 
@@ -332,81 +321,7 @@ class ControlServer:
         self.port = 0
 
     def start(self, port: int = 0) -> None:
-        outer = self
-
-        class Handler(http.server.BaseHTTPRequestHandler):
-            def log_message(self, *args: Any) -> None:  # noqa: D102
-                return
-
-            def _send(self, code: int, payload: Any) -> None:
-                body = json.dumps(payload, indent=2).encode("utf-8")
-                self.send_response(code)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-                self.send_header("Access-Control-Allow-Headers", "Content-Type")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-
-            def do_OPTIONS(self) -> None:  # noqa: N802
-                self._send(200, {"ok": True})
-
-            def _body(self) -> dict[str, Any]:
-                length = int(self.headers.get("Content-Length", "0") or "0")
-                if length <= 0:
-                    return {}
-                try:
-                    return json.loads(self.rfile.read(length).decode("utf-8"))
-                except json.JSONDecodeError:
-                    return {}
-
-            def do_GET(self) -> None:  # noqa: N802
-                path = urllib.parse.urlparse(self.path).path
-                if path in ("/status", "/health"):
-                    self._send(200, outer._state.status())
-                elif path == "/state":
-                    self._send(200, outer._state.snapshot())
-                elif path in ("/scenes", "/list-scenes"):
-                    from pi_robotics import menagerie, scenes
-
-                    names = sorted(set(scenes.list_scenes()) | set(menagerie.MODELS))
-                    self._send(200, {"scenes": names})
-                elif path == "/scene":
-                    self._send(
-                        200,
-                        {
-                            "scene": outer._state.scene_name,
-                            "source": outer._state.status().get("scene_source"),
-                            "xml": outer._state.scene_xml(),
-                        },
-                    )
-                elif path == "/cameras":
-                    self._send(200, {"cameras": outer.list_cameras()})
-                elif path == "/camera":
-                    query = urllib.parse.parse_qs(
-                        urllib.parse.urlparse(self.path).query
-                    )
-                    page = outer.camera_page(query)
-                    self.send_response(200)
-                    self.send_header("Content-Type", "text/html; charset=utf-8")
-                    self.send_header("Content-Length", str(len(page)))
-                    self.end_headers()
-                    self.wfile.write(page)
-                elif path == "/stream.mjpg":
-                    outer.stream_mjpeg(self)
-                else:
-                    self._send(404, {"error": f"unknown endpoint {path}"})
-
-            def do_POST(self) -> None:  # noqa: N802
-                path = urllib.parse.urlparse(self.path).path
-                body = self._body()
-                try:
-                    result = outer._handle_post(path, body)
-                except Exception as exc:  # noqa: BLE001
-                    self._send(400, {"ok": False, "error": str(exc)})
-                    return
-                self._send(200, result)
+        Handler = make_handler(self)
 
         self._server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
         self.port = int(self._server.server_address[1])
@@ -484,7 +399,10 @@ class ControlServer:
             "Content-Type", "multipart/x-mixed-replace; boundary=frame"
         )
         handler.send_header("Cache-Control", "no-store")
-        handler.send_header("Access-Control-Allow-Origin", "*")
+        origin = loopback_origin(handler.headers.get("Origin"))
+        if origin:
+            handler.send_header("Access-Control-Allow-Origin", origin)
+            handler.send_header("Vary", "Origin")
         handler.end_headers()
 
         try:
@@ -509,7 +427,7 @@ class ControlServer:
                 with self._render_lock:
                     renderer.update_scene(scratch, camera=cam_id)
                     frame = renderer.render()
-                jpeg = _encode_jpeg(frame, quality)
+                jpeg = encode_jpeg(frame, quality)
                 handler.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\n")
                 handler.wfile.write(
                     f"Content-Length: {len(jpeg)}\r\n\r\n".encode()
@@ -598,6 +516,14 @@ class ControlServer:
             kwargs: dict[str, Any] = {}
             if body.get("plane_z") is not None:
                 kwargs["plane_z"] = float(body["plane_z"])
+            for key in ("site", "body", "gripper"):
+                if body.get(key):
+                    kwargs[key] = str(body[key])
+            for key in ("approach", "lift", "open_value", "close_value"):
+                if body.get(key) is not None:
+                    kwargs[key] = float(body[key])
+            if body.get("quat") is not None:
+                kwargs["quat"] = list(body["quat"])
             return self._vision.start(
                 object_body=str(body.get("object") or "object"),
                 camera=str(body.get("camera") or "camera_rgb"),
@@ -637,52 +563,6 @@ class ControlServer:
         self._sim_plugin.enqueue({**body, "cmd": cmd})
         return {"ok": True, "queued": cmd}
 
-    # -- offscreen rendering --------------------------------------------------
-    # NOTE: `mujoco.Renderer` owns a GL context tied to the thread that created
-    # it, and ThreadingHTTPServer handles each request on a NEW thread. A
-    # renderer must therefore never outlive the request/thread that made it.
-    # `_render_array` creates (and closes) one per call unless a caller passes
-    # its own renderer — used by `reel`, which creates one per camera inside its
-    # single request and reuses it across all frames (fast and thread-safe).
-    def _render_array(
-        self,
-        model: mujoco.MjModel,
-        scratch: mujoco.MjData,
-        width: int,
-        height: int,
-        camera: str | None,
-        camera_opts: dict[str, Any] | None = None,
-        renderer: Any = None,
-    ) -> np.ndarray:
-        """Renders one camera (or the free panel view) to an RGB uint8 array."""
-        own = renderer is None
-        if own:
-            renderer = mujoco.Renderer(model, height=int(height), width=int(width))
-        try:
-            mujoco.mj_forward(model, scratch)
-            if camera:
-                cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, camera)
-                if cam_id < 0:
-                    raise ValueError(f"unknown camera '{camera}'")
-                renderer.update_scene(scratch, camera=cam_id)
-            else:
-                opts = camera_opts or {}
-                cam = mujoco.MjvCamera()
-                cam.type = mujoco.mjtCamera.mjCAMERA_FREE
-                cam.distance = float(opts.get("distance", 2.0))
-                cam.elevation = float(opts.get("elevation", -20))
-                cam.azimuth = float(opts.get("azimuth", 120))
-                if opts.get("lookat") is not None:
-                    cam.lookat[:] = np.asarray(opts["lookat"], dtype=float)[:3]
-                renderer.update_scene(scratch, camera=cam)
-            return np.asarray(renderer.render()).copy()
-        finally:
-            if own:
-                try:
-                    renderer.close()
-                except Exception:  # noqa: BLE001
-                    pass
-
     def _camera_and_size(
         self, body: dict[str, Any]
     ) -> tuple[str, int, int, dict[str, Any] | None]:
@@ -718,11 +598,11 @@ class ControlServer:
         height = min(int(body.get("height", 480)), 960)
         cam_arrays: dict[str, np.ndarray] = {}
         cam_error: str | None = None
-        scratch = _scratch_from_snapshot(model, snapshot)
+        scratch = scratch_from_snapshot(model, snapshot)
         for name in render_list:
             try:
                 with self._render_lock:
-                    cam_arrays[name] = self._render_array(
+                    cam_arrays[name] = render_array(
                         model, scratch, width, height, name, None
                     )
             except Exception as exc:  # noqa: BLE001
@@ -734,7 +614,7 @@ class ControlServer:
             panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
             try:
                 with self._render_lock:
-                    panel = self._render_array(
+                    panel = render_array(
                         model, scratch, panel_w, panel_h, None, panel_opts
                     )
             except Exception:  # noqa: BLE001
@@ -744,13 +624,7 @@ class ControlServer:
             main = next(iter(cam_arrays.values()))
 
         def png(array: np.ndarray | None) -> str | None:
-            if array is None:
-                return None
-            from PIL import Image  # optional dependency
-
-            buf = io.BytesIO()
-            Image.fromarray(array).save(buf, format="PNG")
-            return base64.b64encode(buf.getvalue()).decode("ascii")
+            return None if array is None else encode_png(array)
 
         return {
             "ok": main is not None,
@@ -776,40 +650,19 @@ class ControlServer:
         model = self._handle.model
         if model is None:
             return {"ok": False, "error": "no model loaded"}
-        ranges: dict[str, tuple[float, float]] = {}
-        current: dict[str, float] = {}
-        ctrl_list = self._state.snapshot().get("ctrl") or []
-        for i in range(model.nu):
-            name = (
-                mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
-                or f"act{i}"
-            )
-            lo, hi = model.actuator_ctrlrange[i]
-            ranges[name] = (float(lo), float(hi))
-            current[name] = float(ctrl_list[i]) if i < len(ctrl_list) else 0.0
-
-        def clamp(name: str, value: float) -> float:
-            lo, hi = ranges.get(name, (0.0, 0.0))
-            if hi > lo:
-                return max(lo, min(hi, value))
-            return value
-
-        for key, actuator in (
-            ("extend", "arm_extend"),
-            ("lift", "lift"),
-            ("wrist", "wrist_yaw"),
-        ):
-            if body.get(key) is not None:
-                current[actuator] = clamp(
-                    actuator, current.get(actuator, 0.0) + float(body[key])
-                )
-        if body.get("grip") is not None:
-            current["grip"] = clamp("grip", float(body["grip"]))
-        # Generic control for any robot: {actuator_name: delta}.
-        actuators = body.get("actuators") or {}
-        for name, delta in actuators.items():
-            if name in current:
-                current[name] = clamp(name, current[name] + float(delta))
+        current = motion.current_actuators(
+            model, self._state.snapshot().get("ctrl")
+        )
+        motion.apply_manual_deltas(
+            model,
+            current,
+            extend=body.get("extend"),
+            lift=body.get("lift"),
+            wrist=body.get("wrist"),
+            grip=body.get("grip"),
+            # Generic control for any robot: {actuator_name: delta}.
+            actuators=body.get("actuators"),
+        )
 
         self._sim_plugin.set_servo(current)
         time.sleep(max(0.1, min(float(body.get("settle", 0.8)), 5.0)))
@@ -851,17 +704,6 @@ class ControlServer:
         total = max(0.2, min(float(body.get("settle", 1.5)), 6.0))
         target = np.asarray(pos, dtype=float)
 
-        def current_ctrl(snapshot: dict[str, Any]) -> dict[str, float]:
-            values: dict[str, float] = {}
-            ctrl_list = snapshot.get("ctrl") or []
-            for i in range(model.nu):
-                name = (
-                    mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
-                    or f"act{i}"
-                )
-                values[name] = float(ctrl_list[i]) if i < len(ctrl_list) else 0.0
-            return values
-
         last_error: dict[str, Any] = {}
         for step in range(1, steps + 1):
             snapshot = self._state.snapshot()
@@ -877,22 +719,8 @@ class ControlServer:
                 solution = ik.solve(model, qpos, site, waypoint, quat)
             except Exception as exc:  # noqa: BLE001
                 return {"ok": False, "error": str(exc)}
-            current = current_ctrl(snapshot)
-            for actuator in range(model.nu):
-                if int(model.actuator_trntype[actuator]) != int(
-                    mujoco.mjtTrn.mjTRN_JOINT
-                ):
-                    continue
-                joint = int(model.actuator_trnid[actuator, 0])
-                jname = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, joint)
-                if jname in solution["joints"]:
-                    aname = (
-                        mujoco.mj_id2name(
-                            model, mujoco.mjtObj.mjOBJ_ACTUATOR, actuator
-                        )
-                        or f"act{actuator}"
-                    )
-                    current[aname] = solution["joints"][jname]
+            current = motion.current_actuators(model, snapshot.get("ctrl"))
+            current.update(motion.solution_to_actuators(model, solution))
             self._sim_plugin.set_servo(current)
             last_error = solution["error"]
             self._sleep(total / steps)
@@ -1024,13 +852,13 @@ class ControlServer:
                 cams: dict[str, Any] = {}
                 for name in cameras:
                     try:
-                        cams[name] = self._render_array(
+                        cams[name] = render_array(
                             model, scratch, width, height, name, None,
                             renderer=renderers[name],
                         )
                     except Exception:  # noqa: BLE001
                         pass
-                panel = self._render_array(
+                panel = render_array(
                     model, scratch, panel_w, panel_h, None, opts,
                     renderer=panel_renderer,
                 )
@@ -1062,75 +890,18 @@ class ControlServer:
         result["rendered"] = len(frames)
         return result
 
-    def _body_aabb(
-        self, model: mujoco.MjModel, scratch: mujoco.MjData, body_id: int
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """World AABB of a body from its geoms (exact for box/sphere/cylinder)."""
-        lo = np.full(3, 1e9)
-        hi = np.full(3, -1e9)
-        for g in range(model.ngeom):
-            if int(model.geom_bodyid[g]) != body_id:
-                continue
-            pos = scratch.geom_xpos[g]
-            mat = scratch.geom_xmat[g].reshape(3, 3)
-            size = model.geom_size[g]
-            gtype = int(model.geom_type[g])
-            if gtype == int(mujoco.mjtGeom.mjGEOM_BOX):
-                half = np.abs(mat) @ size
-            elif gtype in (
-                int(mujoco.mjtGeom.mjGEOM_SPHERE),
-                int(mujoco.mjtGeom.mjGEOM_MESH),
-            ):
-                half = np.full(3, float(model.geom_rbound[g]))
-            elif gtype == int(mujoco.mjtGeom.mjGEOM_CAPSULE):
-                half = np.array([size[0], size[0], size[0] + size[1]])
-            else:  # cylinder / ellipsoid / other
-                half = np.array([size[0], size[0], max(size[0], size[1])])
-            lo = np.minimum(lo, pos - half)
-            hi = np.maximum(hi, pos + half)
-        return lo, hi
-
     def _contains(self, body: dict[str, Any]) -> dict[str, Any]:
-        """VLABench-style `contain` condition: is `object` inside `container`?
-
-        Reports whether the object body's center lies within the container
-        body's world AABB, so a task can be judged done without guessing.
-        """
+        """VLABench-style `contain` condition: is `object` inside `container`?"""
         model = self._handle.model
         if model is None:
             return {"ok": False, "error": "no model loaded"}
-        obj_name = str(body.get("object") or "")
-        box_name = str(body.get("container") or body.get("region") or "")
-        obj_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, obj_name)
-        box_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, box_name)
-        if obj_id < 0 or box_id < 0:
-            return {"ok": False, "error": "unknown object/container body"}
-        scratch = _scratch_from_snapshot(model, self._state.snapshot())
-        mujoco.mj_forward(model, scratch)
-        center = np.asarray(scratch.xpos[obj_id], dtype=float)
-        lo_o, hi_o = self._body_aabb(model, scratch, obj_id)
-        obj_height = float(max(hi_o[2] - lo_o[2], 0.0))
-        lo, hi = self._body_aabb(model, scratch, box_id)
-        # x/y: the object's centre must lie over the container's footprint.
-        # z: allow the container's span extended upwards by the object's own
-        # height, so a tall object standing in a shallow tray counts as
-        # contained (its centre is above the tray walls).
-        contained = bool(
-            lo[0] <= center[0] <= hi[0]
-            and lo[1] <= center[1] <= hi[1]
-            and (lo[2] - 0.02) <= center[2] <= (hi[2] + obj_height)
+        scratch = scratch_from_snapshot(model, self._state.snapshot())
+        return geometry.contains(
+            model,
+            scratch,
+            str(body.get("object") or ""),
+            str(body.get("container") or body.get("region") or ""),
         )
-        return {
-            "ok": True,
-            "contained": contained,
-            "object": obj_name,
-            "container": box_name,
-            "object_center": [round(float(v), 4) for v in center],
-            "container_aabb": {
-                "min": [round(float(v), 4) for v in lo],
-                "max": [round(float(v), 4) for v in hi],
-            },
-        }
 
     def _capture(self, body: dict[str, Any]) -> dict[str, Any]:
         model = self._handle.model
@@ -1143,7 +914,7 @@ class ControlServer:
         camera_opts = body.get("camera_opts") or {}
         with self._render_lock:
             try:
-                png = _render_png(model, data, width, height, camera, camera_opts)
+                png = render_png(model, data, width, height, camera, camera_opts)
             except Exception as exc:  # noqa: BLE001
                 return {"ok": False, "error": f"render failed: {exc}"}
         out_name = body.get("name") or f"frame_{int(time.time() * 1000)}.png"

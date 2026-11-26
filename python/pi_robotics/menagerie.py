@@ -16,17 +16,25 @@ import uuid
 
 MENAGERIE_URL = "https://github.com/google-deepmind/mujoco_menagerie"
 
-# Scene name -> Menagerie directory.
+# Scene name -> Menagerie directory. Fetched on demand; never vendored.
 MODELS: dict[str, str] = {
+    # Mobile manipulators.
     "stretch": "hello_robot_stretch",
     "stretch3": "hello_robot_stretch_3",
+    # Arms.
+    "panda": "franka_emika_panda",
+    "franka_fr3": "franka_fr3",
+    "ur5e": "universal_robots_ur5e",
+    "aloha": "aloha",
+    "so101": "robotstudio_so101",
+    # Quadrupeds / humanoids.
+    "go2": "unitree_go2",
+    "g1": "unitree_g1",
 }
 
-# MJCF file to open inside each model directory.
-SCENE_FILES: dict[str, str] = {
-    "stretch": "scene.xml",
-    "stretch3": "scene.xml",
-}
+# MJCF file to open inside each model directory (most ship `scene.xml`).
+SCENE_FILES: dict[str, str] = {}
+DEFAULT_SCENE_FILE = "scene.xml"
 
 
 def is_menagerie_scene(name: str | None) -> bool:
@@ -38,7 +46,7 @@ def model_dir(models_root: pathlib.Path, name: str) -> pathlib.Path:
 
 
 def scene_path(models_root: pathlib.Path, name: str) -> pathlib.Path:
-    return model_dir(models_root, name) / SCENE_FILES[name]
+    return model_dir(models_root, name) / SCENE_FILES.get(name, DEFAULT_SCENE_FILE)
 
 
 def ensure_model(
@@ -57,7 +65,8 @@ def ensure_model(
         raise KeyError(f"Unknown Menagerie model '{name}'. Known: {', '.join(MODELS)}")
 
     destination = model_dir(models_root, name)
-    if (destination / "scene.xml").is_file():
+    scene_file = SCENE_FILES.get(name, DEFAULT_SCENE_FILE)
+    if (destination / scene_file).is_file():
         return destination
 
     models_root.mkdir(parents=True, exist_ok=True)
@@ -83,9 +92,9 @@ def ensure_model(
             timeout=timeout,
         )
         source = scratch / MODELS[name]
-        if not (source / "scene.xml").is_file():
+        if not (source / scene_file).is_file():
             raise RuntimeError(
-                f"fetched '{name}' but {MODELS[name]}/scene.xml is missing"
+                f"fetched '{name}' but {MODELS[name]}/{scene_file} is missing"
             )
         if destination.exists():
             shutil.rmtree(destination, ignore_errors=True)
