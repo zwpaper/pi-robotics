@@ -375,6 +375,12 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
+      duration: Type.Optional(
+        Type.Number({
+          description:
+            "Seconds to smoothly interpolate for action 'qpos' (default 0 = instant teleport). Entries that do not change are left simulating.",
+        }),
+      ),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
       width: Type.Optional(Type.Number()),
       height: Type.Optional(Type.Number()),
@@ -660,6 +666,7 @@ fi`,
           const res = await controlPost(port, "/command", {
             cmd: "qpos",
             values: params.values,
+            seconds: params.duration ?? 0,
           });
           return ok(json(res.body), { action });
         }

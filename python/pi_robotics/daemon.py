@@ -81,6 +81,9 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         self._scene_name = state.scene_name
         self._scene_params = dict(state.scene_params)
         self._commands: queue.Queue[dict[str, Any]] = queue.Queue()
+        # Active smooth ``qpos`` move: interpolates selected entries over time
+        # instead of teleporting (see `_apply_command` / `_advance_tween`).
+        self._tween: dict[str, Any] | None = None
         self._pick: dict[str, Any] | None = None
         self._servo: dict[str, float] | None = None
         self._servo_lock = threading.Lock()
@@ -281,6 +284,10 @@ class RoboticsSimPlugin(plugin.SimPlugin):
                 self._apply_command(model, data, cmd, applied)
             except Exception:  # noqa: BLE001
                 self._state.record_error("command", traceback.format_exc())
+        # A smooth `qpos` move interpolates toward its target on every step.
+        if self._tween is not None:
+            self._advance_tween(data)
+            applied.append("tween")
         with self._servo_lock:
             servo = None if self._servo is None else dict(self._servo)
         if servo is not None:
@@ -295,6 +302,69 @@ class RoboticsSimPlugin(plugin.SimPlugin):
             applied.append("pick")
         if applied:
             mujoco.mj_forward(model, data)
+
+    def _prepare_tween(
+        self, model: mujoco.MjModel, tween: dict[str, Any], idx: np.ndarray
+    ) -> None:
+        """Finds the dofs to freeze and the quaternions to slerp for a move.
+
+        A tween writes ``qpos`` directly, but ``mj_step`` then adds ``qvel*dt``
+        on top, so contact forces would accumulate and fling the body. Freezing
+        the moved joints' velocities keeps the move kinematic, and quaternion
+        entries are interpolated on the unit sphere (with a hemisphere fix) so
+        orientation never passes through a degenerate value.
+        """
+        dofs: list[int] = []
+        quats: list[dict[str, Any]] = []
+        changed = set(int(i) for i in idx)
+        for jid in range(model.njnt):
+            jtype = int(model.jnt_type[jid])
+            qadr = int(model.jnt_qposadr[jid])
+            vadr = int(model.jnt_dofadr[jid])
+            if jtype == int(mujoco.mjtJoint.mjJNT_FREE):
+                qsize, vsize, qoff = 7, 6, 3
+            elif jtype == int(mujoco.mjtJoint.mjJNT_BALL):
+                qsize, vsize, qoff = 4, 3, 0
+            else:
+                qsize, vsize, qoff = 1, 1, -1
+            if not changed.intersection(range(qadr, qadr + qsize)):
+                continue
+            dofs.extend(range(vadr, vadr + vsize))
+            if qoff < 0:
+                continue
+            qidx = np.arange(qadr + qoff, qadr + qoff + 4)
+            if not all(int(i) in changed for i in qidx):
+                continue
+            slots = [int(np.nonzero(tween["indices"] == i)[0][0]) for i in qidx]
+            start = tween["start"][slots].copy()
+            target = tween["target"][slots].copy()
+            if float(np.dot(start, target)) < 0.0:
+                target = -target  # keep both quats in the same hemisphere
+                tween["target"][slots] = target
+            quats.append({"idx": qidx, "start": start, "target": target})
+        tween["dofs"] = np.asarray(dofs, dtype=int)
+        tween["quats"] = quats
+
+    def _advance_tween(self, data: mujoco.MjData) -> None:
+        """Writes the eased midpoint of an active smooth `qpos` move."""
+        tween = self._tween
+        if tween is None:
+            return
+        duration = max(1e-6, float(tween["duration"]))
+        alpha = min(1.0, max(0.0, (float(data.time) - tween["t0"]) / duration))
+        eased = alpha * alpha * (3.0 - 2.0 * alpha)  # smoothstep
+        data.qpos[tween["indices"]] = (
+            tween["start"] + (tween["target"] - tween["start"]) * eased
+        )
+        for quat in tween.get("quats", []):
+            value = quat["start"] + (quat["target"] - quat["start"]) * eased
+            norm = float(np.linalg.norm(value))
+            data.qpos[quat["idx"]] = value / norm if norm > 1e-9 else quat["target"]
+        dofs = tween.get("dofs")
+        if dofs is not None and dofs.size:
+            data.qvel[dofs] = 0.0
+        if alpha >= 1.0:
+            self._tween = None
 
     def _apply_command(
         self,
@@ -320,8 +390,29 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         elif kind == "qpos":
             values = np.asarray(cmd.get("values", []), dtype=float)
             n = min(values.size, model.nq)
-            data.qpos[:n] = values[:n]
-            applied.append(f"qpos[{n}]")
+            seconds = float(cmd.get("seconds", 0.0) or 0.0)
+            if n and seconds > 0.0:
+                # Smooth move: only the entries that actually change are
+                # interpolated, so the rest of the scene keeps simulating.
+                current = np.asarray(data.qpos[:n], dtype=float)
+                idx = np.nonzero(np.abs(values[:n] - current) > 1e-9)[0]
+                if idx.size:
+                    tween = {
+                        "indices": idx,
+                        "start": current[idx].copy(),
+                        "target": values[:n][idx].copy(),
+                        "t0": float(data.time),
+                        "duration": seconds,
+                    }
+                    self._prepare_tween(model, tween, idx)
+                    self._tween = tween
+                    applied.append(f"qpos_tween[{idx.size} over {seconds:g}s]")
+                else:
+                    self._tween = None
+                    applied.append("qpos[noop]")
+            else:
+                data.qpos[:n] = values[:n]
+                applied.append(f"qpos[{n}]")
         elif kind == "qvel":
             values = np.asarray(cmd.get("values", []), dtype=float)
             n = min(values.size, model.nv)
