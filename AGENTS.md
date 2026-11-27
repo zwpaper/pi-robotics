@@ -27,6 +27,8 @@ a live 3D panel to the pi coding agent. It mirrors the simulation surface of
   - `workspace.py` — the Live Python Studio workspace: scaffold templates
     (`messages.py` / `sim_plugin.py` / `viewer_plugin.py`), plugin loading, the
     `--hot_reload` spec, and `bake` (MjSpec → `scene.xml`).
+  - `director.py` — a hidden `director` body the daemon glides along the
+    action front so a camera parented to it is a native chase camera.
   - `reel.py` — state recorder + multi-view video composition.
   - `vision.py` — camera -> detect -> control grasp servo.
 - `python/tests/` — fast unit tests (no daemon, no GL) for the modules above.

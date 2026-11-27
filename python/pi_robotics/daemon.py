@@ -45,6 +45,7 @@ from mujoco.studio import (
 
 from pi_robotics import menagerie, scenes
 from pi_robotics import workspace as workspace_mod
+from pi_robotics import director as director_mod
 from pi_robotics.control import ControlServer, SharedState
 from pi_robotics.vision import VisionServo
 
@@ -87,6 +88,10 @@ class RoboticsSimPlugin(plugin.SimPlugin):
         self._pick: dict[str, Any] | None = None
         self._servo: dict[str, float] | None = None
         self._servo_lock = threading.Lock()
+        # Optional hidden "director" body (a scene body named `director`): the
+        # sim glides it along the action front so a camera parented to it is a
+        # native chase camera (live viewer and recorded reel).
+        self._director: director_mod.Director | None = None
 
     def set_servo(self, ctrl: dict[str, float] | None) -> None:
         """Sets (or clears) the actuator override written by the vision servo."""
@@ -182,6 +187,7 @@ class RoboticsSimPlugin(plugin.SimPlugin):
             pass
         self._state.publish_model(event.model)
         self._state.record_error(None, None)
+        self._director = director_mod.Director(event.model)
         if self._pick is None:
             self._state.clear_pick()
         self._apply_home_posture(event.model, event.data)
@@ -302,6 +308,10 @@ class RoboticsSimPlugin(plugin.SimPlugin):
             applied.append("pick")
         if applied:
             mujoco.mj_forward(model, data)
+        # Glide any hidden `director` body to the leading edge of the motion so
+        # a camera parented to it follows the whole action natively.
+        if self._director is not None:
+            self._director.step(model, data)
 
     def _prepare_tween(
         self, model: mujoco.MjModel, tween: dict[str, Any], idx: np.ndarray

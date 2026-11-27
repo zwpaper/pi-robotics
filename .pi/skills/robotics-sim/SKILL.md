@@ -166,6 +166,19 @@ any run can be turned into a video.
   always captured for the video. (Camera-only input matches real hardware; the
   panel is a free-camera render that no real robot has.)
 
+**Chase camera (hidden `director` body).** A scene can add a small, invisible,
+non-colliding body named `director` (a `freejoint` body, `contype=0`, `rgba`
+alpha 0, `gravcomp=1`) with a `mode="fixed"` camera parented to it. Whenever
+such a body exists the daemon glides it, every step, to the **leading edge of
+the motion** — the forward-most body *or site* that has displaced from its rest
+pose, rate-limited so the camera sweeps instead of jumping. The camera then
+follows the whole action natively: it works in the live viewer **and** in the
+reel, because the director's pose is a joint and so is part of the recorded
+`qpos`. This is the way to get a smooth "follow the ball, then the dominoes,
+then the lever, then the bell" shot without scripting frames. See
+`scenes/rube_goldberg.xml` (body `director`, camera `chase`) for a worked
+example.
+
 Layout rule: the 3D panel is tile 0, then the cameras in first-seen order; one
 camera → one tile, several → one tile each. A camera that first appears later
 gets a blank tile in earlier frames.

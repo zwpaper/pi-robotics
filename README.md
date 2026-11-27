@@ -249,6 +249,16 @@ the robot **camera** image(s) (add `panel: true` to override), but the panel is
 always captured for the video. Camera-only input is deliberate: it matches real
 hardware, where no free-camera 3D view exists.
 
+**Chase camera (hidden `director` body).** A scene may add a small, invisible,
+non-colliding body named `director` (a `freejoint` body: `contype="0"`,
+`rgba` alpha 0, `gravcomp="1"`) with a `mode="fixed"` camera parented to it.
+When such a body exists the daemon glides it, every step, to the **leading edge
+of the motion** (the forward-most body or site that has displaced from its rest
+pose, rate-limited), so the camera natively follows the whole action in both
+the live viewer and the reel (the director's pose is a joint, hence part of the
+recorded `qpos`). `scenes/rube_goldberg.xml` uses this for a single chase shot
+that pans ball → dominoes → lever → bell with no per-frame scripting.
+
 ### Vision-based grasping (camera → detect → control)
 
 `pick` is a fixed, calibrated sequence — it only works for the object at the
