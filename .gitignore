@@ -2,6 +2,9 @@
 node_modules
 node_modules/
 .pi/robotics/
+# The live Live-Python-Studio scratch workspace for this checkout; the shipped
+# example lives in examples/joinery_workspace/.
+/studio_workspace/
 __pycache__/
 *.pyc
 .pytest_cache/

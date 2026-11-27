@@ -48,7 +48,8 @@ grid, rendered from the recorded state timeline. See the
 [full write-up](examples/aloha_sim/videos/marker_remove_lid.md).
 
 More demos: [TidyBot++ water-the-plant / fill-a-cup](examples/tidybot2/README.md),
-[VLABench mahjong selection](examples/vlabench/README.md).
+[VLABench mahjong selection](examples/vlabench/README.md),
+[joinery (榫卯) interactive workspace](examples/joinery_workspace/README.md).
 
 https://github.com/user-attachments/assets/8f9a91fe-3751-4b96-bca0-a3ed46a3efa1
 
@@ -448,7 +449,8 @@ pi-robotics/
 │   ├── scenes/                      # example MJCF (peg_and_hole.xml)
 │   ├── tidybot2/                    # TidyBot++ models + water_plant / fill_cup scenes
 │   ├── aloha_sim/                   # ALOHA 2 task scenes (+ exporter) and demo write-ups
-│   └── vlabench/                    # VLABench Franka scenes (mahjong assets vendored)
+│   ├── vlabench/                    # VLABench Franka scenes (mahjong assets vendored)
+│   └── joinery_workspace/           # 榫卯 joinery Live Python Studio workspace
 └── scripts/test-extension.mjs       # headless extension smoke test
 ```
 
