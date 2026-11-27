@@ -1,0 +1,20 @@
+{
+  "subagents": {
+    "agentOverrides": {
+      "worker": {
+        "tools": [
+          "read",
+          "grep",
+          "find",
+          "ls",
+          "bash",
+          "edit",
+          "write",
+          "contact_supervisor",
+          "robotics"
+        ],
+        "extensions": ["./.pi/extensions/robotics/index.ts"]
+      }
+    }
+  }
+}
