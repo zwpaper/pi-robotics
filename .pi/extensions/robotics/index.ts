@@ -362,6 +362,17 @@ export default function roboticsExtension(pi: ExtensionAPI) {
       cols: Type.Optional(
         Type.Number({ description: "grid columns for 'reel' (default: auto, square-ish)." }),
       ),
+      idle_cap: Type.Optional(
+        Type.Number({
+          description:
+            "Max seconds of static frames kept per idle run when composing 'reel' (default 1; 0 disables). The untouched timeline is also written as '<name>_raw.mp4'.",
+        }),
+      ),
+      keep_raw: Type.Optional(
+        Type.Boolean({
+          description: "Also render the un-condensed recording as '<name>_raw.mp4' on 'reel' (default true).",
+        }),
+      ),
       value: Type.Optional(Type.Number({ description: "Value for a named 'ctrl' or 'speed'." })),
       n: Type.Optional(Type.Number({ description: "Number of steps (for action 'step')." })),
       paused: Type.Optional(Type.Boolean({ description: "Pause state (for action 'pause')." })),
@@ -387,7 +398,8 @@ export default function roboticsExtension(pi: ExtensionAPI) {
             "Vision:     vision_pick {object,camera,site,gripper} (auto servo) · nudge {extend,lift,wrist,grip,actuators} · move_ee {pos,quat,site|body,posture} · clear",
             "Audit:      audit {scene|path,seconds}  (initial penetration, settle, mass/inertia, limits, saturation, energy)",
             "Workspace:  scaffold_workspace {dir} (write + hot-reload a Live Python Studio workspace) · workspace (status) · bake (freeze the scene to scene.xml)",
-            "Reel:       record_start {fps,cameras} → chapter {title} per attempt → reel {height} (record_stop/reel_clear)",
+            "Reel:       record_start {fps,cameras,idle_cap} → chapter {title} per attempt → reel {height,idle_cap,keep_raw} (record_stop/reel_clear)",
+            "            reel condenses >idle_cap s of still frames (default 1s) and also writes the untouched timeline as '<name>_raw.mp4'",
             "Manip:      pick {object}   (scripted grasp+lift)\n" +
             "            vision_pick {object,camera}  (camera->detect->control servo)",
             "Cameras:    cameras \u00b7 stream {camera,fps,width,height}  (live MJPEG in the browser)",
@@ -890,6 +902,7 @@ fi`,
             cameras: params.cameras,
             width: params.width ?? 640,
             height: params.height ?? 480,
+            idle_cap: params.idle_cap,
           });
           return ok(json(res.body), { action });
         }
@@ -975,6 +988,8 @@ fi`,
               height: params.height ?? 480,
               cols: params.cols,
               name: params.reel_name,
+              idle_cap: params.idle_cap,
+              keep_raw: params.keep_raw,
             },
             120000,
           );
@@ -991,16 +1006,25 @@ fi`,
             rows?: number;
             cols?: number;
             chapters?: Array<{ start: number; end: number; title: string }>;
+            raw_path?: string;
+            raw_seconds?: number;
+            raw_steps?: number;
+            condensed_steps?: number;
+            idle_cap?: number;
             error?: string;
           };
           if (!body?.ok || !body.path) {
             return fail(`reel failed: ${body?.error ?? "unknown"}`, { action });
           }
           if (body.path) await openInBrowser(body.path);
+          const raw = body.raw_path
+            ? `; raw (${body.raw_steps} steps / ${body.raw_seconds}s) -> ${body.raw_path}`
+            : "";
           return ok(
             `Operation reel (${body.format}, ${body.steps} steps / ${body.frames} frames, ${body.seconds}s, ` +
               `${body.layout ?? "grid"} ${body.rows}x${body.cols}, ${(body.chapters ?? []).length} chapter(s); ` +
-              `sources: ${(body.columns ?? []).join(" | ")}) -> ${body.path}`,
+              `idle>${body.idle_cap}s condensed ${body.raw_steps}->${body.condensed_steps} frames; ` +
+              `sources: ${(body.columns ?? []).join(" | ")}) -> ${body.path}${raw}`,
             { action, ...body },
           );
         }

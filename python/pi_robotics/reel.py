@@ -65,6 +65,64 @@ class Recorder:
             return states, list(self._chapters)
 
 
+def condense_static_timeline(
+    states: list[tuple[float, np.ndarray]],
+    chapters: list[tuple[int, str]],
+    max_idle: float = 1.0,
+    eps: float = 1e-4,
+) -> tuple[list[tuple[float, np.ndarray]], list[tuple[int, str]]]:
+    """Cuts long runs of static frames down to at most ``max_idle`` seconds.
+
+    Recording samples ``qpos`` on a wall-clock timer, so whenever the scene is
+    still (for example while an agent reasons between tool calls) it repeats
+    the previous state. This keeps at most ``max_idle`` seconds of each such
+    run and removes the dropped wall time from the timeline, so the rendered
+    video flows without a long stall. The raw timeline is left untouched, so
+    both the raw and the processed video can be produced.
+
+    Returns:
+        ``(states, chapters)`` with the reduncant static frames removed and the
+        remaining timestamps shifted earlier by the removed time.
+    """
+    if not states or max_idle <= 0:
+        return list(states), list(chapters)
+
+    kept_pairs: list[tuple[int, float, np.ndarray]] = []  # raw idx, time, qpos
+    shift = 0.0
+    i, n = 0, len(states)
+    while i < n:
+        j = i
+        while j + 1 < n and (
+            float(np.max(np.abs(
+                np.asarray(states[j + 1][1], dtype=float)
+                - np.asarray(states[j][1], dtype=float)
+            ))) <= eps
+        ):
+            j += 1
+        run_seconds = states[j][0] - states[i][0]
+        if run_seconds <= max_idle:
+            kept = list(range(i, j + 1))
+        else:
+            cutoff = states[i][0] + max_idle
+            kept = [k for k in range(i, j + 1) if states[k][0] <= cutoff] or [i]
+        for k in kept:
+            kept_pairs.append((k, states[k][0] - shift, states[k][1]))
+        shift += run_seconds - (states[kept[-1]][0] - states[i][0])
+        i = j + 1
+
+    out_states = [(t, q) for _, t, q in kept_pairs]
+    raw_order = [raw for raw, _, _ in kept_pairs]
+    out_chapters: list[tuple[int, str]] = []
+    for index, title in chapters:
+        mapped = len(out_states)
+        for new_index, raw_index in enumerate(raw_order):
+            if raw_index >= index:
+                mapped = new_index
+                break
+        out_chapters.append((mapped, title))
+    return out_states, out_chapters
+
+
 def compose_video(
     out_dir: pathlib.Path,
     frames: list[dict[str, Any]],

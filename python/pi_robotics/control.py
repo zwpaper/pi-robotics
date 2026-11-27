@@ -16,7 +16,7 @@ import mujoco
 from mujoco.studio import messages, sim, viewer_handle
 
 from pi_robotics import audit, geometry, ik, motion, vision
-from pi_robotics.reel import Recorder, compose_video
+from pi_robotics.reel import Recorder, compose_video, condense_static_timeline
 from pi_robotics.rendering import (
     CAMERA_PAGE,
     PANEL_CAMERA_OPTS,
@@ -318,6 +318,9 @@ class ControlServer:
         self._recorder_lock = threading.Lock()
         self._rec_stop: threading.Event | None = None
         self._rec_thread: threading.Thread | None = None
+        # Max seconds of static frames kept per idle run when composing (see
+        # `condense_static_timeline`); the raw timeline is always kept too.
+        self._idle_cap: float = 1.0
         self._rec_cfg: dict[str, Any] = {}
         self.recorder = Recorder()
         self.port = 0
@@ -843,6 +846,7 @@ class ControlServer:
         if self._handle.model is None:
             return {"ok": False, "error": "no model loaded"}
         fps = max(1, min(int(body.get("fps", 8)), 30))
+        self._idle_cap = max(0.0, float(body.get("idle_cap", self._idle_cap)))
         # The panel (a free-camera render) is only needed for the video backdrop;
         # capture it less often than the cameras so the cameras can run faster.
         panel_fps = max(0.5, min(float(body.get("panel_fps", max(1.0, fps / 4.0))), float(fps)))
@@ -884,6 +888,7 @@ class ControlServer:
             "fps": fps,
             "panel_fps": panel_fps,
             "cameras": cameras,
+            "idle_cap": self._idle_cap,
         }
 
     def _record_stop(self) -> dict[str, Any]:
@@ -898,14 +903,17 @@ class ControlServer:
         return {"ok": True, "recording": False}
 
     def _reel(self, body: dict[str, Any]) -> dict[str, Any]:
-        """Renders the recorded state timeline into a grid video.
+        """Renders the recorded state timeline into grid video(s).
 
         Recording only stored qpos, so the (expensive) multi-camera rendering
         happens here, once, after the run — keeping capture smooth and cheap.
+        Runs of static frames longer than ``idle_cap`` seconds are condensed for
+        the main video; the untouched timeline is rendered alongside as
+        ``<name>_raw.mp4`` so the raw recording is never lost.
         """
         self._record_stop()
-        states, chapters = self.recorder.timeline()
-        if not states:
+        raw_states, chapters = self.recorder.timeline()
+        if not raw_states:
             return {"ok": False, "error": "nothing recorded; run record_start first"}
         model = self._handle.model
         if model is None:
@@ -916,38 +924,41 @@ class ControlServer:
         panel_w = min(int(body.get("panel_width", PANEL_WIDTH)), 1280)
         panel_h = min(int(body.get("panel_height", PANEL_HEIGHT)), 960)
         opts = body.get("panel_opts") or PANEL_CAMERA_OPTS
-        # Decimate by default: render at most `fps` states per second of wall
-        # time, so a long recording does not render every captured state.
         out_fps = float(body.get("fps", 10))
-        step = 1
-        if body.get("decimate", True) and out_fps > 0 and len(states) > 1:
-            span = max(1e-6, states[-1][0] - states[0][0])
-            step = max(1, int(round((len(states) / span) / out_fps)))
-        sampled = states[::step]
+        name = str(body.get("name", "operation"))
+        idle_cap = max(0.0, float(body.get("idle_cap", self._idle_cap)))
+        states, condensed_chapters = condense_static_timeline(
+            raw_states, chapters, idle_cap
+        )
+        keep_raw = bool(body.get("keep_raw", True)) and len(states) != len(raw_states)
         # One renderer per camera, created and used on THIS request's thread (a
         # Renderer's GL context is thread-bound) and reused across all frames.
         renderers: dict[str, Any] = {}
         panel_renderer = None
-        try:
-            for name in cameras:
-                renderers[name] = mujoco.Renderer(
-                    model, height=height, width=width
-                )
-            panel_renderer = mujoco.Renderer(
-                model, height=panel_h, width=panel_w
-            )
+
+        def build(
+            timeline: list[tuple[float, Any]],
+            marks: list[tuple[int, str]],
+            video_name: str,
+        ) -> dict[str, Any]:
+            # Decimate by default: render at most `fps` states per second of
+            # time, so a long recording does not render every captured state.
+            step = 1
+            if body.get("decimate", True) and out_fps > 0 and len(timeline) > 1:
+                span = max(1e-6, timeline[-1][0] - timeline[0][0])
+                step = max(1, int(round((len(timeline) / span) / out_fps)))
             frames: list[dict[str, Any]] = []
             stamps: list[float] = []
-            for t, qpos in sampled:
+            for t, qpos in timeline[::step]:
                 scratch = mujoco.MjData(model)
                 if qpos.size == model.nq:
                     scratch.qpos[:] = qpos
                 cams: dict[str, Any] = {}
-                for name in cameras:
+                for cam in cameras:
                     try:
-                        cams[name] = render_array(
-                            model, scratch, width, height, name, None,
-                            renderer=renderers[name],
+                        cams[cam] = render_array(
+                            model, scratch, width, height, cam, None,
+                            renderer=renderers[cam],
                         )
                     except Exception:  # noqa: BLE001
                         pass
@@ -957,18 +968,33 @@ class ControlServer:
                 )
                 frames.append({"panel": panel, "cameras": cams})
                 stamps.append(t)
-            result = compose_video(
+            composed = compose_video(
                 self._state.runtime_dir / "reels",
                 frames,
                 stamps,
-                chapters,
+                marks,
                 fps=out_fps,
                 hold=None if body.get("hold") is None else float(body["hold"]),
                 min_hold=float(body.get("min_hold", 0.0)),
                 tail=float(body.get("tail", 0.8)),
                 height=int(body.get("height", 480)),
                 cols=(int(body["cols"]) if body.get("cols") else None),
-                name=str(body.get("name", "operation")),
+                name=video_name,
+            )
+            composed["rendered"] = len(frames)
+            return composed
+
+        try:
+            for cam in cameras:
+                renderers[cam] = mujoco.Renderer(
+                    model, height=height, width=width
+                )
+            panel_renderer = mujoco.Renderer(
+                model, height=panel_h, width=panel_w
+            )
+            result = build(states, condensed_chapters, name)
+            raw_result = (
+                build(raw_states, chapters, f"{name}_raw") if keep_raw else None
             )
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": str(exc)}
@@ -980,7 +1006,12 @@ class ControlServer:
                     except Exception:  # noqa: BLE001
                         pass
         result["ok"] = True
-        result["rendered"] = len(frames)
+        result["raw_steps"] = len(raw_states)
+        result["condensed_steps"] = len(states)
+        result["idle_cap"] = idle_cap
+        if raw_result is not None:
+            result["raw_path"] = raw_result.get("path")
+            result["raw_seconds"] = raw_result.get("seconds")
         return result
 
     def _contains(self, body: dict[str, Any]) -> dict[str, Any]:
